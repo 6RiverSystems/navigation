@@ -124,9 +124,11 @@ void LayeredCostmap::updateMap(double robot_x, double robot_y, double robot_yaw)
   yn = std::min(int(costmap_.getSizeInCellsY()), yn + 1);
 
   ROS_DEBUG("Updating area x: [%d, %d] y: [%d, %d]", x0, xn, y0, yn);
-
-  if (xn < x0 || yn < y0)
+// std::cerr << "Updating area x: [" << x0 << ", " << xn << "] y: [" << y0 << ", " << yn << "]" << std::endl;
+  if (xn < x0 || yn < y0){
+    // std::cerr << "Not updating because xn, yn are bad" << std::endl;
     return;
+  }
 
   costmap_.resetMap(x0, y0, xn, yn);
   for (vector<boost::shared_ptr<Layer> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();

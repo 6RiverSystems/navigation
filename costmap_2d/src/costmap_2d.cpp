@@ -181,6 +181,7 @@ Costmap2D::~Costmap2D()
 unsigned int Costmap2D::cellDistance(double world_dist)
 {
   double cells_dist = max(0.0, ceil(world_dist / resolution_));
+  std::cout << "world: " << world_dist << ", res: " << resolution_ << std::endl;
   return (unsigned int)cells_dist;
 }
 

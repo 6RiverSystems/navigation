@@ -4,6 +4,7 @@
 #include<costmap_2d/cost_values.h>
 #include<costmap_2d/costmap_2d.h>
 #include <costmap_2d/static_layer.h>
+#include <costmap_2d/static_layer_with_inflation.h>
 #include <costmap_2d/obstacle_layer.h>
 #include <costmap_2d/inflation_layer.h>
 
@@ -64,6 +65,13 @@ void addStaticLayer(costmap_2d::LayeredCostmap& layers, tf::TransformListener& t
   slayer->initialize(&layers, "static", &tf);
 }
 
+void addStaticLayerWithInflation(costmap_2d::LayeredCostmap& layers, tf::TransformListener& tf)
+{
+  costmap_2d::StaticLayerWithInflation* slayer = new costmap_2d::StaticLayerWithInflation();
+  layers.addPlugin(boost::shared_ptr<costmap_2d::Layer>(slayer));
+  slayer->initialize(&layers, "static", &tf);
+}
+
 costmap_2d::ObstacleLayer* addObstacleLayer(costmap_2d::LayeredCostmap& layers, tf::TransformListener& tf)
 {
   costmap_2d::ObstacleLayer* olayer = new costmap_2d::ObstacleLayer();
@@ -96,6 +104,30 @@ costmap_2d::InflationLayer* addInflationLayer(costmap_2d::LayeredCostmap& layers
   boost::shared_ptr<costmap_2d::Layer> ipointer(ilayer);
   layers.addPlugin(ipointer);
   return ilayer;
+}
+
+std::vector<geometry_msgs::Point> setRadii(costmap_2d::LayeredCostmap& layers, double length, double width, double inflation_radius)
+{
+  std::vector<geometry_msgs::Point> polygon;
+  geometry_msgs::Point p;
+  p.x = width;
+  p.y = length;
+  polygon.push_back(p);
+  p.x = width;
+  p.y = -length;
+  polygon.push_back(p);
+  p.x = -width;
+  p.y = -length;
+  polygon.push_back(p);
+  p.x = -width;
+  p.y = length;
+  polygon.push_back(p);
+  layers.setFootprint(polygon);
+
+  ros::NodeHandle nh;
+  nh.setParam("/inflation_tests/inflation/inflation_radius", inflation_radius);
+
+  return polygon;
 }
 
 
