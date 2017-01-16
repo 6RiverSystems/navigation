@@ -278,10 +278,10 @@ public:
    */
   bool saveMap(std::string file_name);
 
-  void resizeMap(unsigned int size_x, unsigned int size_y, double resolution, double origin_x,
+  virtual void resizeMap(unsigned int size_x, unsigned int size_y, double resolution, double origin_x,
                  double origin_y);
 
-  void resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn);
+  virtual void resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn);
 
   /**
    * @brief  Given distance in the world... convert it to cells

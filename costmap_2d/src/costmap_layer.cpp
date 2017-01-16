@@ -11,6 +11,14 @@ void CostmapLayer::touch(double x, double y, double* min_x, double* min_y, doubl
     *max_y = std::max(y, *max_y);
 }
 
+void CostmapLayer::touchWithRadius(double x, double y, double radius, double* min_x, double* min_y, double* max_x, double* max_y)
+{
+    *min_x = std::min(x - radius, *min_x);
+    *min_y = std::min(y - radius, *min_y);
+    *max_x = std::max(x + radius, *max_x);
+    *max_y = std::max(y + radius, *max_y);
+}
+
 void CostmapLayer::matchSize()
 {
     Costmap2D* master = layered_costmap_->getCostmap();

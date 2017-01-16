@@ -126,6 +126,20 @@ protected:
    */
   void touch(double x, double y, double* min_x, double* min_y, double* max_x, double* max_y);
 
+  /**
+   * Updates the bounding box specified in the parameters to include
+   * the location (x,y) and the radius r around it
+   *
+   * @param x x-coordinate to include
+   * @param y y-coordinate to include
+   * @param r the radius
+   * @param min_x bounding box
+   * @param min_y bounding box
+   * @param max_x bounding box
+   * @param max_y bounding box
+   */
+  void touchWithRadius(double x, double y, double radius, double* min_x, double* min_y, double* max_x, double* max_y);
+
   /*
    * Updates the bounding box specified in the parameters
    * to include the bounding box from the addExtraBounds

@@ -42,6 +42,8 @@ add_message_files(
     DIRECTORY msg
     FILES
     VoxelGrid.msg
+    ObstructionMsg.msg
+    ObstructionListMsg.msg
 )
 
 generate_messages(
@@ -55,6 +57,7 @@ generate_messages(
 generate_dynamic_reconfigure_options(
   cfg/Costmap2D.cfg
   cfg/ObstaclePlugin.cfg
+  cfg/ObstructionPlugin.cfg
   cfg/GenericPlugin.cfg
   cfg/InflationPlugin.cfg
   cfg/VoxelPlugin.cfg
@@ -109,6 +112,7 @@ target_link_libraries(costmap_2d
 add_library(layers
   plugins/inflation_layer.cpp
   plugins/obstacle_layer.cpp
+  plugins/obstruction_layer.cpp
   plugins/static_layer.cpp
   plugins/static_layer_with_inflation.cpp
   plugins/voxel_layer.cpp

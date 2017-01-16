@@ -37,7 +37,7 @@
  *         David V. Lu!!
  *         Daniel Grieneisen
  *********************************************************************/
-#include <costmap_2d/obstacle_layer.h>
+#include <costmap_2d/obstruction_layer.h>
 #include <costmap_2d/costmap_math.h>
 #include <pluginlib/class_list_macros.h>
 
@@ -226,14 +226,16 @@ void ObstructionLayer::onInitialize()
     }
   }
 
+  obstruction_publisher_ = nh.advertise<costmap_2d::ObstructionListMsg>("obstructions", 1);
+
   dsrv_ = NULL;
   setupDynamicReconfigure(nh);
 }
 
 void ObstructionLayer::setupDynamicReconfigure(ros::NodeHandle& nh)
 {
-  dsrv_ = new dynamic_reconfigure::Server<costmap_2d::ObstaclePluginConfig>(nh);
-  dynamic_reconfigure::Server<costmap_2d::ObstaclePluginConfig>::CallbackType cb = boost::bind(
+  dsrv_ = new dynamic_reconfigure::Server<costmap_2d::ObstructionPluginConfig>(nh);
+  dynamic_reconfigure::Server<costmap_2d::ObstructionPluginConfig>::CallbackType cb = boost::bind(
       &ObstructionLayer::reconfigureCB, this, _1, _2);
   dsrv_->setCallback(cb);
 }
@@ -243,12 +245,14 @@ ObstructionLayer::~ObstructionLayer()
     if (dsrv_)
         delete dsrv_;
 }
-void ObstructionLayer::reconfigureCB(costmap_2d::ObstaclePluginConfig &config, uint32_t level)
+void ObstructionLayer::reconfigureCB(costmap_2d::ObstructionPluginConfig &config, uint32_t level)
 {
   enabled_ = config.enabled;
-  footprint_clearing_enabled_ = config.footprint_clearing_enabled;
   max_obstacle_height_ = config.max_obstacle_height;
-  combination_method_ = config.combination_method;
+  obstruction_half_life_ = ros::Duration(config.obstruction_half_life);
+  num_obstruction_levels_ = config.num_obstruction_levels;
+
+  setInflationParameters(config.inflation_radius, config.cost_scaling_factor);
 }
 
 void ObstructionLayer::laserScanCallback(const sensor_msgs::LaserScanConstPtr& message,
@@ -371,10 +375,58 @@ void ObstructionLayer::updateBounds(double robot_x, double robot_y, double robot
     checkObservations(observations[i], min_x, min_y, max_x, max_y);
   }
 
-  updateFootprint(robot_x, robot_y, robot_yaw, min_x, min_y, max_x, max_y);
+  // Update obstructions
+  updateObstructions(min_x, min_y, max_x, max_y);
+
+  /// @todo Add this if we want it?
+  // updateFootprint(robot_x, robot_y, robot_yaw, min_x, min_y, max_x, max_y);
 }
 
-void checkObservations(Observation obs, double* min_x, double* min_y, double* max_x, double* max_y)
+
+void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* max_x, double* max_y)
+{
+  ObstructionListMsg msg;
+
+  // Iterate over the obstructions
+  auto iter = obstruction_list_.begin();
+  while (iter != obstruction_list_.end())
+  {
+    auto obs = *iter;
+    // Update level (and radius) if need be
+    if (obs->last_sighting_time_ - obs->last_level_time_ > obstruction_half_life_)
+    {
+      obs->level_++;
+      obs->last_level_time_= obs->last_sighting_time_;
+      if (obs->level_ >= num_obstruction_levels_)
+      {
+        ROS_WARN("Clearing out an old observation.");
+        obs->cleared_ = true;
+      }
+    }
+    obs->radius_ = kernels_[obs->level_]->getRadius();
+
+    // Touch with size extent
+    touchWithRadius(obs->x_, obs->y_, obs->radius_, min_x, min_y, max_x, max_y);
+
+    // Collect for publishing
+    msg.obstructions.push_back(obs->asMsg());
+
+    // Remove cleared ones
+    if (obs->cleared_)
+    {
+      iter = obstruction_list_.erase(iter);
+    }
+    else
+    {
+      ++iter;
+    }
+  }
+
+  // Publish obstructions
+  obstruction_publisher_.publish(msg);
+}
+
+void ObstructionLayer::checkObservations(Observation obs, double* min_x, double* min_y, double* max_x, double* max_y)
 {
   const pcl::PointCloud<pcl::PointXYZ>& cloud = *(obs.cloud_);
 
@@ -411,8 +463,28 @@ void checkObservations(Observation obs, double* min_x, double* min_y, double* ma
     }
 
     unsigned int index = getIndex(mx, my);
-    costmap_[index] = LETHAL_OBSTACLE;
-    touch(px, py, min_x, min_y, max_x, max_y);
+
+    // Check to see if there is already an obstruction there
+    if (obstruction_map_[index])
+    {
+      // Touch it.
+      obstruction_map_[index]->touch();
+    }
+    else
+    {
+      // Check to see if it is in the master grid already.
+      if (layered_costmap_->getCostmap()->getCHarMap()[index] != LETHAL_OBSTACLE)
+      {
+        // Create a new one.  Store in list and map.
+        std::shared_ptr<Obstruction> obs = std::make_shared(px, py, cloud.header.frame_id);
+        obstruction_list_.push_back(obs);
+        obstruction_map_[index] = obs;
+      }
+    }
+
+    // Touching can happen later.
+    // costmap_[index] = LETHAL_OBSTACLE;
+    // touch(px, py, min_x, min_y, max_x, max_y);
   }
 }
 
@@ -433,22 +505,18 @@ void ObstructionLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i
   if (!enabled_)
     return;
 
-  if (footprint_clearing_enabled_)
+  /// @todo Add this?
+  // if (footprint_clearing_enabled_)
+  // {
+  //   setConvexPolygonCost(transformed_footprint_, costmap_2d::FREE_SPACE);
+  // }
+
+  // Iterate over all of the obstructions
+  for (auto obs_ptr : obstruction_list_)
   {
-    setConvexPolygonCost(transformed_footprint_, costmap_2d::FREE_SPACE);
+    kernels_[obs_ptr->level_]->applyKernelAtLocation(obs_ptr->x_, obs_ptr->y_, master_grid);
   }
 
-  switch (combination_method_)
-  {
-    case 0:  // Overwrite
-      updateWithOverwrite(master_grid, min_i, min_j, max_i, max_j);
-      break;
-    case 1:  // Maximum
-      updateWithMax(master_grid, min_i, min_j, max_i, max_j);
-      break;
-    default:  // Nothing
-      break;
-  }
 }
 
 void ObstructionLayer::addStaticObservation(costmap_2d::Observation& obs, bool marking, bool clearing)
@@ -571,11 +639,12 @@ void ObstructionLayer::raytraceFreespace(const Observation& clearing_observation
       continue;
 
     unsigned int cell_raytrace_range = cellDistance(clearing_observation.raytrace_range_);
-    MarkCell marker(costmap_, FREE_SPACE);
+    ClearObstructionCell marker(obstruction_map_);
     // and finally... we can execute our trace to clear obstacles along that line
     raytraceLine(marker, x0, y0, x1, y1, cell_raytrace_range);
 
-    updateRaytraceBounds(ox, oy, wx, wy, clearing_observation.raytrace_range_, min_x, min_y, max_x, max_y);
+    // Don't need to update here because we will update based on all obstructions marked and cleared.
+    // updateRaytraceBounds(ox, oy, wx, wy, clearing_observation.raytrace_range_, min_x, min_y, max_x, max_y);
   }
 }
 
@@ -676,7 +745,75 @@ void ObstructionLayer::updateOrigin(double new_origin_x, double new_origin_y)
   // make sure to clean up
   delete[] local_map;
   delete[] local_obs_map;
+}
 
+void ObstructionLayer::initMaps(unsigned int size_x, unsigned int size_y)
+{
+  boost::unique_lock<mutex_t> lock(*access_);
+  delete[] costmap_;
+  delete[] obstruction_map_;
+  costmap_ = new unsigned char[size_x * size_y];
+  obstruction_map_ = new std::shared_ptr<Obstruction>[size_x * size_y];
+}
+
+void ObstructionLayer::resetMaps()
+{
+  boost::unique_lock<mutex_t> lock(*access_);
+  memset(costmap_, default_value_, size_x_ * size_y_ * sizeof(unsigned char));
+  for (size_t k = 0; k < size_x_ * size_y_; ++k)
+  {
+    obstruction_map_[k].reset();
+  }
+
+  generateKernels();
+}
+
+void ObstructionLayer::resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn)
+{
+  boost::unique_lock<mutex_t> lock(*(access_));
+  unsigned int len = xn - x0;
+  for (unsigned int y = y0 * size_x_ + x0; y < yn * size_x_ + x0; y += size_x_)
+    memset(costmap_ + y, default_value_, len * sizeof(unsigned char));
+    obstruction_map_[y].reset();
+}
+
+void ObstructionLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor)
+{
+  std::cout << "Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor << std::endl;
+  if (cost_scaling_factor_ != cost_scaling_factor || inflation_radius_ != inflation_radius)
+  {
+    // Lock here so that reconfiguring the inflation radius doesn't cause segfaults
+    // when accessing the cached arrays
+    boost::unique_lock < boost::recursive_mutex > lock(*inflation_access_);
+
+    inflation_radius_ = inflation_radius;
+    cost_scaling_factor_ = cost_scaling_factor;
+    need_reinflation_ = true;
+    generateKernels();
+  }
+}
+
+void ObstructionLayer::generateKernels()
+{
+  // Do some checks
+  if (num_obstruction_levels == 0)
+  {
+    ROS_WARN("Cannot set up kernels without obstruction levels");
+    return;
+  }
+
+  // Create all the new kernels that are needed.
+  kernels_.clear();
+  kernels_.reserve(num_obstruction_levels);
+
+  // Start.
+  for (unsigned int k = 0; k < num_obstruction_levels; ++k)
+  {
+    std::shared_ptr<Kernel> kernel = std::make_shared();
+    kernel->generateRadialInflationKernel((LETHAL_OBSTACLE / (k + 1)), (INSCRIBED_INFLATED_OBSTACLE / (k + 1)),
+      inflation_radius_, cost_scaling_factor_);
+    kernels_.push_back(kernel);
+  }
 }
 
 }  // namespace costmap_2d
