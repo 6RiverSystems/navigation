@@ -74,13 +74,14 @@ struct Obstruction
 
   Obstruction(float x, float y, std::string frame) : x_(x), y_(y), frame_(frame),
     first_sighting_time_(ros::Time::now()), last_sighting_time_(ros::Time::now()),
-    last_level_time_(ros::Time::now()) {}
+    last_level_time_(ros::Time::now()), seen_this_cycle_(true) {}
 
   void touch()
   {
     last_sighting_time_ = ros::Time::now();
     last_level_time_ = last_sighting_time_;
     cleared_ = false;
+    seen_this_cycle_ = true;
     level_ = 0;
   }
 
@@ -105,6 +106,7 @@ struct Obstruction
   float y_ = 0.0; // y location of obstruction
   unsigned int level_ = 0; // obstruction level
   bool cleared_ = false; // flag to indicate if the obstruction is cleared and should be removed
+  bool seen_this_cycle_ = false;
   float radius_ = -1;
   std::string frame_ = "";
 };
@@ -120,10 +122,37 @@ public:
     if (values_) { delete[] values_;}
   };
 
+  Kernel& operator=(const Kernel& kern)
+  {
+    // check for self assignement
+    if (this == &kern)
+    {
+      return *this;
+    }
+
+    size_x_ = kern.size_x_;
+    size_y_ = kern.size_y_;
+    resolution_ = kern.resolution_;
+    radius_ = kern.radius_;
+
+    if (values_) { delete[] values_;}
+    values_ = new unsigned char[size_x_ * size_y_];
+
+    memcpy(values_, kern.values_, size_x_ * size_y_ * sizeof(unsigned char));
+
+    return *this;
+  };
+
+  Kernel(const Kernel& kern) :
+    values_(nullptr)
+  {
+    *this = kern;
+  };
+
   float getRadius()
   {
     return radius_;
-  }
+  };
 
   /// TODO: move to cpp file
   void generateRadialInflationKernel(unsigned char max_value, unsigned char inscribed_value,
@@ -136,31 +165,37 @@ public:
     unsigned int size =  cell_inflation_radius * 2 + 1;
     size_x_ = size;
     size_y_ = size;
-    unsigned int center_x = size_x_ / 2 + 1;
-    unsigned int center_y = size_y_ / 2 + 1;
+    int center_x = size_x_ / 2 + 1;
+    int center_y = size_y_ / 2 + 1;
+
+    ROS_INFO("Inflating: max_val %d, insc val %d, cell rad %d, size %d, center_x: %d, center_y: %d",
+      max_value, inscribed_value, cell_inflation_radius, size, center_x, center_y);
 
     if (values_) { delete[] values_;}
     values_ = new unsigned char[size_x_ * size_y_];
 
-    for (unsigned int yy = 0; yy < size_y_; ++yy)
+    for (int yy = 0; yy < size_y_; ++yy)
     {
-      for (unsigned int xx = 0; xx < size_x_; ++xx)
+      for (int xx = 0; xx < size_x_; ++xx)
       {
-        double distance = std::hypot(center_x - xx, center_y - yy);
+        double cell_distance = std::hypot(center_x - xx, center_y - yy);
+        double real_distance = cell_distance * resolution;
+        ROS_DEBUG("yy %d, xx %d, cell_dist %f", yy, xx, cell_distance);
 
         unsigned char cost = 0;
-        if (distance == 0)
+        if (cell_distance == 0)
         {
           cost = max_value;
         }
-        else if (distance * resolution <= inscribed_radius)
+        else if (real_distance <= inscribed_radius)
         {
           cost = inscribed_value;
         }
-        else if (inscribed_value > 0 && distance * resolution <= inflation_radius)
+        else if (inscribed_value > 0 && real_distance <= inflation_radius)
         {
-          double factor = exp(-1.0 * cost_scaling_factor * (distance - inscribed_radius));
+          double factor = exp(-1.0 * cost_scaling_factor * (real_distance - inscribed_radius));
           cost = (unsigned char)((inscribed_value - 1) * factor);
+          ROS_DEBUG("Inflating dist: %f, factor %f, cost %d", real_distance, factor, cost);
         }
 
         values_[size_x_ * yy + xx] = cost;
@@ -177,17 +212,18 @@ public:
     unsigned int grid_x_size = master_grid.getSizeInCellsX();
     unsigned int grid_y_size = master_grid.getSizeInCellsY();
 
-    unsigned int center_x = size_x_ / 2 + 1;
-    unsigned int center_y = size_y_ / 2 + 1;
+    int center_x = size_x_ / 2 + 1;
+    int center_y = size_y_ / 2 + 1;
     // Now try to apply it.
-    for (unsigned int yy = 0; yy < size_y_; ++yy)
+    for (int yy = 0; yy < size_y_; ++yy)
     {
-      unsigned int grid_y = yy - center_y + my;
+      int grid_y = yy - center_y + my;
+      // ROS_DEBUG("yy %d, center_y %d, my %d, grid_y %d", yy, center_y, my, grid_y);
       if (grid_y < grid_y_size && grid_y >= 0)
       {
-        for (unsigned int xx = 0; xx < size_x_; ++xx)
+        for (int xx = 0; xx < size_x_; ++xx)
         {
-          unsigned int grid_x = xx - center_x + mx;
+          int grid_x = xx - center_x + mx;
           if (grid_x < grid_x_size && grid_x >= 0)
           {
             // Point is valid, max it in.
@@ -221,10 +257,11 @@ public:
   inline void operator()(unsigned int offset)
   {
     std::shared_ptr<Obstruction> obs = costmap_[offset];
-    if (obs)
+    if (obs && !obs->seen_this_cycle_)
     {
       obs->cleared_ = true;
       costmap_[offset].reset();
+      ROS_INFO("Clearing cell at %d", offset);
     }
   }
 private:
@@ -288,11 +325,12 @@ public:
   void clearStaticObservations(bool marking, bool clearing);
 
 
-  virtual void resizeMap(unsigned int size_x, unsigned int size_y, double resolution, double origin_x,
-                 double origin_y);
+  // virtual void resizeMap(unsigned int size_x, unsigned int size_y, double resolution, double origin_x,
+  //                double origin_y);
 
   virtual void resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn);
 
+  virtual void updateOrigin(double new_origin_x, double new_origin_y);
 
 protected:
   virtual void setupDynamicReconfigure(ros::NodeHandle& nh);
@@ -354,6 +392,9 @@ protected:
    */
   virtual void initMaps(unsigned int size_x, unsigned int size_y);
 
+  virtual void onFootprintChanged();
+
+
   std::string global_frame_;  ///< @brief The global frame for the costmap
   double max_obstacle_height_;  ///< @brief Max Obstacle Height
 
@@ -378,10 +419,10 @@ protected:
   // Things from the inflation layer
   std::vector<std::shared_ptr<Kernel>> kernels_; // vector of kernels for different obstruction levels
 
-  ros::Duration obstruction_half_life_; // The time to wait before decrementing the obstruction level by half.
-  unsigned int num_obstruction_levels_;  // The number of levels the obstruction should go through before disappearing
-  float inflation_radius_;
-  float cost_scaling_factor_;
+  ros::Duration obstruction_half_life_ = ros::Duration(1); // The time to wait before decrementing the obstruction level by half.
+  unsigned int num_obstruction_levels_ = 10;  // The number of levels the obstruction should go through before disappearing
+  float inflation_radius_ = 1;
+  float cost_scaling_factor_ = 1;
 
   ros::Publisher obstruction_publisher_;  // Publisher of obstruction data
 

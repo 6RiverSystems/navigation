@@ -55,6 +55,7 @@ namespace costmap_2d
 
 void ObstructionLayer::onInitialize()
 {
+  ROS_WARN("running obs on initialized");
   ros::NodeHandle nh("~/" + name_), g_nh;
   rolling_window_ = layered_costmap_->isRolling();
 
@@ -259,6 +260,7 @@ void ObstructionLayer::laserScanCallback(const sensor_msgs::LaserScanConstPtr& m
                                       const boost::shared_ptr<ObservationBuffer>& buffer)
 {
   // project the laser into a point cloud
+  ROS_WARN("Received laser scan callback.");
   sensor_msgs::PointCloud2 cloud;
   cloud.header = message->header;
 
@@ -365,18 +367,20 @@ void ObstructionLayer::updateBounds(double robot_x, double robot_y, double robot
   current_ = current;
 
   // raytrace freespace
-  for (unsigned int i = 0; i < clearing_observations.size(); ++i)
-  {
-    raytraceFreespace(clearing_observations[i], min_x, min_y, max_x, max_y);
-  }
-
+  ROS_INFO("In update bounds.  Have %d clearing and %d marking obs.", clearing_observations.size(), observations.size());
   for (unsigned int i = 0; i < observations.size(); ++i)
   {
     checkObservations(observations[i], min_x, min_y, max_x, max_y);
   }
 
+  for (unsigned int i = 0; i < clearing_observations.size(); ++i)
+  {
+    raytraceFreespace(clearing_observations[i], min_x, min_y, max_x, max_y);
+  }
+
   // Update obstructions
   updateObstructions(min_x, min_y, max_x, max_y);
+  ROS_WARN_NAMED("obstruction", "Updating bounds to %f, %f, %f, %f", *min_x, *min_y, *max_x, *max_y);
 
   /// @todo Add this if we want it?
   // updateFootprint(robot_x, robot_y, robot_yaw, min_x, min_y, max_x, max_y);
@@ -387,23 +391,37 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
 {
   ObstructionListMsg msg;
 
+  ros::Time now = ros::Time::now();
+
   // Iterate over the obstructions
   auto iter = obstruction_list_.begin();
   while (iter != obstruction_list_.end())
   {
     auto obs = *iter;
-    // Update level (and radius) if need be
-    if (obs->last_sighting_time_ - obs->last_level_time_ > obstruction_half_life_)
+    // Clear the recently seen flag
+    if (obs->seen_this_cycle_)
     {
+      obs->seen_this_cycle_ = false;
+      obs->radius_ = kernels_[obs->level_]->getRadius();
+    }
+
+    // Update level (and radius) if need be
+    ROS_INFO("obs sight %f, level %f", obs->last_sighting_time_.toSec(), obs->last_level_time_.toSec());
+    if (now - obs->last_level_time_ > obstruction_half_life_)
+    {
+      ROS_WARN("Obstruction level updated");
       obs->level_++;
-      obs->last_level_time_= obs->last_sighting_time_;
+      obs->last_level_time_= now;
       if (obs->level_ >= num_obstruction_levels_)
       {
         ROS_WARN("Clearing out an old observation.");
         obs->cleared_ = true;
       }
+      else
+      {
+        obs->radius_ = std::max(kernels_[obs->level_]->getRadius(), obs->radius_);
+      }
     }
-    obs->radius_ = kernels_[obs->level_]->getRadius();
 
     // Touch with size extent
     touchWithRadius(obs->x_, obs->y_, obs->radius_, min_x, min_y, max_x, max_y);
@@ -414,6 +432,7 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
     // Remove cleared ones
     if (obs->cleared_)
     {
+      ROS_INFO("Removing obstruction with radius %f at %f, %f", obs->radius_, obs->x_, obs->y_);
       iter = obstruction_list_.erase(iter);
     }
     else
@@ -426,7 +445,7 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
   obstruction_publisher_.publish(msg);
 }
 
-void ObstructionLayer::checkObservations(Observation obs, double* min_x, double* min_y, double* max_x, double* max_y)
+void ObstructionLayer::checkObservations(const Observation& obs, double* min_x, double* min_y, double* max_x, double* max_y)
 {
   const pcl::PointCloud<pcl::PointXYZ>& cloud = *(obs.cloud_);
 
@@ -468,15 +487,17 @@ void ObstructionLayer::checkObservations(Observation obs, double* min_x, double*
     if (obstruction_map_[index])
     {
       // Touch it.
+      ROS_INFO("Touching obstacle at %f, %f, %d", px, py, index);
       obstruction_map_[index]->touch();
     }
     else
     {
       // Check to see if it is in the master grid already.
-      if (layered_costmap_->getCostmap()->getCHarMap()[index] != LETHAL_OBSTACLE)
+      if (layered_costmap_->getCostmap()->getCharMap()[index] != LETHAL_OBSTACLE)
       {
+        ROS_INFO("Creating new obstacle at %f, %f, %d", px, py, index);
         // Create a new one.  Store in list and map.
-        std::shared_ptr<Obstruction> obs = std::make_shared(px, py, cloud.header.frame_id);
+        auto obs = std::make_shared<Obstruction>(px, py, cloud.header.frame_id);
         obstruction_list_.push_back(obs);
         obstruction_map_[index] = obs;
       }
@@ -512,6 +533,7 @@ void ObstructionLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i
   // }
 
   // Iterate over all of the obstructions
+  ROS_WARN_NAMED("obstruction", "Updating costs");
   for (auto obs_ptr : obstruction_list_)
   {
     kernels_[obs_ptr->level_]->applyKernelAtLocation(obs_ptr->x_, obs_ptr->y_, master_grid);
@@ -711,10 +733,10 @@ void ObstructionLayer::updateOrigin(double new_origin_x, double new_origin_y)
 
   // we need to compute the overlap of the new and existing windows
   int lower_left_x, lower_left_y, upper_right_x, upper_right_y;
-  lower_left_x = min(max(cell_ox, 0), size_x);
-  lower_left_y = min(max(cell_oy, 0), size_y);
-  upper_right_x = min(max(cell_ox + size_x, 0), size_x);
-  upper_right_y = min(max(cell_oy + size_y, 0), size_y);
+  lower_left_x = std::min(std::max(cell_ox, 0), size_x);
+  lower_left_y = std::min(std::max(cell_oy, 0), size_y);
+  upper_right_x = std::min(std::max(cell_ox + size_x, 0), size_x);
+  upper_right_y = std::min(std::max(cell_oy + size_y, 0), size_y);
 
   unsigned int cell_size_x = upper_right_x - lower_left_x;
   unsigned int cell_size_y = upper_right_y - lower_left_y;
@@ -725,7 +747,7 @@ void ObstructionLayer::updateOrigin(double new_origin_x, double new_origin_y)
 
   // copy the local window in the costmap to the local map
   copyMapRegion(costmap_, lower_left_x, lower_left_y, size_x_, local_map, 0, 0, cell_size_x, cell_size_x, cell_size_y);
-  copyMapRegion(obstruction_map_, lower_left_x, lower_left_y, size_x_, local_map, 0, 0, cell_size_x, cell_size_x, cell_size_y);
+  copyMapRegion(obstruction_map_, lower_left_x, lower_left_y, size_x_, local_obs_map, 0, 0, cell_size_x, cell_size_x, cell_size_y);
 
   // now we'll set the costmap to be completely unknown if we track unknown space
   resetMaps();
@@ -749,7 +771,7 @@ void ObstructionLayer::updateOrigin(double new_origin_x, double new_origin_y)
 
 void ObstructionLayer::initMaps(unsigned int size_x, unsigned int size_y)
 {
-  boost::unique_lock<mutex_t> lock(*access_);
+  boost::unique_lock<mutex_t> lock(*getMutex());
   delete[] costmap_;
   delete[] obstruction_map_;
   costmap_ = new unsigned char[size_x * size_y];
@@ -758,7 +780,7 @@ void ObstructionLayer::initMaps(unsigned int size_x, unsigned int size_y)
 
 void ObstructionLayer::resetMaps()
 {
-  boost::unique_lock<mutex_t> lock(*access_);
+  boost::unique_lock<mutex_t> lock(*getMutex());
   memset(costmap_, default_value_, size_x_ * size_y_ * sizeof(unsigned char));
   for (size_t k = 0; k < size_x_ * size_y_; ++k)
   {
@@ -770,33 +792,53 @@ void ObstructionLayer::resetMaps()
 
 void ObstructionLayer::resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn)
 {
-  boost::unique_lock<mutex_t> lock(*(access_));
+  boost::unique_lock<mutex_t> lock(*getMutex());
   unsigned int len = xn - x0;
   for (unsigned int y = y0 * size_x_ + x0; y < yn * size_x_ + x0; y += size_x_)
+  {
     memset(costmap_ + y, default_value_, len * sizeof(unsigned char));
     obstruction_map_[y].reset();
+  }
 }
+
+void ObstructionLayer::deleteMaps()
+{
+  // clean up data
+  boost::unique_lock<mutex_t> lock(*getMutex());
+  delete[] costmap_;
+  delete[] obstruction_map_;
+  costmap_ = NULL;
+  obstruction_map_ = NULL;
+}
+
 
 void ObstructionLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor)
 {
-  std::cout << "Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor << std::endl;
+  ROS_WARN_STREAM("Obstruction Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor);
   if (cost_scaling_factor_ != cost_scaling_factor || inflation_radius_ != inflation_radius)
   {
     // Lock here so that reconfiguring the inflation radius doesn't cause segfaults
     // when accessing the cached arrays
-    boost::unique_lock < boost::recursive_mutex > lock(*inflation_access_);
+    boost::unique_lock < boost::recursive_mutex > lock(*getMutex());
 
     inflation_radius_ = inflation_radius;
     cost_scaling_factor_ = cost_scaling_factor;
-    need_reinflation_ = true;
     generateKernels();
   }
+}
+
+void ObstructionLayer::onFootprintChanged()
+{
+  generateKernels();
+  ROS_WARN("Got a footprint change in obstruction layer.");
 }
 
 void ObstructionLayer::generateKernels()
 {
   // Do some checks
-  if (num_obstruction_levels == 0)
+  ROS_WARN("Obstu:  generate kerns with: number of levels %d, inflation_radius %f, cost_scaling_factor %f, resolution %f",
+    num_obstruction_levels_, inflation_radius_, cost_scaling_factor_, resolution_);
+  if (num_obstruction_levels_ == 0)
   {
     ROS_WARN("Cannot set up kernels without obstruction levels");
     return;
@@ -804,14 +846,15 @@ void ObstructionLayer::generateKernels()
 
   // Create all the new kernels that are needed.
   kernels_.clear();
-  kernels_.reserve(num_obstruction_levels);
+  kernels_.reserve(num_obstruction_levels_);
 
   // Start.
-  for (unsigned int k = 0; k < num_obstruction_levels; ++k)
+  for (unsigned int k = 0; k < num_obstruction_levels_; ++k)
   {
-    std::shared_ptr<Kernel> kernel = std::make_shared();
+    // auto kernel = std::make_shared<Kernel>();
+    std::shared_ptr<Kernel> kernel(new Kernel());
     kernel->generateRadialInflationKernel((LETHAL_OBSTACLE / (k + 1)), (INSCRIBED_INFLATED_OBSTACLE / (k + 1)),
-      inflation_radius_, cost_scaling_factor_);
+        layered_costmap_->getInscribedRadius(), inflation_radius_, cost_scaling_factor_, resolution_);
     kernels_.push_back(kernel);
   }
 }
