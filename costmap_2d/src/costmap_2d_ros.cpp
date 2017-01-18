@@ -508,7 +508,6 @@ void Costmap2DROS::resume()
     r.sleep();
 }
 
-
 void Costmap2DROS::resetLayers()
 {
   Costmap2D* top = layered_costmap_->getCostmap();

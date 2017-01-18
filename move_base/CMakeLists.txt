@@ -13,7 +13,7 @@ find_package(catkin REQUIRED
         move_base_msgs
         nav_core
         tf
-        srslib_framework
+        srslib_timing
 )
 find_package(Eigen REQUIRED)
 add_definitions(${EIGEN_DEFINITIONS})

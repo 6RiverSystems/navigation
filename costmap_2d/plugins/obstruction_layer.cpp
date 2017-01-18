@@ -391,8 +391,9 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
 {
   ObstructionListMsg msg;
 
-  ros::Time now = ros::Time::now();
+  boost::unique_lock<mutex_t> lock(*getMutex());
 
+  ros::Time now = ros::Time::now();
   // Iterate over the obstructions
   auto iter = obstruction_list_.begin();
   while (iter != obstruction_list_.end())
@@ -420,6 +421,7 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
       else
       {
         obs->radius_ = std::max(kernels_[obs->level_]->getRadius(), obs->radius_);
+        obs->updated_ = true;
       }
     }
 
@@ -502,10 +504,6 @@ void ObstructionLayer::checkObservations(const Observation& obs, double* min_x, 
         obstruction_map_[index] = obs;
       }
     }
-
-    // Touching can happen later.
-    // costmap_[index] = LETHAL_OBSTACLE;
-    // touch(px, py, min_x, min_y, max_x, max_y);
   }
 }
 
@@ -534,6 +532,8 @@ void ObstructionLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i
 
   // Iterate over all of the obstructions
   ROS_WARN_NAMED("obstruction", "Updating costs");
+  boost::unique_lock<mutex_t> lock(*getMutex());
+  std::cerr << "Updating " << obstruction_list_.size() << " obstructions." << std::endl;
   for (auto obs_ptr : obstruction_list_)
   {
     kernels_[obs_ptr->level_]->applyKernelAtLocation(obs_ptr->x_, obs_ptr->y_, master_grid);
@@ -712,8 +712,6 @@ void ObstructionLayer::reset()
     activate();
 }
 
-
-// Inflation type things
 void ObstructionLayer::updateOrigin(double new_origin_x, double new_origin_y)
 {
   // project the new origin into the grid
@@ -784,9 +782,13 @@ void ObstructionLayer::resetMaps()
   memset(costmap_, default_value_, size_x_ * size_y_ * sizeof(unsigned char));
   for (size_t k = 0; k < size_x_ * size_y_; ++k)
   {
-    obstruction_map_[k].reset();
+    auto obs = obstruction_map_[k];
+    if (obs)
+    {
+      obs->cleared_ = true;
+      obs.reset();
+    }
   }
-
   generateKernels();
 }
 
@@ -797,7 +799,12 @@ void ObstructionLayer::resetMap(unsigned int x0, unsigned int y0, unsigned int x
   for (unsigned int y = y0 * size_x_ + x0; y < yn * size_x_ + x0; y += size_x_)
   {
     memset(costmap_ + y, default_value_, len * sizeof(unsigned char));
-    obstruction_map_[y].reset();
+    auto obs = obstruction_map_[y];
+    if (obs)
+    {
+      obs->cleared_ = true;
+      obs.reset();
+    }
   }
 }
 
@@ -829,6 +836,7 @@ void ObstructionLayer::setInflationParameters(double inflation_radius, double co
 
 void ObstructionLayer::onFootprintChanged()
 {
+  boost::unique_lock < boost::recursive_mutex > lock(*getMutex());
   generateKernels();
   ROS_WARN("Got a footprint change in obstruction layer.");
 }
@@ -858,5 +866,17 @@ void ObstructionLayer::generateKernels()
     kernels_.push_back(kernel);
   }
 }
+
+void ObstructionLayer::clearGridCell(unsigned int x, unsigned int y)
+{
+  int index = getIndex(x,y);
+  auto obs = obstruction_map_[index];
+  if (obstruction_map_[index])
+  {
+    obs->cleared_ = true;
+    obs.reset();
+  }
+}
+
 
 }  // namespace costmap_2d

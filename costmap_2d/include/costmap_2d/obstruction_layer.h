@@ -40,6 +40,10 @@
 #ifndef COSTMAP_2D_OBSTRUCTION_LAYER_H_
 #define COSTMAP_2D_OBSTRUCTION_LAYER_H_
 
+#include <cmath>
+#include <memory>
+#include <cstddef>
+
 #include <ros/ros.h>
 #include <costmap_2d/costmap_layer.h>
 #include <costmap_2d/layered_costmap.h>
@@ -63,8 +67,6 @@
 
 namespace costmap_2d
 {
-
-
 /////////////////////////////////////////////////////////////
 // HELPER CLASSES
 /////////////////////////////////////////////////////////////
@@ -74,7 +76,7 @@ struct Obstruction
 
   Obstruction(float x, float y, std::string frame) : x_(x), y_(y), frame_(frame),
     first_sighting_time_(ros::Time::now()), last_sighting_time_(ros::Time::now()),
-    last_level_time_(ros::Time::now()), seen_this_cycle_(true) {}
+    last_level_time_(ros::Time::now()), seen_this_cycle_(true), updated_(true) {}
 
   void touch()
   {
@@ -82,7 +84,11 @@ struct Obstruction
     last_level_time_ = last_sighting_time_;
     cleared_ = false;
     seen_this_cycle_ = true;
-    level_ = 0;
+    if (level_ != 0)
+    {
+      level_ = 0;
+      updated_ = true;
+    }
   }
 
   ObstructionMsg asMsg()
@@ -95,6 +101,11 @@ struct Obstruction
     msg.cleared = cleared_;
     msg.effective_radius = radius_;
     msg.frame_id = frame_;
+    if (cleared_)
+    {
+      updated_ = true;
+    }
+    msg.updated = updated_;
 
     return msg;
   }
@@ -107,10 +118,10 @@ struct Obstruction
   unsigned int level_ = 0; // obstruction level
   bool cleared_ = false; // flag to indicate if the obstruction is cleared and should be removed
   bool seen_this_cycle_ = false;
+  bool updated_ = false;
   float radius_ = -1;
   std::string frame_ = "";
 };
-
 
 class Kernel
 {
@@ -214,26 +225,59 @@ public:
 
     int center_x = size_x_ / 2 + 1;
     int center_y = size_y_ / 2 + 1;
+
+    unsigned char* grid = master_grid.getCharMap();
+
+
+    ////////
+    // Calculate yy start and yy end
+    int yy_start = 0;
+    if (my - center_y < 0)
+    {
+      yy_start = center_y - my;
+    }
+
+    int yy_end = size_y_;
+    if (my + center_y > grid_y_size)
+    {
+      yy_end = center_y + my - grid_y_size;
+    }
+    /////
+
+    ////////
+    // Calculate xx start and xx end
+    int xx_start = 0;
+    if (mx - center_x < 0)
+    {
+      xx_start = center_x - mx;
+    }
+
+    int xx_end = size_x_;
+    if (mx + center_x > grid_x_size)
+    {
+      xx_end = center_x + mx - grid_x_size;
+    }
+    /////
+
+
     // Now try to apply it.
-    for (int yy = 0; yy < size_y_; ++yy)
+    for (int yy = yy_start; yy < yy_end; ++yy)
     {
       int grid_y = yy - center_y + my;
-      // ROS_DEBUG("yy %d, center_y %d, my %d, grid_y %d", yy, center_y, my, grid_y);
-      if (grid_y < grid_y_size && grid_y >= 0)
+
+      unsigned int kern_x_start = size_x_ * yy;
+      unsigned int grid_x_start = grid_x_size * grid_y;
+
+      for (int xx = xx_start; xx < xx_end; ++xx)
       {
-        for (int xx = 0; xx < size_x_; ++xx)
+        int grid_x = xx - center_x + mx;
+        // Point is valid, max it in.
+        unsigned int grid_idx = grid_x_start + grid_x;
+        unsigned char grid_cost = grid[grid_idx];
+        unsigned char kernel_cost = values_[kern_x_start + xx];
+        if (grid_cost < kernel_cost || grid_cost == NO_INFORMATION)
         {
-          int grid_x = xx - center_x + mx;
-          if (grid_x < grid_x_size && grid_x >= 0)
-          {
-            // Point is valid, max it in.
-            unsigned char grid_cost = master_grid.getCost(grid_x, grid_y);
-            unsigned char kernel_cost = values_[size_x_ * yy + xx];
-            if (grid_cost < kernel_cost || grid_cost == NO_INFORMATION)
-            {
-              master_grid.setCost(grid_x, grid_y, kernel_cost);
-            }
-          }
+          grid[grid_idx] = kernel_cost;
         }
       }
     }
@@ -256,7 +300,7 @@ public:
   }
   inline void operator()(unsigned int offset)
   {
-    std::shared_ptr<Obstruction> obs = costmap_[offset];
+    auto obs = costmap_[offset];
     if (obs && !obs->seen_this_cycle_)
     {
       obs->cleared_ = true;
@@ -267,7 +311,6 @@ public:
 private:
   std::shared_ptr<Obstruction>* costmap_;
 };
-
 
 class ObstructionLayer : public CostmapLayer
 {
@@ -394,6 +437,7 @@ protected:
 
   virtual void onFootprintChanged();
 
+  virtual void clearGridCell(unsigned int x, unsigned int y);
 
   std::string global_frame_;  ///< @brief The global frame for the costmap
   double max_obstacle_height_;  ///< @brief Max Obstacle Height

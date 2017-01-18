@@ -6,6 +6,7 @@
 #include <costmap_2d/static_layer.h>
 #include <costmap_2d/static_layer_with_inflation.h>
 #include <costmap_2d/obstacle_layer.h>
+#include <costmap_2d/obstruction_layer.h>
 #include <costmap_2d/inflation_layer.h>
 
 const double MAX_Z(1.0);
@@ -80,7 +81,32 @@ costmap_2d::ObstacleLayer* addObstacleLayer(costmap_2d::LayeredCostmap& layers, 
   return olayer;
 }
 
+costmap_2d::ObstructionLayer* addObstructionLayer(costmap_2d::LayeredCostmap& layers, tf::TransformListener& tf)
+{
+  costmap_2d::ObstructionLayer* olayer = new costmap_2d::ObstructionLayer();
+  olayer->initialize(&layers, "obstructions", &tf);
+  layers.addPlugin(boost::shared_ptr<costmap_2d::Layer>(olayer));
+  return olayer;
+}
+
 void addObservation(costmap_2d::ObstacleLayer* olayer, double x, double y, double z = 0.0,
+                    double ox = 0.0, double oy = 0.0, double oz = MAX_Z){
+  pcl::PointCloud<pcl::PointXYZ> cloud;
+  cloud.points.resize(1);
+  cloud.points[0].x = x;
+  cloud.points[0].y = y;
+  cloud.points[0].z = z;
+
+  geometry_msgs::Point p;
+  p.x = ox;
+  p.y = oy;
+  p.z = oz;
+
+  costmap_2d::Observation obs(p, cloud, 100.0, 100.0);  // obstacle range = raytrace range = 100.0
+  olayer->addStaticObservation(obs, true, true);
+}
+
+void addObservation(costmap_2d::ObstructionLayer* olayer, double x, double y, double z = 0.0,
                     double ox = 0.0, double oy = 0.0, double oz = MAX_Z){
   pcl::PointCloud<pcl::PointXYZ> cloud;
   cloud.points.resize(1);

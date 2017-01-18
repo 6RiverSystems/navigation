@@ -43,7 +43,7 @@
 
 #include <geometry_msgs/Twist.h>
 
-#include <srslib_framework/platform/timing/ScopedTimingSampleRecorder.hpp>
+#include <srslib_timing/ScopedTimingSampleRecorder.hpp>
 #include <costmap_2d/ThreadAffinity.hpp>
 
 namespace move_base {

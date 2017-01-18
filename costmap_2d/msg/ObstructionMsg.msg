@@ -11,5 +11,8 @@ time first_sighting_time
 # Indicate if the obstruction has been cleared
 bool cleared
 
+# Indicate if the obstruction has been updated
+bool updated
+
 # The effective radius (how much the costmap is affected by this obstruction)
 float32 effective_radius
