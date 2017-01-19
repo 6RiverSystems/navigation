@@ -64,6 +64,8 @@
 #include <costmap_2d/ObstructionMsg.h>
 #include <costmap_2d/ObstructionListMsg.h>
 
+#include <srslib_timing/MasterTimingDataRecorder.hpp>
+
 
 namespace costmap_2d
 {
@@ -315,7 +317,7 @@ private:
 class ObstructionLayer : public CostmapLayer
 {
 public:
-  ObstructionLayer()
+  ObstructionLayer() : timingDataRecorder_("obstruction")
   {
     costmap_ = NULL;  // this is the unsigned char* member of parent class Costmap2D.
     obstruction_map_ = NULL;
@@ -477,6 +479,9 @@ protected:
 
 private:
   void reconfigureCB(costmap_2d::ObstructionPluginConfig &config, uint32_t level);
+
+  // Add timing data recorder
+  srs::MasterTimingDataRecorder timingDataRecorder_;
 };
 
 }  // namespace costmap_2d

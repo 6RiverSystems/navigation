@@ -22,6 +22,7 @@ find_package(catkin REQUIRED
             std_msgs
             tf
             voxel_grid
+            srslib_timing
         )
 
 find_package(PCL REQUIRED)
@@ -84,6 +85,7 @@ catkin_package(
         std_msgs
         tf
         voxel_grid
+        srslib_timing
     DEPENDS
         PCL
         Eigen

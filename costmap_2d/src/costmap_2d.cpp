@@ -167,7 +167,7 @@ Costmap2D::Costmap2D(const Costmap2D& map) :
 
 // just initialize everything to NULL by default
 Costmap2D::Costmap2D() :
-    size_x_(0), size_y_(0), resolution_(0.0), origin_x_(0.0), origin_y_(0.0), costmap_(NULL)
+    size_x_(0), size_y_(0), resolution_(0.1), origin_x_(0.0), origin_y_(0.0), costmap_(NULL)
 {
   access_ = new mutex_t();
 }
@@ -181,7 +181,6 @@ Costmap2D::~Costmap2D()
 unsigned int Costmap2D::cellDistance(double world_dist)
 {
   double cells_dist = max(0.0, ceil(world_dist / resolution_));
-  std::cout << "world: " << world_dist << ", res: " << resolution_ << std::endl;
   return (unsigned int)cells_dist;
 }
 

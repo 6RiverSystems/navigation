@@ -47,6 +47,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <map_msgs/OccupancyGridUpdate.h>
 #include <message_filters/subscriber.h>
+#include <srslib_timing/MasterTimingDataRecorder.hpp>
 
 namespace costmap_2d
 {
@@ -100,6 +101,9 @@ private:
 
   InflationLayer* inflation_layer_;
   bool needs_reinflation_;
+
+  // Add timing data recorder
+  srs::MasterTimingDataRecorder timingDataRecorder_;
 };
 
 }  // namespace costmap_2d

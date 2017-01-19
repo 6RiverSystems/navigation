@@ -40,6 +40,7 @@
 #include <costmap_2d/obstruction_layer.h>
 #include <costmap_2d/costmap_math.h>
 #include <pluginlib/class_list_macros.h>
+#include <srslib_timing/ScopedTimingSampleRecorder.hpp>
 
 PLUGINLIB_EXPORT_CLASS(costmap_2d::ObstructionLayer, costmap_2d::Layer)
 
@@ -260,7 +261,6 @@ void ObstructionLayer::laserScanCallback(const sensor_msgs::LaserScanConstPtr& m
                                       const boost::shared_ptr<ObservationBuffer>& buffer)
 {
   // project the laser into a point cloud
-  ROS_WARN("Received laser scan callback.");
   sensor_msgs::PointCloud2 cloud;
   cloud.header = message->header;
 
@@ -348,6 +348,8 @@ void ObstructionLayer::pointCloud2Callback(const sensor_msgs::PointCloud2ConstPt
 void ObstructionLayer::updateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x,
                                           double* min_y, double* max_x, double* max_y)
 {
+  srs::ScopedTimingSampleRecorder stsr_update_bounds(timingDataRecorder_.getRecorder("-updateBounds", 1));
+
   if (rolling_window_)
     updateOrigin(robot_x - getSizeInMetersX() / 2, robot_y - getSizeInMetersY() / 2);
   if (!enabled_)
@@ -367,7 +369,7 @@ void ObstructionLayer::updateBounds(double robot_x, double robot_y, double robot
   current_ = current;
 
   // raytrace freespace
-  ROS_INFO("In update bounds.  Have %d clearing and %d marking obs.", clearing_observations.size(), observations.size());
+  ROS_DEBUG("In update bounds.  Have %d clearing and %d marking obs.", clearing_observations.size(), observations.size());
   for (unsigned int i = 0; i < observations.size(); ++i)
   {
     checkObservations(observations[i], min_x, min_y, max_x, max_y);
@@ -380,7 +382,7 @@ void ObstructionLayer::updateBounds(double robot_x, double robot_y, double robot
 
   // Update obstructions
   updateObstructions(min_x, min_y, max_x, max_y);
-  ROS_WARN_NAMED("obstruction", "Updating bounds to %f, %f, %f, %f", *min_x, *min_y, *max_x, *max_y);
+  ROS_DEBUG_NAMED("obstruction", "Updating bounds to %f, %f, %f, %f", *min_x, *min_y, *max_x, *max_y);
 
   /// @todo Add this if we want it?
   // updateFootprint(robot_x, robot_y, robot_yaw, min_x, min_y, max_x, max_y);
@@ -398,7 +400,7 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
   auto iter = obstruction_list_.begin();
   while (iter != obstruction_list_.end())
   {
-    auto obs = *iter;
+    auto obs = *iter;p
     // Clear the recently seen flag
     if (obs->seen_this_cycle_)
     {
@@ -407,15 +409,15 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
     }
 
     // Update level (and radius) if need be
-    ROS_INFO("obs sight %f, level %f", obs->last_sighting_time_.toSec(), obs->last_level_time_.toSec());
+    ROS_DEBUG("obs sight %f, level %f", obs->last_sighting_time_.toSec(), obs->last_level_time_.toSec());
     if (now - obs->last_level_time_ > obstruction_half_life_)
     {
-      ROS_WARN("Obstruction level updated");
+      ROS_DEBUG("Obstruction level updated");
       obs->level_++;
       obs->last_level_time_= now;
       if (obs->level_ >= num_obstruction_levels_)
       {
-        ROS_WARN("Clearing out an old observation.");
+        ROS_DEBUG("Clearing out an old observation.");
         obs->cleared_ = true;
       }
       else
@@ -434,7 +436,7 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
     // Remove cleared ones
     if (obs->cleared_)
     {
-      ROS_INFO("Removing obstruction with radius %f at %f, %f", obs->radius_, obs->x_, obs->y_);
+      ROS_DEBUG("Removing obstruction with radius %f at %f, %f", obs->radius_, obs->x_, obs->y_);
       iter = obstruction_list_.erase(iter);
     }
     else
@@ -523,6 +525,7 @@ void ObstructionLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i
 {
   if (!enabled_)
     return;
+  srs::ScopedTimingSampleRecorder stsr_update_costs(timingDataRecorder_.getRecorder("-updateCosts", 1));
 
   /// @todo Add this?
   // if (footprint_clearing_enabled_)
@@ -531,9 +534,8 @@ void ObstructionLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i
   // }
 
   // Iterate over all of the obstructions
-  ROS_WARN_NAMED("obstruction", "Updating costs");
+  ROS_DEBUG_NAMED("obstruction", "Updating costs");
   boost::unique_lock<mutex_t> lock(*getMutex());
-  std::cerr << "Updating " << obstruction_list_.size() << " obstructions." << std::endl;
   for (auto obs_ptr : obstruction_list_)
   {
     kernels_[obs_ptr->level_]->applyKernelAtLocation(obs_ptr->x_, obs_ptr->y_, master_grid);
@@ -789,7 +791,7 @@ void ObstructionLayer::resetMaps()
       obs.reset();
     }
   }
-  generateKernels();
+  // generateKernels();
 }
 
 void ObstructionLayer::resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn)

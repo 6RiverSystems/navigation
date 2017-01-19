@@ -41,6 +41,7 @@
 #include <costmap_2d/static_layer_with_inflation.h>
 #include <costmap_2d/costmap_math.h>
 #include <pluginlib/class_list_macros.h>
+#include <srslib_timing/ScopedTimingSampleRecorder.hpp>
 
 PLUGINLIB_EXPORT_CLASS(costmap_2d::StaticLayerWithInflation, costmap_2d::Layer)
 
@@ -52,7 +53,7 @@ namespace costmap_2d
 {
 
 StaticLayerWithInflation::StaticLayerWithInflation() : dsrv_(NULL),
-  inflation_layer_(NULL), needs_reinflation_(true) {}
+  inflation_layer_(NULL), needs_reinflation_(true), timingDataRecorder_("slwi") {}
 
 StaticLayerWithInflation::~StaticLayerWithInflation()
 {
@@ -223,9 +224,8 @@ void StaticLayerWithInflation::incomingMap(const nav_msgs::OccupancyGridConstPtr
   has_updated_data_ = true;
 
   // new map.  Inflate it now.
-  std::cerr << "Updating inflation costs." << std::endl;
   if (!inflation_layer_){
-    ROS_WARN("NO INFLATION LAYER?");
+    ROS_INFO("Creating inflation layer in static layer.");
     inflation_layer_ = new costmap_2d::InflationLayer();
     inflation_layer_->initialize(layered_costmap_, name_ + "/inflation", tf_);
   }
@@ -313,6 +313,8 @@ void StaticLayerWithInflation::updateBounds(double robot_x, double robot_y, doub
 
 void StaticLayerWithInflation::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j)
 {
+  srs::ScopedTimingSampleRecorder stsr_update_costs(timingDataRecorder_.getRecorder("-updateCosts", 1));
+
   if (!map_received_)
     return;
 
