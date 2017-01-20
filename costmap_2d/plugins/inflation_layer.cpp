@@ -225,7 +225,7 @@ void InflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, 
       }
     }
   }
-  ROS_DEBUG_STREAM("Gathered " << obs_bin.size() << " obstacles to inflate"0;
+  ROS_DEBUG_STREAM("Gathered " << obs_bin.size() << " obstacles to inflate");
 
   // Process cells by increasing distance; new cells are appended to the corresponding distance bin, so they
   // can overtake previously inserted but farther away cells

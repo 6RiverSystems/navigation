@@ -296,13 +296,13 @@ private:
 class ClearObstructionCell
 {
 public:
-  ClearObstructionCell(std::shared_ptr<Obstruction>* costmap) :
+  ClearObstructionCell(std::weak_ptr<Obstruction>* costmap) :
       costmap_(costmap)
   {
   }
   inline void operator()(unsigned int offset)
   {
-    auto obs = costmap_[offset];
+    auto obs = costmap_[offset].lock();
     if (obs && !obs->seen_this_cycle_)
     {
       obs->cleared_ = true;
@@ -311,13 +311,13 @@ public:
     }
   }
 private:
-  std::shared_ptr<Obstruction>* costmap_;
+  std::weak_ptr<Obstruction>* costmap_ = nullptr;
 };
 
 class ObstructionLayer : public CostmapLayer
 {
 public:
-  ObstructionLayer() : timingDataRecorder_("obstruction")
+  ObstructionLayer() : timingDataRecorder_("ob")
   {
     costmap_ = NULL;  // this is the unsigned char* member of parent class Costmap2D.
     obstruction_map_ = NULL;
@@ -459,7 +459,7 @@ protected:
   dynamic_reconfigure::Server<costmap_2d::ObstructionPluginConfig> *dsrv_;
 
   // Bits that are new for obstuctions
-  std::shared_ptr<Obstruction>* obstruction_map_;
+  std::weak_ptr<Obstruction>* obstruction_map_;
   std::list<std::shared_ptr<Obstruction>> obstruction_list_; /// @todo update to priority queue sorted on last time
 
   // Things from the inflation layer

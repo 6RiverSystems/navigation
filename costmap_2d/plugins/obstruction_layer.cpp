@@ -369,7 +369,7 @@ void ObstructionLayer::updateBounds(double robot_x, double robot_y, double robot
   current_ = current;
 
   // raytrace freespace
-  ROS_DEBUG("In update bounds.  Have %d clearing and %d marking obs.", clearing_observations.size(), observations.size());
+  ROS_WARN("In update bounds.  Have %d clearing and %d marking obs.", clearing_observations.size(), observations.size());
   for (unsigned int i = 0; i < observations.size(); ++i)
   {
     checkObservations(observations[i], min_x, min_y, max_x, max_y);
@@ -382,7 +382,7 @@ void ObstructionLayer::updateBounds(double robot_x, double robot_y, double robot
 
   // Update obstructions
   updateObstructions(min_x, min_y, max_x, max_y);
-  ROS_DEBUG_NAMED("obstruction", "Updating bounds to %f, %f, %f, %f", *min_x, *min_y, *max_x, *max_y);
+  ROS_INFO_NAMED("obstruction", "Updating bounds to %f, %f, %f, %f", *min_x, *min_y, *max_x, *max_y);
 
   /// @todo Add this if we want it?
   // updateFootprint(robot_x, robot_y, robot_yaw, min_x, min_y, max_x, max_y);
@@ -400,7 +400,7 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
   auto iter = obstruction_list_.begin();
   while (iter != obstruction_list_.end())
   {
-    auto obs = *iter;p
+    auto obs = *iter;
     // Clear the recently seen flag
     if (obs->seen_this_cycle_)
     {
@@ -409,15 +409,15 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
     }
 
     // Update level (and radius) if need be
-    ROS_DEBUG("obs sight %f, level %f", obs->last_sighting_time_.toSec(), obs->last_level_time_.toSec());
+    ROS_INFO("obs sight %f, level %f", obs->last_sighting_time_.toSec(), obs->last_level_time_.toSec());
     if (now - obs->last_level_time_ > obstruction_half_life_)
     {
-      ROS_DEBUG("Obstruction level updated");
+      ROS_INFO("Obstruction level updated");
       obs->level_++;
       obs->last_level_time_= now;
       if (obs->level_ >= num_obstruction_levels_)
       {
-        ROS_DEBUG("Clearing out an old observation.");
+        ROS_INFO("Clearing out an old observation.");
         obs->cleared_ = true;
       }
       else
@@ -436,7 +436,7 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
     // Remove cleared ones
     if (obs->cleared_)
     {
-      ROS_DEBUG("Removing obstruction with radius %f at %f, %f", obs->radius_, obs->x_, obs->y_);
+      ROS_INFO("Removing obstruction with radius %f at %f, %f", obs->radius_, obs->x_, obs->y_);
       iter = obstruction_list_.erase(iter);
     }
     else
@@ -488,11 +488,12 @@ void ObstructionLayer::checkObservations(const Observation& obs, double* min_x, 
     unsigned int index = getIndex(mx, my);
 
     // Check to see if there is already an obstruction there
-    if (obstruction_map_[index])
+    auto obstruction = obstruction_map_[index].lock();
+    if (obstruction)
     {
       // Touch it.
       ROS_INFO("Touching obstacle at %f, %f, %d", px, py, index);
-      obstruction_map_[index]->touch();
+      obstruction->touch();
     }
     else
     {
@@ -708,10 +709,10 @@ void ObstructionLayer::updateRaytraceBounds(double ox, double oy, double wx, dou
 
 void ObstructionLayer::reset()
 {
-    deactivate();
-    resetMaps();
-    current_ = true;
-    activate();
+  deactivate();
+  resetMaps();
+  current_ = true;
+  activate();
 }
 
 void ObstructionLayer::updateOrigin(double new_origin_x, double new_origin_y)
@@ -743,11 +744,11 @@ void ObstructionLayer::updateOrigin(double new_origin_x, double new_origin_y)
 
   // we need a map to store the obstacles in the window temporarily
   unsigned char* local_map = new unsigned char[cell_size_x * cell_size_y];
-  std::shared_ptr<Obstruction>* local_obs_map = new std::shared_ptr<Obstruction>[cell_size_x * cell_size_y];
+  std::weak_ptr<Obstruction>* local_obs_map = new std::weak_ptr<Obstruction>[cell_size_x * cell_size_y];
 
   // copy the local window in the costmap to the local map
   copyMapRegion(costmap_, lower_left_x, lower_left_y, size_x_, local_map, 0, 0, cell_size_x, cell_size_x, cell_size_y);
-  copyMapRegion(obstruction_map_, lower_left_x, lower_left_y, size_x_, local_obs_map, 0, 0, cell_size_x, cell_size_x, cell_size_y);
+  copyMapRegionElementwise(obstruction_map_, lower_left_x, lower_left_y, size_x_, local_obs_map, 0, 0, cell_size_x, cell_size_x, cell_size_y);
 
   // now we'll set the costmap to be completely unknown if we track unknown space
   resetMaps();
@@ -762,7 +763,7 @@ void ObstructionLayer::updateOrigin(double new_origin_x, double new_origin_y)
 
   // now we want to copy the overlapping information back into the map, but in its new location
   copyMapRegion(local_map, 0, 0, cell_size_x, costmap_, start_x, start_y, size_x_, cell_size_x, cell_size_y);
-  copyMapRegion(local_obs_map, 0, 0, cell_size_x, obstruction_map_, start_x, start_y, size_x_, cell_size_x, cell_size_y);
+  copyMapRegionElementwise(local_obs_map, 0, 0, cell_size_x, obstruction_map_, start_x, start_y, size_x_, cell_size_x, cell_size_y);
 
   // make sure to clean up
   delete[] local_map;
@@ -775,22 +776,26 @@ void ObstructionLayer::initMaps(unsigned int size_x, unsigned int size_y)
   delete[] costmap_;
   delete[] obstruction_map_;
   costmap_ = new unsigned char[size_x * size_y];
-  obstruction_map_ = new std::shared_ptr<Obstruction>[size_x * size_y];
+  obstruction_map_ = new std::weak_ptr<Obstruction>[size_x * size_y];
+  // for (size_t k = 0; k < size_x * size_y; ++k)
+  // {
+  //   obstruction_map_[k] = nullptr;
+  // }
 }
 
 void ObstructionLayer::resetMaps()
 {
   boost::unique_lock<mutex_t> lock(*getMutex());
   memset(costmap_, default_value_, size_x_ * size_y_ * sizeof(unsigned char));
-  for (size_t k = 0; k < size_x_ * size_y_; ++k)
-  {
-    auto obs = obstruction_map_[k];
-    if (obs)
-    {
-      obs->cleared_ = true;
-      obs.reset();
-    }
-  }
+  // for (size_t k = 0; k < size_x_ * size_y_; ++k)
+  // {
+  //   auto obs = obstruction_map_[k].lock();
+  //   if (obs)
+  //   {
+  //     obs->cleared_ = true;
+  //     obstruction_map_[k].reset();
+  //   }
+  // }
   // generateKernels();
 }
 
@@ -801,11 +806,11 @@ void ObstructionLayer::resetMap(unsigned int x0, unsigned int y0, unsigned int x
   for (unsigned int y = y0 * size_x_ + x0; y < yn * size_x_ + x0; y += size_x_)
   {
     memset(costmap_ + y, default_value_, len * sizeof(unsigned char));
-    auto obs = obstruction_map_[y];
+    auto obs = obstruction_map_[y].lock();
     if (obs)
     {
       obs->cleared_ = true;
-      obs.reset();
+      obstruction_map_[y].reset();
     }
   }
 }
@@ -872,11 +877,11 @@ void ObstructionLayer::generateKernels()
 void ObstructionLayer::clearGridCell(unsigned int x, unsigned int y)
 {
   int index = getIndex(x,y);
-  auto obs = obstruction_map_[index];
-  if (obstruction_map_[index])
+  auto obs = obstruction_map_[index].lock();
+  if (obs)
   {
     obs->cleared_ = true;
-    obs.reset();
+    obstruction_map_[index].reset();
   }
 }
 
