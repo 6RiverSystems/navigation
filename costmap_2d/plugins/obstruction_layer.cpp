@@ -722,7 +722,7 @@ void ObstructionLayer::updateRaytraceBounds(double ox, double oy, double wx, dou
 void ObstructionLayer::reset()
 {
   deactivate();
-  resetMaps();
+  resetMapsAndClearObstructions();
   current_ = true;
   activate();
 }
@@ -791,26 +791,35 @@ void ObstructionLayer::initMaps(unsigned int size_x, unsigned int size_y)
   delete[] obstruction_map_;
   costmap_ = new unsigned char[size_x * size_y];
   obstruction_map_ = new std::weak_ptr<Obstruction>[size_x * size_y];
-  // for (size_t k = 0; k < size_x * size_y; ++k)
-  // {
-  //   obstruction_map_[k] = nullptr;
-  // }
+}
+
+void ObstructionLayer::resetMapsAndClearObstructions()
+{
+  boost::unique_lock<mutex_t> lock(*getMutex());
+  memset(costmap_, default_value_, size_x_ * size_y_ * sizeof(unsigned char));
+  for (size_t k = 0; k < size_x_ * size_y_; ++k)
+  {
+    auto obs = obstruction_map_[k].lock();
+    if (obs)
+    {
+      obs->cleared_ = true;
+      obstruction_map_[k].reset();
+    }
+  }
 }
 
 void ObstructionLayer::resetMaps()
 {
   boost::unique_lock<mutex_t> lock(*getMutex());
   memset(costmap_, default_value_, size_x_ * size_y_ * sizeof(unsigned char));
-  // for (size_t k = 0; k < size_x_ * size_y_; ++k)
-  // {
-  //   auto obs = obstruction_map_[k].lock();
-  //   if (obs)
-  //   {
-  //     obs->cleared_ = true;
-  //     obstruction_map_[k].reset();
-  //   }
-  // }
-  // generateKernels();
+  for (size_t k = 0; k < size_x_ * size_y_; ++k)
+  {
+    auto obs = obstruction_map_[k].lock();
+    if (obs)
+    {
+      obstruction_map_[k].reset();
+    }
+  }
 }
 
 void ObstructionLayer::resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn)

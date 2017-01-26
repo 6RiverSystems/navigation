@@ -430,6 +430,8 @@ protected:
    */
   virtual void resetMaps();
 
+  virtual void resetMapsAndClearObstructions();
+
   /**
    * @brief  Initializes the costmap, static_map, and markers data structures
    * @param size_x The x size to use for map initialization
