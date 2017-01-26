@@ -369,7 +369,7 @@ void ObstructionLayer::updateBounds(double robot_x, double robot_y, double robot
   current_ = current;
 
   // raytrace freespace
-  ROS_WARN("In update bounds.  Have %d clearing and %d marking obs.", clearing_observations.size(), observations.size());
+  ROS_DEBUG("In update bounds.  Have %d clearing and %d marking obs.", clearing_observations.size(), observations.size());
   for (unsigned int i = 0; i < observations.size(); ++i)
   {
     checkObservations(observations[i], min_x, min_y, max_x, max_y);
@@ -382,7 +382,7 @@ void ObstructionLayer::updateBounds(double robot_x, double robot_y, double robot
 
   // Update obstructions
   updateObstructions(min_x, min_y, max_x, max_y);
-  ROS_INFO_NAMED("obstruction", "Updating bounds to %f, %f, %f, %f", *min_x, *min_y, *max_x, *max_y);
+  ROS_DEBUG_NAMED("obstruction", "Updating bounds to %f, %f, %f, %f", *min_x, *min_y, *max_x, *max_y);
 
   /// @todo Add this if we want it?
   // updateFootprint(robot_x, robot_y, robot_yaw, min_x, min_y, max_x, max_y);
@@ -406,6 +406,14 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
     {
       obs->seen_this_cycle_ = false;
       obs->radius_ = kernels_[obs->level_]->getRadius();
+    }
+
+    // Check to see if the obstruction is still on the map - if not it should get cleared.
+    unsigned int dummyx, dummyy;
+    if (!worldToMap(obs->x_, obs->y_, dummyx, dummyy))
+    {
+      ROS_DEBUG("Removing obstruction which has fallen off the map");
+      obs->cleared_ = true;
     }
 
     // Update level (and radius) if need be
@@ -505,6 +513,10 @@ void ObstructionLayer::checkObservations(const Observation& obs, double* min_x, 
         auto obs = std::make_shared<Obstruction>(px, py, cloud.header.frame_id);
         obstruction_list_.push_back(obs);
         obstruction_map_[index] = obs;
+      }
+      else
+      {
+        ROS_DEBUG("Obstacle in char map already.");
       }
     }
   }
@@ -717,6 +729,8 @@ void ObstructionLayer::reset()
 
 void ObstructionLayer::updateOrigin(double new_origin_x, double new_origin_y)
 {
+  boost::unique_lock<mutex_t> lock(*getMutex());
+
   // project the new origin into the grid
   int cell_ox, cell_oy;
   cell_ox = int((new_origin_x - origin_x_) / resolution_);

@@ -47,6 +47,8 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <map_msgs/OccupancyGridUpdate.h>
 #include <message_filters/subscriber.h>
+#include <pluginlib/class_loader.h>
+
 #include <srslib_timing/MasterTimingDataRecorder.hpp>
 
 namespace costmap_2d
@@ -81,6 +83,8 @@ private:
   void incomingUpdate(const map_msgs::OccupancyGridUpdateConstPtr& update);
   void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
 
+  void updateCostmapFromStaticMap();
+
   unsigned char interpretValue(unsigned char value);
 
   std::string global_frame_;  ///< @brief The global frame for the costmap
@@ -98,10 +102,13 @@ private:
   unsigned char lethal_threshold_, unknown_cost_value_;
 
   dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig> *dsrv_;
-
-  InflationLayer* inflation_layer_;
+  pluginlib::ClassLoader<Layer> plugin_loader_;
+  boost::shared_ptr<InflationLayer> inflation_layer_;
+  // InflationLayer* inflation_layer_;
   bool needs_reinflation_;
 
+  unsigned char* static_map_;
+  nav_msgs::OccupancyGridConstPtr staticy_map_;
   // Add timing data recorder
   srs::MasterTimingDataRecorder timingDataRecorder_;
 };

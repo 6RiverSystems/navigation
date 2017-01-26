@@ -82,7 +82,7 @@ void LayeredCostmap::updateMap(double robot_x, double robot_y, double robot_yaw)
   // implement thread unsafe updateBounds() functions.
 
   srs::TimingDataRecorder* rec = nullptr;
-  if (!rolling_window_) {rec = timingDataRecorder_.getRecorder("-getLock", 1);  rec->startSample();}
+  if (rolling_window_) {rec = timingDataRecorder_.getRecorder("-getLock", 1);  rec->startSample();}
 
   boost::unique_lock<Costmap2D::mutex_t> lock(*(costmap_.getMutex()));
   if (rec) {rec->stopSample();}
@@ -102,7 +102,7 @@ void LayeredCostmap::updateMap(double robot_x, double robot_y, double robot_yaw)
   maxx_ = maxy_ = -1e30;
 
   rec = nullptr;
-  if (!rolling_window_) {rec = timingDataRecorder_.getRecorder("-updateBounds", 1);  rec->startSample();}
+  if (rolling_window_) {rec = timingDataRecorder_.getRecorder("-updateBounds", 1);  rec->startSample();}
 
   for (vector<boost::shared_ptr<Layer> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
        ++plugin)
@@ -138,13 +138,13 @@ void LayeredCostmap::updateMap(double robot_x, double robot_y, double robot_yaw)
   }
 
   rec = nullptr;
-  if (!rolling_window_) {rec = timingDataRecorder_.getRecorder("-resetMaps", 1);  rec->startSample();}
+  if (rolling_window_) {rec = timingDataRecorder_.getRecorder("-resetMaps", 1);  rec->startSample();}
 
   costmap_.resetMap(x0, y0, xn, yn);
   if (rec) {rec->stopSample();}
 
   rec = nullptr;
-  if (!rolling_window_) {rec = timingDataRecorder_.getRecorder("-updateCosts", 1);  rec->startSample();}
+  if (rolling_window_) {rec = timingDataRecorder_.getRecorder("-updateCosts", 1);  rec->startSample();}
 
   for (vector<boost::shared_ptr<Layer> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
        ++plugin)
@@ -180,6 +180,13 @@ void LayeredCostmap::setFootprint(const std::vector<geometry_msgs::Point>& footp
 {
   footprint_ = footprint_spec;
   costmap_2d::calculateMinAndMaxDistances(footprint_spec, inscribed_radius_, circumscribed_radius_);
+
+  ROS_WARN("Setting footprint: ");
+  for (auto pt : footprint_spec)
+  {
+    ROS_WARN("  [%f, %f]", pt.x, pt.y);
+  }
+  ROS_WARN("  ins: %f, circ: %f");
 
   for (vector<boost::shared_ptr<Layer> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
       ++plugin)

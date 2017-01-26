@@ -108,7 +108,7 @@ add_dependencies(costmap_2d geometry_msgs_gencpp)
 target_link_libraries(costmap_2d
   ${PCL_LIBRARIES}
   ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES}
+  ${catkin_LIBRARIES} efence
 )
 
 add_library(layers
@@ -121,7 +121,7 @@ add_library(layers
   src/observation_buffer.cpp
 )
 target_link_libraries(layers
-  costmap_2d
+  costmap_2d efence
 )
 
 add_dependencies(costmap_2d costmap_2d_gencfg)
