@@ -108,7 +108,7 @@ add_dependencies(costmap_2d geometry_msgs_gencpp)
 target_link_libraries(costmap_2d
   ${PCL_LIBRARIES}
   ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES} efence
+  ${catkin_LIBRARIES}
 )
 
 add_library(layers
@@ -121,7 +121,7 @@ add_library(layers
   src/observation_buffer.cpp
 )
 target_link_libraries(layers
-  costmap_2d efence
+  costmap_2d
 )
 
 add_dependencies(costmap_2d costmap_2d_gencfg)
@@ -190,12 +190,12 @@ if(CATKIN_ENABLE_TESTING)
     DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
     MD5 e66b17ee374f2d7657972efcb3e2e4f7)
 
-#  add_rostest(test/footprint_tests.launch)
-#  add_rostest(test/inflation_tests.launch)
+  add_rostest(test/footprint_tests.launch)
+  add_rostest(test/inflation_tests.launch)
   add_rostest(test/static_with_inflation_tests.launch)
-#  add_rostest(test/obstacle_tests.launch)
-#  add_rostest(test/simple_driving_test.xml)
-#  add_rostest(test/static_tests.launch)
+  add_rostest(test/obstacle_tests.launch)
+  add_rostest(test/simple_driving_test.xml)
+  add_rostest(test/static_tests.launch)
 
   catkin_add_gtest(array_parser_test test/array_parser_test.cpp)
   target_link_libraries(array_parser_test costmap_2d)

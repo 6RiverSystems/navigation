@@ -61,8 +61,8 @@ void ClearCostmapRecovery::initialize(std::string name, tf::TransformListener* t
     private_nh.param("reset_distance", reset_distance_, 3.0);
 
     std::vector<std::string> clearable_layers_default, clearable_layers;
-    clearable_layers_default.push_back( std::string("obstacles") );
-    clearable_layers_default.push_back( std::string("obstruction") );
+    clearable_layers_default.push_back( std::string("obstacle_layer") );
+    clearable_layers_default.push_back( std::string("obstruction_layer") );
     private_nh.param("layer_names", clearable_layers, clearable_layers_default);
 
     for(unsigned i=0; i < clearable_layers.size(); i++) {
@@ -121,7 +121,6 @@ void ClearCostmapRecovery::clear(costmap_2d::Costmap2DROS* costmap){
     }
   }
 }
-
 
 void ClearCostmapRecovery::clearMap(boost::shared_ptr<costmap_2d::CostmapLayer> costmap,
                                         double pose_x, double pose_y){

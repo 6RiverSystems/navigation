@@ -163,7 +163,7 @@ void InflationLayer::onFootprintChanged()
   cell_inflation_radius_ = cellDistance(inflation_radius_);
   computeCaches();
   need_reinflation_ = true;
-  ROS_WARN("InflationLayer::onFootprintChanged(): num footprint points: %lu,"
+  ROS_DEBUG("InflationLayer::onFootprintChanged(): num footprint points: %lu,"
             " inscribed_radius_ = %.3f, inflation_radius_ = %.3f",
             layered_costmap_->getFootprint().size(), inscribed_radius_, inflation_radius_);
 }
@@ -181,13 +181,13 @@ void InflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, 
   unsigned int size_x = master_grid.getSizeInCellsX(), size_y = master_grid.getSizeInCellsY();
 
   if (seen_ == NULL) {
-    ROS_WARN("InflationLayer::updateCosts(): seen_ array is NULL");
+    ROS_DEBUG("InflationLayer::updateCosts(): seen_ array is NULL");
     seen_size_ = size_x * size_y;
     seen_ = new bool[seen_size_];
   }
   else if (seen_size_ != size_x * size_y)
   {
-    ROS_WARN("InflationLayer::updateCosts(): seen_ array size is wrong");
+    ROS_DEBUG("InflationLayer::updateCosts(): seen_ array size is wrong");
     delete[] seen_;
     seen_size_ = size_x * size_y;
     seen_ = new bool[seen_size_];
@@ -300,18 +300,16 @@ inline void InflationLayer::enqueue(unsigned int index, unsigned int mx, unsigne
 
 void InflationLayer::computeCaches()
 {
-  ROS_DEBUG_STREAM("Computing caches with " << cell_inflation_radius_ << " radius");
 
-    ROS_WARN_STREAM("Cache compute with ir: " << inflation_radius_ << ", cir: "
-      << cell_inflation_radius_ << ", w: " << weight_
-      << ", insc: " << inscribed_radius_ << ", res: " << resolution_);
+  ROS_DEBUG_STREAM("Cache compute with ir: " << inflation_radius_ << ", cir: "
+    << cell_inflation_radius_ << ", w: " << weight_
+    << ", insc: " << inscribed_radius_ << ", res: " << resolution_);
   if (cell_inflation_radius_ == 0)
     return;
 
   // based on the inflation radius... compute distance and cost caches
   if (cell_inflation_radius_ != cached_cell_inflation_radius_)
   {
-    ROS_WARN("Actually recomputing kernels.");
     deleteKernels();
 
     cached_costs_ = new unsigned char*[cell_inflation_radius_ + 2];

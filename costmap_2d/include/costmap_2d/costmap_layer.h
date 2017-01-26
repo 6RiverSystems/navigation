@@ -164,6 +164,11 @@ protected:
   void useExtraBounds(double* min_x, double* min_y, double* max_x, double* max_y);
   bool has_extra_bounds_;
 
+  /**
+   * Clear the specified grid cell.
+   * @param x the x index
+   * @param y the y index
+   */
   virtual void clearGridCell(unsigned int x, unsigned int y);
 
 private:

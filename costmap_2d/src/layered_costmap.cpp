@@ -150,7 +150,7 @@ void LayeredCostmap::updateMap(double robot_x, double robot_y, double robot_yaw)
        ++plugin)
   {
     srs::TimingDataRecorder* rec2 = nullptr;
-    if (!rolling_window_) {rec2 = timingDataRecorder_.getRecorder("-updateCost"+(*plugin)->getName(), 1);  rec2->startSample();}
+    if (rolling_window_) {rec2 = timingDataRecorder_.getRecorder("-updateCost"+(*plugin)->getName(), 1);  rec2->startSample();}
 
     (*plugin)->updateCosts(costmap_, x0, y0, xn, yn);
     if (rec2) {rec2->stopSample();}
@@ -180,13 +180,6 @@ void LayeredCostmap::setFootprint(const std::vector<geometry_msgs::Point>& footp
 {
   footprint_ = footprint_spec;
   costmap_2d::calculateMinAndMaxDistances(footprint_spec, inscribed_radius_, circumscribed_radius_);
-
-  ROS_WARN("Setting footprint: ");
-  for (auto pt : footprint_spec)
-  {
-    ROS_WARN("  [%f, %f]", pt.x, pt.y);
-  }
-  ROS_WARN("  ins: %f, circ: %f");
 
   for (vector<boost::shared_ptr<Layer> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
       ++plugin)

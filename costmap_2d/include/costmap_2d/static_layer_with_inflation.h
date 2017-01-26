@@ -3,6 +3,7 @@
  * Software License Agreement (BSD License)
  *
  *  Copyright (c) 2008, 2013, Willow Garage, Inc.
+ *                2017 6 River Systems
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -34,6 +35,7 @@
  *
  * Author: Eitan Marder-Eppstein
  *         David V. Lu!!
+ *         Daniel Grieneisen
  *********************************************************************/
 #ifndef COSTMAP_2D_STATIC_LAYER_WITH_INFLATION_H_
 #define COSTMAP_2D_STATIC_LAYER_WITH_INFLATION_H_
@@ -54,6 +56,10 @@
 namespace costmap_2d
 {
 
+/**
+ * Provides a costmap layer for a static map.  In addition, it inflates the map so
+ * that reinflation is not necessary.
+ */
 class StaticLayerWithInflation : public CostmapLayer
 {
 public:
@@ -83,6 +89,9 @@ private:
   void incomingUpdate(const map_msgs::OccupancyGridUpdateConstPtr& update);
   void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
 
+  /**
+   * Updates the stored costmap with the data from the stored static map.
+   */
   void updateCostmapFromStaticMap();
 
   unsigned char interpretValue(unsigned char value);
@@ -108,7 +117,7 @@ private:
   bool needs_reinflation_;
 
   unsigned char* static_map_;
-  nav_msgs::OccupancyGridConstPtr staticy_map_;
+
   // Add timing data recorder
   srs::MasterTimingDataRecorder timingDataRecorder_;
 };

@@ -72,14 +72,27 @@ namespace costmap_2d
 /////////////////////////////////////////////////////////////
 // HELPER CLASSES
 /////////////////////////////////////////////////////////////
+
+/**
+ * Struct to hold information about things in the world seen by sensors.
+ */
 struct Obstruction
 {
-  // Obstruction(){};
+  // Obstruction(){};  // No default constructor
 
+  /**
+   * Constructor
+   * @param x The x location (in meters) of the obstruction
+   * @param y The y location (in meters) of the obstruction
+   * @param frame The frame in which the x and y params are defined
+   */
   Obstruction(float x, float y, std::string frame) : x_(x), y_(y), frame_(frame),
     first_sighting_time_(ros::Time::now()), last_sighting_time_(ros::Time::now()),
     last_level_time_(ros::Time::now()), seen_this_cycle_(true), updated_(true) {}
 
+  /**
+   * Mark the obstruction as seen again.
+   */
   void touch()
   {
     last_sighting_time_ = ros::Time::now();
@@ -93,6 +106,9 @@ struct Obstruction
     }
   }
 
+  /**
+   * Convert the obstruction to a message.
+   */
   ObstructionMsg asMsg()
   {
     ObstructionMsg msg;
@@ -119,12 +135,15 @@ struct Obstruction
   float y_ = 0.0; // y location of obstruction
   unsigned int level_ = 0; // obstruction level
   bool cleared_ = false; // flag to indicate if the obstruction is cleared and should be removed
-  bool seen_this_cycle_ = false;
-  bool updated_ = false;
-  float radius_ = -1;
-  std::string frame_ = "";
+  bool seen_this_cycle_ = false; // flag to indicate if the obstruction was seen this cycle
+  bool updated_ = false; // flag to indicate if something about the obstruction was updated
+  float radius_ = -1; // the effective radius
+  std::string frame_ = ""; // the frame in which it is defined
 };
 
+/**
+ * A kernel is the map of cost that should be placed at the obstruction location in the costmap.
+ */
 class Kernel
 {
 public:
@@ -167,7 +186,15 @@ public:
     return radius_;
   };
 
-  /// TODO: move to cpp file
+  /**
+   * Generates radial inflation cost.
+   * @param max_value The maximum value (placed at the center of the kernel)
+   * @param inscribed_value The value to use within the inscribed radius
+   * @param inscribed_radius The radius of the largest inscribed circle within the robot's footprint
+   * @param inflation_radius The max distance away from the kernel center for which there is cost
+   * @param cost_scaling_factor The factor used in the exponential decay cost function
+   * @param resolution The resolution of the grid
+   */
   void generateRadialInflationKernel(unsigned char max_value, unsigned char inscribed_value,
     double inscribed_radius, double inflation_radius, double cost_scaling_factor, double resolution)
   {
@@ -181,7 +208,7 @@ public:
     int center_x = size_x_ / 2 + 1;
     int center_y = size_y_ / 2 + 1;
 
-    ROS_INFO("Inflating: max_val %d, insc val %d, cell rad %d, size %d, center_x: %d, center_y: %d",
+    ROS_DEBUG("Inflating: max_val %d, insc val %d, cell rad %d, size %d, center_x: %d, center_y: %d",
       max_value, inscribed_value, cell_inflation_radius, size, center_x, center_y);
 
     if (values_) { delete[] values_;}
@@ -216,6 +243,13 @@ public:
     }
   }
 
+  /**
+   * Applies the kernel to the given location of the costmap grid.
+   * The grid value will be the max(prev_grid_val, kernel_val)
+   * @param x The x location in meters
+   * @param y The y location in meters
+   * @param master_grid A reference to the grid to which the kernel should be applied
+   */
   void applyKernelAtLocation(float x, float y, Costmap2D& master_grid)
   {
     // Get the grid location of the point.
@@ -229,7 +263,6 @@ public:
     int center_y = size_y_ / 2 + 1;
 
     unsigned char* grid = master_grid.getCharMap();
-
 
     ////////
     // Calculate yy start and yy end
@@ -260,7 +293,6 @@ public:
       xx_end = center_x + mx - grid_x_size;
     }
     /////
-
 
     // Now try to apply it.
     for (int yy = yy_start; yy < yy_end; ++yy)
@@ -293,13 +325,25 @@ private:
   float radius_ = 1; // radius of affect of the costmap
 };
 
+/**
+ * Helper class used to clear cells in the obstruction map when ray tracing.
+ */
 class ClearObstructionCell
 {
 public:
+  /**
+   * Constructor
+   * @param costmap The beginning of the obstruction map array
+   */
   ClearObstructionCell(std::weak_ptr<Obstruction>* costmap) :
       costmap_(costmap)
   {
   }
+
+  /**
+   * Operator used by the ray tracer.
+   * @param offset The index into the array.
+   */
   inline void operator()(unsigned int offset)
   {
     auto obs = costmap_[offset].lock();
@@ -307,13 +351,21 @@ public:
     {
       obs->cleared_ = true;
       costmap_[offset].reset();
-      ROS_INFO("Clearing cell at %d", offset);
     }
   }
 private:
   std::weak_ptr<Obstruction>* costmap_ = nullptr;
 };
 
+/**
+ * @brief a costmap layer which tracks obstructions
+ * This layer tracks obstructions, which are obstacles that are seen by a sensor but
+ * are not in the static map.  Obstructions are tracked and placed into the costmap
+ * with some expansion (defined by a kernel).  The obstructions decay over time, until
+ * they are completely removed.
+ *
+ * Much of this layer is the same as the obstacle layer.
+ */
 class ObstructionLayer : public CostmapLayer
 {
 public:
@@ -370,9 +422,6 @@ public:
   void clearStaticObservations(bool marking, bool clearing);
 
 
-  // virtual void resizeMap(unsigned int size_x, unsigned int size_y, double resolution, double origin_x,
-  //                double origin_y);
-
   virtual void resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn);
 
   virtual void updateOrigin(double new_origin_x, double new_origin_y);
@@ -405,9 +454,26 @@ protected:
   virtual void raytraceFreespace(const costmap_2d::Observation& clearing_observation, double* min_x, double* min_y,
                                  double* max_x, double* max_y);
 
-  virtual void checkObservations(const costmap_2d::Observation& observation, double* min_x, double* min_y,
+  /**
+   * Check if the observation has any new obstructions and track them if necessary.
+   * Also update the bounds based on the obstructions.
+   * @param observation The observation to check
+   * @param min_x
+   * @param min_y
+   * @param max_x
+   * @param max_y
+   */
+  virtual void checkObservation(const costmap_2d::Observation& observation, double* min_x, double* min_y,
                                  double* max_x, double* max_y);
 
+  /**
+   * Update the obstructions.  Clear out old ones, change levels, and publish a list of
+   * all of them.
+   * @param min_x
+   * @param min_y
+   * @param max_x
+   * @param max_y
+   */
   virtual void updateObstructions(double* min_x, double* min_y, double* max_x, double* max_y);
 
 
@@ -426,10 +492,13 @@ protected:
   virtual void deleteMaps();
 
   /**
-   * @brief  Resets the costmap and static_map to be unknown space
+   * @brief  Resets the obstruction map, but does not mark the obstructions as cleared.
    */
   virtual void resetMaps();
 
+  /**
+   * @brief Resets the obstruction map and marks them as cleared.
+   */
   virtual void resetMapsAndClearObstructions();
 
   /**
@@ -439,8 +508,16 @@ protected:
    */
   virtual void initMaps(unsigned int size_x, unsigned int size_y);
 
+  /**
+   * Updates to run when the footprint has changed.
+   */
   virtual void onFootprintChanged();
 
+  /**
+   * Clears an individual grid cell
+   * @param x x index
+   * @param y y index
+   */
   virtual void clearGridCell(unsigned int x, unsigned int y);
 
   std::string global_frame_;  ///< @brief The global frame for the costmap
@@ -460,11 +537,10 @@ protected:
   bool rolling_window_;
   dynamic_reconfigure::Server<costmap_2d::ObstructionPluginConfig> *dsrv_;
 
-  // Bits that are new for obstuctions
+  // Map for keeping track of obstructions
   std::weak_ptr<Obstruction>* obstruction_map_;
-  std::list<std::shared_ptr<Obstruction>> obstruction_list_; /// @todo update to priority queue sorted on last time
+  std::list<std::shared_ptr<Obstruction>> obstruction_list_;
 
-  // Things from the inflation layer
   std::vector<std::shared_ptr<Kernel>> kernels_; // vector of kernels for different obstruction levels
 
   ros::Duration obstruction_half_life_ = ros::Duration(1); // The time to wait before decrementing the obstruction level by half.

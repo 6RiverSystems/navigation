@@ -36,7 +36,7 @@
 #include <costmap_2d/layered_costmap.h>
 #include <costmap_2d/observation_buffer.h>
 #include <costmap_2d/testing_helper.h>
-#include <costmap_2d/StopWatch.h>
+#include <srslib_timing/StopWatch.h>
 #include <set>
 #include <random>
 #include <gtest/gtest.h>
@@ -129,7 +129,7 @@ TEST(costmap, testTimeMapUpdatesNominal) {
   float rth = 0.0;
 
   std::cerr << "Starting old typefirst update." << std::endl;
-  StopWatch sw = StopWatch();
+  srs::StopWatch sw = StopWatch();
   layers.updateMap(rx, ry, rth);
   std::cerr << "Time for first update " << sw.elapsedMicroseconds() << std::endl;
 
@@ -193,7 +193,7 @@ TEST(costmap, testTimeMapUpdatesNew) {
   float rth = 0.0;
 
   std::cerr << "Starting new type first update." << std::endl;
-  StopWatch sw = StopWatch();
+  srs::StopWatch sw = StopWatch();
   layers.updateMap(rx, ry, rth);
   std::cerr << "Time for first update " << sw.elapsedMicroseconds() << std::endl;
 

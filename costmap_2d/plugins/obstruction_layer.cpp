@@ -56,7 +56,6 @@ namespace costmap_2d
 
 void ObstructionLayer::onInitialize()
 {
-  ROS_WARN("running obs on initialized");
   ros::NodeHandle nh("~/" + name_), g_nh;
   rolling_window_ = layered_costmap_->isRolling();
 
@@ -245,7 +244,9 @@ void ObstructionLayer::setupDynamicReconfigure(ros::NodeHandle& nh)
 ObstructionLayer::~ObstructionLayer()
 {
     if (dsrv_)
-        delete dsrv_;
+    {
+      delete dsrv_;
+    }
 }
 void ObstructionLayer::reconfigureCB(costmap_2d::ObstructionPluginConfig &config, uint32_t level)
 {
@@ -372,7 +373,7 @@ void ObstructionLayer::updateBounds(double robot_x, double robot_y, double robot
   ROS_DEBUG("In update bounds.  Have %d clearing and %d marking obs.", clearing_observations.size(), observations.size());
   for (unsigned int i = 0; i < observations.size(); ++i)
   {
-    checkObservations(observations[i], min_x, min_y, max_x, max_y);
+    checkObservation(observations[i], min_x, min_y, max_x, max_y);
   }
 
   for (unsigned int i = 0; i < clearing_observations.size(); ++i)
@@ -417,15 +418,15 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
     }
 
     // Update level (and radius) if need be
-    ROS_INFO("obs sight %f, level %f", obs->last_sighting_time_.toSec(), obs->last_level_time_.toSec());
+    ROS_DEBUG("obs sight %f, level %f", obs->last_sighting_time_.toSec(), obs->last_level_time_.toSec());
     if (now - obs->last_level_time_ > obstruction_half_life_)
     {
-      ROS_INFO("Obstruction level updated");
+      ROS_DEBUG("Obstruction level updated");
       obs->level_++;
       obs->last_level_time_= now;
       if (obs->level_ >= num_obstruction_levels_)
       {
-        ROS_INFO("Clearing out an old observation.");
+        ROS_DEBUG("Clearing out an old observation.");
         obs->cleared_ = true;
       }
       else
@@ -444,7 +445,7 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
     // Remove cleared ones
     if (obs->cleared_)
     {
-      ROS_INFO("Removing obstruction with radius %f at %f, %f", obs->radius_, obs->x_, obs->y_);
+      ROS_DEBUG("Removing obstruction with radius %f at %f, %f", obs->radius_, obs->x_, obs->y_);
       iter = obstruction_list_.erase(iter);
     }
     else
@@ -457,7 +458,7 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
   obstruction_publisher_.publish(msg);
 }
 
-void ObstructionLayer::checkObservations(const Observation& obs, double* min_x, double* min_y, double* max_x, double* max_y)
+void ObstructionLayer::checkObservation(const Observation& obs, double* min_x, double* min_y, double* max_x, double* max_y)
 {
   const pcl::PointCloud<pcl::PointXYZ>& cloud = *(obs.cloud_);
 
@@ -553,7 +554,6 @@ void ObstructionLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i
   {
     kernels_[obs_ptr->level_]->applyKernelAtLocation(obs_ptr->x_, obs_ptr->y_, master_grid);
   }
-
 }
 
 void ObstructionLayer::addStaticObservation(costmap_2d::Observation& obs, bool marking, bool clearing)
@@ -868,13 +868,13 @@ void ObstructionLayer::onFootprintChanged()
 {
   boost::unique_lock < boost::recursive_mutex > lock(*getMutex());
   generateKernels();
-  ROS_WARN("Got a footprint change in obstruction layer.");
+  ROS_DEBUG("Got a footprint change in obstruction layer.");
 }
 
 void ObstructionLayer::generateKernels()
 {
   // Do some checks
-  ROS_WARN("Obstu:  generate kerns with: number of levels %d, inflation_radius %f, cost_scaling_factor %f, resolution %f",
+  ROS_DEBUG("Generating kerns with: number of levels %d, inflation_radius %f, cost_scaling_factor %f, resolution %f",
     num_obstruction_levels_, inflation_radius_, cost_scaling_factor_, resolution_);
   if (num_obstruction_levels_ == 0)
   {
@@ -907,6 +907,5 @@ void ObstructionLayer::clearGridCell(unsigned int x, unsigned int y)
     obstruction_map_[index].reset();
   }
 }
-
 
 }  // namespace costmap_2d

@@ -199,7 +199,7 @@ void StaticLayerWithInflation::incomingMap(const nav_msgs::OccupancyGridConstPtr
       !layered_costmap_->isSizeLocked()))
   {
     // Update the size of the layered costmap (and all layers, including this one)
-    ROS_WARN("Resizing costmap to %d X %d at %f m/pix", size_x, size_y, new_map->info.resolution);
+    ROS_INFO("Resizing costmap to %d X %d at %f m/pix", size_x, size_y, new_map->info.resolution);
     layered_costmap_->resizeMap(size_x, size_y, new_map->info.resolution, new_map->info.origin.position.x,
                                 new_map->info.origin.position.y, true);
   }
@@ -209,7 +209,7 @@ void StaticLayerWithInflation::incomingMap(const nav_msgs::OccupancyGridConstPtr
            origin_y_ != new_map->info.origin.position.y)
   {
     // only update the size of the costmap stored locally in this layer
-    ROS_WARN("Resizing static layer to %d X %d at %f m/pix", size_x, size_y, new_map->info.resolution);
+    ROS_INFO("Resizing static layer to %d X %d at %f m/pix", size_x, size_y, new_map->info.resolution);
     resizeMap(size_x, size_y, new_map->info.resolution,
               new_map->info.origin.position.x, new_map->info.origin.position.y);
   }
@@ -224,9 +224,7 @@ void StaticLayerWithInflation::incomingMap(const nav_msgs::OccupancyGridConstPtr
   height_ = size_y_;
   map_received_ = true;
   has_updated_data_ = true;
-//ROS_WARN("Height: %d, width: %d", height_, width_);
   static_map_ = new unsigned char[height_ * width_];
-  // staticy_map_ = new_map;
 
   unsigned int index = 0;
   // initialize the costmap with static data
@@ -240,14 +238,9 @@ void StaticLayerWithInflation::incomingMap(const nav_msgs::OccupancyGridConstPtr
       ++index;
     }
   }
-  // updateCostmapFromStaticMap();
 
   map_frame_ = new_map->header.frame_id;
 
-  // we have a new map, update full size of map
-
-
-  // // new map.  make sure there is an inflation layer.
   if (!inflation_layer_){
     ROS_INFO("Creating inflation layer in static layer.");
     // inflation_layer_ = new costmap_2d::InflationLayer();
@@ -270,18 +263,8 @@ void StaticLayerWithInflation::incomingMap(const nav_msgs::OccupancyGridConstPtr
 
 void StaticLayerWithInflation::updateCostmapFromStaticMap()
 {
-  ROS_WARN("Copying static map into slwi costmap");
+  ROS_DEBUG("Copying static map into slwi costmap");
   memcpy(costmap_, static_map_, sizeof(unsigned char) * height_ * width_);
-  // unsigned int index = 0;
-  // // initialize the costmap with static data
-  // for (unsigned int i = 0; i < height_; ++i)
-  // {
-  //   for (unsigned int j = 0; j < width_; ++j)
-  //   {
-  //     costmap_[index] = static_map_[index];
-  //     ++index;
-  //   }
-  // }
 }
 
 void StaticLayerWithInflation::incomingUpdate(const map_msgs::OccupancyGridUpdateConstPtr& update)
@@ -350,7 +333,7 @@ void StaticLayerWithInflation::updateBounds(double robot_x, double robot_y, doub
 
   has_updated_data_ = false;
   if (!inflation_layer_){
-    ROS_WARN("NO INFLATION LAYER?  Can't update bounds...");
+    ROS_WARN("No inflation layer in static layer. Can't update bounds...");
     return;
   }
   inflation_layer_->updateBounds(robot_x, robot_y, robot_yaw, min_x, min_y, max_x, max_y);
@@ -365,9 +348,6 @@ void StaticLayerWithInflation::updateCosts(costmap_2d::Costmap2D& master_grid, i
 
   if (inflation_layer_ && needs_reinflation_)
   {
-    if (layered_costmap_->isRolling()) {ROS_WARN("Rolling map inflation update");}
-    else {ROS_WARN("Non-rolling map inflation update.");}
-
     updateCostmapFromStaticMap();
     inflation_layer_->updateCosts(*this, x_, y_, width_, height_);
     needs_reinflation_ = false;
@@ -424,15 +404,6 @@ void StaticLayerWithInflation::onFootprintChanged()
 {
   if (inflation_layer_)
   {
-    if (layered_costmap_->isRolling())
-    {
-      ROS_WARN("Setting footprint in rolling map.");
-    }
-    else
-    {
-      ROS_WARN("Setting footprint in non-rolling map");
-    }
-    // ((Layer*)inflation_layer_)->onFootprintChanged();
     boost::static_pointer_cast<Layer>(inflation_layer_)->onFootprintChanged();
     needs_reinflation_ = true;
   } else {

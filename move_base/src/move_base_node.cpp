@@ -38,7 +38,5 @@ int main(int argc, char** argv){
   //ros::MultiThreadedSpinner s;
   ros::spin();
 
-  std::cout << "EXITING CLEANLY" << std::endl;
-
   return(0);
 }

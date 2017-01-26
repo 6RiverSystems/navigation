@@ -330,6 +330,19 @@ protected:
       }
     }
 
+  /**
+   * @brief  Copy a region of a source map into a destination map element by element
+   * @param  source_map The source map
+   * @param sm_lower_left_x The lower left x point of the source map to start the copy
+   * @param sm_lower_left_y The lower left y point of the source map to start the copy
+   * @param sm_size_x The x size of the source map
+   * @param  dest_map The destination map
+   * @param dm_lower_left_x The lower left x point of the destination map to start the copy
+   * @param dm_lower_left_y The lower left y point of the destination map to start the copy
+   * @param dm_size_x The x size of the destination map
+   * @param region_size_x The x size of the region to copy
+   * @param region_size_y The y size of the region to copy
+   */
   template<typename data_type>
     void copyMapRegionElementwise(data_type* source_map, unsigned int sm_lower_left_x, unsigned int sm_lower_left_y,
                        unsigned int sm_size_x, data_type* dest_map, unsigned int dm_lower_left_x,
@@ -347,7 +360,6 @@ protected:
         {
           *(dm_index + j) = *(sm_index + j);
         }
-        // memcpy(dm_index, sm_index, region_size_x * sizeof(data_type));
         sm_index += sm_size_x;
         dm_index += dm_size_x;
       }
