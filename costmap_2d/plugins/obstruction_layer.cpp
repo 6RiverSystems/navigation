@@ -254,6 +254,7 @@ void ObstructionLayer::reconfigureCB(costmap_2d::ObstructionPluginConfig &config
   max_obstacle_height_ = config.max_obstacle_height;
   obstruction_half_life_ = ros::Duration(config.obstruction_half_life);
   num_obstruction_levels_ = config.num_obstruction_levels;
+  enable_decay_ = config.enable_decay;
 
   setInflationParameters(config.inflation_radius, config.cost_scaling_factor);
 }
@@ -392,7 +393,15 @@ void ObstructionLayer::updateBounds(double robot_x, double robot_y, double robot
 
 void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* max_x, double* max_y)
 {
+  // First, make sure the kernels have been created.
+  if (kernels_.empty())
+  {
+    ROS_WARN("No kernels.  Cannot update obstructions.");
+    return;
+  }
+
   ObstructionListMsg msg;
+  msg.costmap_name = name_;
 
   boost::unique_lock<mutex_t> lock(*getMutex());
 
@@ -406,8 +415,10 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
     if (obs->seen_this_cycle_)
     {
       obs->seen_this_cycle_ = false;
-      obs->radius_ = kernels_[obs->level_]->getRadius();
     }
+
+    obs->radius_ = kernels_[obs->level_]->radius_;
+    obs->max_cost_ = kernels_[obs->level_]->max_cost_;
 
     // Check to see if the obstruction is still on the map - if not it should get cleared.
     unsigned int dummyx, dummyy;
@@ -431,7 +442,9 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
       }
       else
       {
-        obs->radius_ = std::max(kernels_[obs->level_]->getRadius(), obs->radius_);
+        obs->radius_ = std::max(kernels_[obs->level_]->radius_, obs->radius_);
+        obs->max_cost_ = kernels_[obs->level_]->max_cost_;
+
         obs->updated_ = true;
       }
     }
@@ -440,7 +453,7 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
     touchWithRadius(obs->x_, obs->y_, obs->radius_, min_x, min_y, max_x, max_y);
 
     // Collect for publishing
-    msg.obstructions.push_back(obs->asMsg());
+    msg.obstructions.push_back(ObstructionAdapter::obstructionToMsg(*obs));
 
     // Remove cleared ones
     if (obs->cleared_)
@@ -501,7 +514,7 @@ void ObstructionLayer::checkObservation(const Observation& obs, double* min_x, d
     if (obstruction)
     {
       // Touch it.
-      ROS_INFO("Touching obstacle at %f, %f, %d", px, py, index);
+      ROS_DEBUG("Touching obstacle at %f, %f, %d", px, py, index);
       obstruction->touch();
     }
     else
@@ -509,7 +522,7 @@ void ObstructionLayer::checkObservation(const Observation& obs, double* min_x, d
       // Check to see if it is in the master grid already.
       if (layered_costmap_->getCostmap()->getCharMap()[index] != LETHAL_OBSTACLE)
       {
-        ROS_INFO("Creating new obstacle at %f, %f, %d", px, py, index);
+        ROS_DEBUG("Creating new obstacle at %f, %f, %d", px, py, index);
         // Create a new one.  Store in list and map.
         auto obs = std::make_shared<Obstruction>(px, py, cloud.header.frame_id);
         obstruction_list_.push_back(obs);
@@ -526,13 +539,15 @@ void ObstructionLayer::checkObservation(const Observation& obs, double* min_x, d
 void ObstructionLayer::updateFootprint(double robot_x, double robot_y, double robot_yaw, double* min_x, double* min_y,
                                     double* max_x, double* max_y)
 {
-    if (!footprint_clearing_enabled_) return;
-    transformFootprint(robot_x, robot_y, robot_yaw, getFootprint(), transformed_footprint_);
+    /// @todo do something if needed...
 
-    for (unsigned int i = 0; i < transformed_footprint_.size(); i++)
-    {
-      touch(transformed_footprint_[i].x, transformed_footprint_[i].y, min_x, min_y, max_x, max_y);
-    }
+    // if (!footprint_clearing_enabled_) return;
+    // transformFootprint(robot_x, robot_y, robot_yaw, getFootprint(), transformed_footprint_);
+
+    // for (unsigned int i = 0; i < transformed_footprint_.size(); i++)
+    // {
+    //   touch(transformed_footprint_[i].x, transformed_footprint_[i].y, min_x, min_y, max_x, max_y);
+    // }
 }
 
 void ObstructionLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j)
@@ -548,13 +563,98 @@ void ObstructionLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i
   // }
 
   // Iterate over all of the obstructions
-  ROS_DEBUG_NAMED("obstruction", "Updating costs");
   boost::unique_lock<mutex_t> lock(*getMutex());
+
+  ROS_DEBUG_NAMED("obstruction", "Updating costs");
+  if (kernels_.empty())
+  {
+    ROS_WARN("Cannot apply kernels because none exist.");
+    return;
+  }
+
   for (auto obs_ptr : obstruction_list_)
   {
-    kernels_[obs_ptr->level_]->applyKernelAtLocation(obs_ptr->x_, obs_ptr->y_, master_grid);
+    applyKernelAtLocation(kernels_[obs_ptr->level_], obs_ptr->x_, obs_ptr->y_, master_grid);
   }
 }
+
+void ObstructionLayer::applyKernelAtLocation(std::shared_ptr<Kernel> kernel, float x, float y, Costmap2D& master_grid)
+  {
+    if (!kernel)
+    {
+      ROS_WARN("Invalid pointer when trying to apply kernel.");
+      return;
+    }
+
+    if (std::fabs(kernel->resolution_ - master_grid.getResolution()) > 0.001)
+    {
+      ROS_WARN("Kernel grid resolution mismatch.  Kernel: %f, grid: %f",
+        kernel->resolution_, master_grid.getResolution());
+      return;
+    }
+
+    // Get the grid location of the point.
+    int mx, my;
+    master_grid.worldToMapNoBounds(x, y, mx, my);
+
+    unsigned int grid_x_size = master_grid.getSizeInCellsX();
+    unsigned int grid_y_size = master_grid.getSizeInCellsY();
+
+    int center_x = kernel->size_x_ / 2 + 1;
+    int center_y = kernel->size_y_ / 2 + 1;
+
+    unsigned char* grid = master_grid.getCharMap();
+
+    ////////
+    // Calculate yy start and yy end
+    int yy_start = 0;
+    if (my - center_y < 0)
+    {
+      yy_start = center_y - my;
+    }
+
+    int yy_end = kernel->size_y_;
+    if (my + center_y > grid_y_size)
+    {
+      yy_end = center_y + my - grid_y_size;
+    }
+    /////
+    ////////
+    // Calculate xx start and xx end
+    int xx_start = 0;
+    if (mx - center_x < 0)
+    {
+      xx_start = center_x - mx;
+    }
+
+    int xx_end = kernel->size_x_;
+    if (mx + center_x > grid_x_size)
+    {
+      xx_end = center_x + mx - grid_x_size;
+    }
+    /////
+    // Now try to apply it.
+    for (int yy = yy_start; yy < yy_end; ++yy)
+    {
+      int grid_y = yy - center_y + my;
+
+      unsigned int kern_x_start = kernel->size_x_ * yy;
+      unsigned int grid_x_start = grid_x_size * grid_y;
+
+      for (int xx = xx_start; xx < xx_end; ++xx)
+      {
+        int grid_x = xx - center_x + mx;
+        // Point is valid, max it in.
+        unsigned int grid_idx = grid_x_start + grid_x;
+        unsigned char grid_cost = grid[grid_idx];
+        unsigned char kernel_cost = kernel->values_[kern_x_start + xx];
+        if (grid_cost < kernel_cost || grid_cost == NO_INFORMATION)
+        {
+          grid[grid_idx] = kernel_cost;
+        }
+      }
+    }
+  }
 
 void ObstructionLayer::addStaticObservation(costmap_2d::Observation& obs, bool marking, bool clearing)
 {
@@ -679,9 +779,6 @@ void ObstructionLayer::raytraceFreespace(const Observation& clearing_observation
     ClearObstructionCell marker(obstruction_map_);
     // and finally... we can execute our trace to clear obstacles along that line
     raytraceLine(marker, x0, y0, x1, y1, cell_raytrace_range);
-
-    // Don't need to update here because we will update based on all obstructions marked and cleared.
-    // updateRaytraceBounds(ox, oy, wx, wy, clearing_observation.raytrace_range_, min_x, min_y, max_x, max_y);
   }
 }
 
@@ -760,6 +857,7 @@ void ObstructionLayer::updateOrigin(double new_origin_x, double new_origin_y)
   unsigned char* local_map = new unsigned char[cell_size_x * cell_size_y];
   std::weak_ptr<Obstruction>* local_obs_map = new std::weak_ptr<Obstruction>[cell_size_x * cell_size_y];
 
+  /// @todo Remove map region copying in the future.
   // copy the local window in the costmap to the local map
   copyMapRegion(costmap_, lower_left_x, lower_left_y, size_x_, local_map, 0, 0, cell_size_x, cell_size_x, cell_size_y);
   copyMapRegionElementwise(obstruction_map_, lower_left_x, lower_left_y, size_x_, local_obs_map, 0, 0, cell_size_x, cell_size_x, cell_size_y);
@@ -851,7 +949,7 @@ void ObstructionLayer::deleteMaps()
 
 void ObstructionLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor)
 {
-  ROS_WARN_STREAM("Obstruction Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor);
+  ROS_DEBUG_STREAM("Obstruction Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor);
   if (cost_scaling_factor_ != cost_scaling_factor || inflation_radius_ != inflation_radius)
   {
     // Lock here so that reconfiguring the inflation radius doesn't cause segfaults
@@ -889,11 +987,9 @@ void ObstructionLayer::generateKernels()
   // Start.
   for (unsigned int k = 0; k < num_obstruction_levels_; ++k)
   {
-    // auto kernel = std::make_shared<Kernel>();
-    std::shared_ptr<Kernel> kernel(new Kernel());
-    kernel->generateRadialInflationKernel((LETHAL_OBSTACLE / (k + 1)), (INSCRIBED_INFLATED_OBSTACLE / (k + 1)),
-        layered_costmap_->getInscribedRadius(), inflation_radius_, cost_scaling_factor_, resolution_);
-    kernels_.push_back(kernel);
+    kernels_.push_back(KernelFactory::generateRadialInflationKernel((LETHAL_OBSTACLE / (k + 1)),
+     (INSCRIBED_INFLATED_OBSTACLE / (k + 1)), layered_costmap_->getInscribedRadius(),
+     inflation_radius_, cost_scaling_factor_, resolution_));
   }
 }
 

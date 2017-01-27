@@ -16,3 +16,5 @@ bool updated
 
 # The effective radius (how much the costmap is affected by this obstruction)
 float32 effective_radius
+# Max cost within the kernel
+uint8 max_cost

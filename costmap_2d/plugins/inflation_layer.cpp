@@ -181,13 +181,13 @@ void InflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, 
   unsigned int size_x = master_grid.getSizeInCellsX(), size_y = master_grid.getSizeInCellsY();
 
   if (seen_ == NULL) {
-    ROS_DEBUG("InflationLayer::updateCosts(): seen_ array is NULL");
+    ROS_WARN("InflationLayer::updateCosts(): seen_ array is NULL");
     seen_size_ = size_x * size_y;
     seen_ = new bool[seen_size_];
   }
   else if (seen_size_ != size_x * size_y)
   {
-    ROS_DEBUG("InflationLayer::updateCosts(): seen_ array size is wrong");
+    ROS_WARN("InflationLayer::updateCosts(): seen_ array size is wrong");
     delete[] seen_;
     seen_size_ = size_x * size_y;
     seen_ = new bool[seen_size_];

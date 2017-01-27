@@ -70,37 +70,11 @@ using namespace costmap_2d;
  *   upper left is 0,0, lower right is 9,9
  */
 
-const unsigned int HBC_OBSTACLES = 47790;
+const unsigned int BIGMAP_OBSTACLES = 47790;
 const unsigned int NUM_UPDATES = 100;
 const unsigned int NUM_OBSTACLES = 350;
 const float OBSTRUCTION_SPREAD = 32.0;
-////////////////////////////////////
-// EXAMPLE TESTS
-////////////////////////////////////
 
-/**
- * Verify that if we add a point that is already a static obstacle we do not end up with a new ostacle
- */
-TEST(costmap, testMultipleAdditions22){
-  tf::TransformListener tf;
-  LayeredCostmap layers("frame", false, false);
-  addStaticLayer(layers, tf);
-
-  ObstacleLayer* olayer = addObstacleLayer(layers, tf);
-
-  // A point cloud with one point that falls within an existing obstacle
-  addObservation(olayer, 9.5, 0.0);
-  layers.updateMap(0,0,0);
-  Costmap2D* costmap = layers.getCostmap();
-  //printMap(*costmap);
-
-  ASSERT_EQ(countValues(*costmap, costmap_2d::LETHAL_OBSTACLE), HBC_OBSTACLES);
-
-}
-
-////////////////////////////////////
-// ACTUAL TESTS
-////////////////////////////////////
 /**
  * Time map updates.
  */
@@ -115,13 +89,6 @@ TEST(costmap, testTimeMapUpdatesNominal) {
 
   std::vector<geometry_msgs::Point> polygon = setRadii(layers, 1, 1.75, 3);
   layers.setFootprint(polygon);
-
-  // Add 5 obstacles
-  // addObservation(olayer, 0.5, 0.0);
-  // addObservation(olayer, 2.5, 0.0);
-  // addObservation(olayer, 4.5, 0.0);
-  // addObservation(olayer, 0.5, 2.0);
-  // addObservation(olayer, 0.5, 4.0);
 
   // Robot location
   float rx = 32.2;
@@ -149,11 +116,6 @@ TEST(costmap, testTimeMapUpdatesNominal) {
       addObservation(olayer, rx + distribution(generator), ry + distribution(generator),
         0.1, rx, ry);
     }
-    // addObservation(olayer, 23.0, 28.1, 0.1, rx, ry);
-    // addObservation(olayer, 23.0, 8.5, 0.1, rx, ry);
-    // addObservation(olayer, 23.0, 47.0, 0.1, rx, ry);
-    // addObservation(olayer, 32.2, 28.1, 0.1, rx, ry);
-    // addObservation(olayer, 32.2, 47.0, 0.1, rx, ry);
     layers.updateMap(rx, ry, rth);
     olayer->clearStaticObservations(true, true);
   }
@@ -161,15 +123,7 @@ TEST(costmap, testTimeMapUpdatesNominal) {
 
   // Print result and verify the correct number of obstacles
   Costmap2D* costmap = layers.getCostmap();
-  ASSERT_EQ(countValues(*costmap, costmap_2d::LETHAL_OBSTACLE), HBC_OBSTACLES + NUM_OBSTACLES);
-
-  // Create a new layered costmap
-
-  // Add 5 obstacles
-
-  // Time 100 map updates
-
-  // Print result and verify the correct number of obstacles
+  ASSERT_EQ(countValues(*costmap, costmap_2d::LETHAL_OBSTACLE), BIGMAP_OBSTACLES + NUM_OBSTACLES);
 }
 
 /**
@@ -182,7 +136,6 @@ TEST(costmap, testTimeMapUpdatesNew) {
   addStaticLayerWithInflation(layers, tf);
 
   ObstructionLayer* olayer = addObstructionLayer(layers, tf);
-  // InflationLayer* ilayer = addInflationLayer(layers, tf);
 
   std::vector<geometry_msgs::Point> polygon = setRadii(layers, 1, 1.75, 3);
   layers.setFootprint(polygon);
@@ -202,8 +155,6 @@ TEST(costmap, testTimeMapUpdatesNew) {
   std::cerr << "Time for second update " << sw.elapsedMicroseconds() << std::endl;
   layers.updateMap(rx, ry, rth);
 
-  // Time 100 map updates
-
   std::default_random_engine generator;
   std::uniform_real_distribution<double> distribution(-OBSTRUCTION_SPREAD, OBSTRUCTION_SPREAD);
   sw.reset();
@@ -220,15 +171,7 @@ TEST(costmap, testTimeMapUpdatesNew) {
 
   // Print result and verify the correct number of obstacles
   Costmap2D* costmap = layers.getCostmap();
-  ASSERT_EQ(countValues(*costmap, costmap_2d::LETHAL_OBSTACLE), HBC_OBSTACLES + NUM_OBSTACLES);
-
-  // Create a new layered costmap
-
-  // Add 5 obstacles
-
-  // Time 100 map updates
-
-  // Print result and verify the correct number of obstacles
+  ASSERT_EQ(countValues(*costmap, costmap_2d::LETHAL_OBSTACLE), BIGMAP_OBSTACLES + NUM_OBSTACLES);
 }
 
 

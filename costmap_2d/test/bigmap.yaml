@@ -3,7 +3,7 @@
 #
 # This is proprietary software, unauthorized distribution is not permitted.
 #
-image: hbc.pgm
+image: bigmap.pgm
 resolution: 0.050
 origin: [-0.025, -0.025, 0.000]
 negate: 0

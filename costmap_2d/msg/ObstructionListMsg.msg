@@ -1,1 +1,2 @@
+string costmap_name
 ObstructionMsg[] obstructions
