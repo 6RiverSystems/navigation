@@ -5,6 +5,7 @@ namespace costmap_2d
 
 void CostmapLayer::clearWindow(double min_x, double min_y, double max_x, double max_y)
 {
+  /// @todo Optimize this further.
   int start_x, start_y, end_x, end_y;
   worldToMapNoBounds(min_x, min_y, start_x, start_y);
   worldToMapNoBounds(max_x, max_y, end_x, end_y);
@@ -31,10 +32,7 @@ void CostmapLayer::clearWindow(double min_x, double min_y, double max_x, double 
 
 void CostmapLayer::clearGridCell(unsigned int x, unsigned int y)
 {
-  int index = getIndex(x,y);
-  if(costmap_[index]!=NO_INFORMATION){
-    costmap_[index] = NO_INFORMATION;
-  }
+  costmap_[getIndex(x,y)] = NO_INFORMATION;
 }
 
 void CostmapLayer::touch(double x, double y, double* min_x, double* min_y, double* max_x, double* max_y)
