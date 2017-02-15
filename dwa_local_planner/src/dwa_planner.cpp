@@ -87,6 +87,8 @@ namespace dwa_local_planner {
     goal_front_costs_.setXShift(forward_point_distance_);
     alignment_costs_.setXShift(forward_point_distance_);
 
+    jerk_costs_.setScale(config.jerk_scale);
+
     // obstacle costs can vary due to scaling footprint feature
     obstacle_costs_.setParams(config.max_trans_vel, config.max_scaling_factor, config.scaling_speed);
 
@@ -181,6 +183,7 @@ namespace dwa_local_planner {
     critics.push_back(&alignment_costs_); // prefers trajectories that keep the robot nose on nose path
     critics.push_back(&path_costs_); // prefers trajectories on global path
     critics.push_back(&goal_costs_); // prefers trajectories that go towards (local) goal, based on wave propagation
+    critics.push_back(&jerk_costs_); // prefers trajectories that have the same acceleration as the previous trajectory
 
     // trajectory generators
     std::vector<base_local_planner::TrajectorySampleGenerator*> generator_list;
@@ -251,7 +254,7 @@ namespace dwa_local_planner {
         &limits,
         vsamples_);
     generator_.generateTrajectory(pos, vel, vel_samples, traj);
-    double cost = scored_sampling_planner_.scoreTrajectory(traj, -1);
+    double cost = scored_sampling_planner_.scoreTrajectory(traj, -1, nullptr);
     //if the trajectory is a legal one... the check passes
     if(cost >= 0) {
       return true;
@@ -352,6 +355,8 @@ namespace dwa_local_planner {
         &limits,
         vsamples_);
 
+    jerk_costs_.setCurrentVelocity(vel);
+
     result_traj_.cost_ = -7;
     // find best trajectory by sampling and scoring the samples
     std::vector<base_local_planner::Trajectory> all_explored;
@@ -405,6 +410,9 @@ namespace dwa_local_planner {
     if (result_traj_.cost_ < 0) {
       drive_velocities.setIdentity();
     } else {
+      // add it to the jerk costs
+      jerk_costs_.setPreviousTrajectoryAndVelocity(&result_traj_, vel);
+
       tf::Vector3 start(result_traj_.xv_, result_traj_.yv_, 0);
       drive_velocities.setOrigin(start);
       tf::Matrix3x3 matrix;

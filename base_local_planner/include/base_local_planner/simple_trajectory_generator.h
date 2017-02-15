@@ -138,6 +138,9 @@ public:
         Eigen::Vector3f sample_target_vel,
         base_local_planner::Trajectory& traj);
 
+  virtual double getStartLinearVelocity() { return vel_[0];};
+  virtual double getStartAngularVelocity() { return vel_[2];};
+
 protected:
 
   unsigned int next_sample_index_;
