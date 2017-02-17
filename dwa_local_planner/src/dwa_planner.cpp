@@ -252,7 +252,8 @@ namespace dwa_local_planner {
         vel,
         goal,
         &limits,
-        vsamples_);
+        vsamples_,
+        true);
     generator_.generateTrajectory(pos, vel, vel_samples, traj);
     double cost = scored_sampling_planner_.scoreTrajectory(traj, -1, nullptr);
     //if the trajectory is a legal one... the check passes
@@ -353,7 +354,8 @@ namespace dwa_local_planner {
         vel,
         goal,
         &limits,
-        vsamples_);
+        vsamples_,
+        true);
 
     jerk_costs_.setCurrentVelocity(vel);
 

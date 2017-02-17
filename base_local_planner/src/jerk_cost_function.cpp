@@ -72,7 +72,7 @@ double JerkCostFunction::scoreTrajectory(Trajectory &traj)
 
   // Compare to the old accelerations
   double dLinearAccel = std::fabs(new_lin_accel - old_linear_accel_);
-  double dAngularAccel = std::fabs(new_lin_accel - old_angular_accel_);
+  double dAngularAccel = std::fabs(new_angular_accel - old_angular_accel_);
 
   // Map differences into cost.
   double cost = (dLinearAccel + dAngularAccel);

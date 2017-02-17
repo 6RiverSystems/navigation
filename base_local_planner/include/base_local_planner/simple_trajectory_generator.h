@@ -41,6 +41,9 @@
 #include <base_local_planner/trajectory_sample_generator.h>
 #include <base_local_planner/local_planner_limits.h>
 #include <Eigen/Core>
+#include <ros/ros.h>
+#include <std_msgs/String.h>
+
 
 namespace base_local_planner {
 
@@ -63,6 +66,8 @@ public:
 
   SimpleTrajectoryGenerator() {
     limits_ = NULL;
+    ros::NodeHandle n("/");
+    publisher_ = n.advertise<std_msgs::String>("/local_planner_generator", 100);
   }
 
   ~SimpleTrajectoryGenerator() {}
@@ -157,6 +162,9 @@ protected:
   double sim_time_, sim_granularity_, angular_sim_granularity_;
   bool use_dwa_;
   double sim_period_; // only for dwa
+
+  ros::Publisher publisher_;
+
 };
 
 } /* namespace base_local_planner */

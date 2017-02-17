@@ -135,6 +135,19 @@ void SimpleTrajectoryGenerator::initialise(
       y_it.reset();
     }
   }
+
+  // Print out all of the sample params to figure wtf is going on.
+  std::stringstream ss;
+  ss << "Sample params:  " << sample_params_.size() << std::endl;
+  for (auto p : sample_params_)
+  {
+    ss << "  [" << p[0] << ", " << p[1] << ", " << p[2] << "]" << std::endl;
+  }
+
+  std_msgs::String msg;
+  msg.data = ss.str();
+  // publisher_.publish(msg);
+  // std::cout << ss.str();
 }
 
 void SimpleTrajectoryGenerator::setParameters(
@@ -232,6 +245,16 @@ bool SimpleTrajectoryGenerator::generateTrajectory(
     traj.yv_     = sample_target_vel[1];
     traj.thetav_ = sample_target_vel[2];
   }
+  std::stringstream ss;
+  ss << "target: [" << sample_target_vel[0] << ", " << sample_target_vel[2]
+     << "], traj: [" << traj.xv_ << ", " << traj.thetav_ << "]"
+     << "], lim: [" << limits_->getAccLimits()[0] << ", " << limits_->getAccLimits()[2] << "]"
+     << " dt: " << dt << ", sime_time_: " << sim_time_
+     << ", num_steps: " << num_steps << ", discretize_by_time_: " << discretize_by_time_
+     << "], start: [" << vel[0] << ", " << vel[2] << "]";
+   std_msgs::String msg;
+   msg.data = ss.str();
+   // publisher_.publish(msg);
 
   //simulate the trajectory and check for collisions, updating costs along the way
   for (int i = 0; i < num_steps; ++i) {

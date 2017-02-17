@@ -48,7 +48,7 @@ namespace base_local_planner {
     max_samples_ = max_samples;
     gen_list_ = gen_list;
     critics_ = critics;
-    ros::NodeHandle n;
+    ros::NodeHandle n("/");
     cost_publisher_ = n.advertise<ScoredSamplingPlannerCosts>("local_planner_costs", 100);
 
   }
