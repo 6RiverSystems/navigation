@@ -309,11 +309,17 @@ namespace dwa_local_planner {
       alignment_costs_.setScale(resolution * pdist_scale_ * 0.5);
       // costs for robot being aligned with path (nose on path, not ju
       alignment_costs_.setTargetPoses(global_plan_);
+
+      goal_front_costs_.setScale(resolution * gdist_scale_ * 0.5);
+
       // costs for going fast near obstacles
       obstacle_costs_.setIgnoreSpeedCost(false);
     } else {
       // once we are close to goal, trying to keep the nose close to anything destabilizes behavior.
       alignment_costs_.setScale(0.0);
+
+      goal_front_costs_.setScale(0.0);
+
       // costs for going fast near obstacles
       obstacle_costs_.setIgnoreSpeedCost(true);
     }

@@ -188,7 +188,7 @@ namespace dwa_local_planner {
     }
 
     tf::Stamped<tf::Pose> robot_vel;
-    odom_helper_.getRobotVel(robot_vel);
+    odom_helper_.getEstimatedRobotVel(robot_vel);
 
     /* For timing uncomment
     struct timeval start, end;
@@ -220,6 +220,8 @@ namespace dwa_local_planner {
     cmd_vel.linear.y = drive_cmds.getOrigin().getY();
     cmd_vel.angular.z = tf::getYaw(drive_cmds.getRotation());
 
+    odom_helper_.setCmdVel(cmd_vel);
+
     //if we cannot move... tell someone
     std::vector<geometry_msgs::PoseStamped> local_plan;
     if(path.cost_ < 0) {
@@ -227,6 +229,7 @@ namespace dwa_local_planner {
           "The dwa local planner failed to find a valid plan, cost functions discarded all candidates. This can mean there is an obstacle too close to the robot.");
       local_plan.clear();
       publishLocalPlan(local_plan);
+
       return false;
     }
 

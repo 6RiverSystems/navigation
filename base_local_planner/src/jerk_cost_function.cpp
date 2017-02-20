@@ -66,16 +66,28 @@ double JerkCostFunction::scoreTrajectory(Trajectory &traj)
     return 0;
   }
 
+  // Don't add any cost if the linear velocity is below a certain amount
+  if (std::fabs(current_vel_[0] < 0.2))
+  {
+    return 0;
+  }
+
   // Get the accelerations
   double new_lin_accel, new_angular_accel;
   calculateAccelerations(&traj, current_vel_, &new_lin_accel, &new_angular_accel, "scoreTraj");
+
+  if (old_linear_accel_ < 0)
+  {
+    // Don't discourage accelerating if the robot is slowing.
+    return 0;
+  }
 
   // Compare to the old accelerations
   double dLinearAccel = std::fabs(new_lin_accel - old_linear_accel_);
   double dAngularAccel = std::fabs(new_angular_accel - old_angular_accel_);
 
   // Map differences into cost.
-  double cost = (dLinearAccel + dAngularAccel);
+  double cost = (dLinearAccel + 0.1 * dAngularAccel);
 
   return cost;
 }
