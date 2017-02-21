@@ -46,7 +46,6 @@ JerkCostFunction::JerkCostFunction() : old_linear_accel_(0.0), old_angular_accel
 
 void JerkCostFunction::setPreviousTrajectoryAndVelocity(Trajectory* traj, Eigen::Vector3f vel)
 {
-  // ROS_WARN("Setting previous trajectory");
   // Calculate the linear and angular velocity
   calculateAccelerations(traj, vel, &old_linear_accel_, &old_angular_accel_, "prev");
 }

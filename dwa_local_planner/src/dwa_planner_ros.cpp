@@ -84,6 +84,8 @@ namespace dwa_local_planner {
       limits.rot_stopped_vel = config.rot_stopped_vel;
       planner_util_.reconfigureCB(limits, config.restore_defaults);
 
+      odom_helper_.setAccelerationRates(config.acc_lim_x, config.acc_lim_theta);
+
       // update dwa specific configuration
       dp_->reconfigure(config);
   }
@@ -168,7 +170,6 @@ namespace dwa_local_planner {
     base_local_planner::publishPlan(path, l_plan_pub_);
   }
 
-
   void DWAPlannerROS::publishGlobalPlan(std::vector<geometry_msgs::PoseStamped>& path) {
     base_local_planner::publishPlan(path, g_plan_pub_);
   }
@@ -177,8 +178,6 @@ namespace dwa_local_planner {
     //make sure to clean things up
     delete dsrv_;
   }
-
-
 
   bool DWAPlannerROS::dwaComputeVelocityCommands(tf::Stamped<tf::Pose> &global_pose, geometry_msgs::Twist& cmd_vel) {
     // dynamic window sampling approach to get useful velocity commands
@@ -258,9 +257,6 @@ namespace dwa_local_planner {
     return true;
   }
 
-
-
-
   bool DWAPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel) {
     // dispatches to either dwa sampling control or stop and rotate control, depending on whether we have been close enough to goal
     if ( ! costmap_ros_->getRobotPose(current_pose_)) {
@@ -313,6 +309,4 @@ namespace dwa_local_planner {
       return isOk;
     }
   }
-
-
 };

@@ -79,16 +79,20 @@ public:
 
   void setCmdVel(geometry_msgs::Twist vel);
 
+  void setAccelerationRates(double linear, double angular);
+
+  void setExpectedVelocityLoopDelay(double delay);
+
 private:
   double forwardEstimateVelocity(double old, double cmd, double accel, double dt);
   geometry_msgs::Twist estimateRobotVel();
 
   geometry_msgs::Twist cmd_vel_;
-  double cmd_vel_time_ = 0;
-  double velocity_loop_delays_ = 0.067;
-  double linear_acceleration_rate_ = 0.7;
-  double angular_acceleration_rate_ = 2.3;
-  double cmd_vel_timeout_ = 0.2;
+  double cmd_vel_time_;
+  double velocity_loop_delays_;
+  double linear_acceleration_rate_;
+  double angular_acceleration_rate_;
+  double cmd_vel_timeout_;
 
   //odom topic
   std::string odom_topic_;

@@ -106,7 +106,7 @@ namespace base_local_planner {
         // since we keep adding positives, once we are worse than the best, we will stay worse
         if (traj_cost > best_traj_cost) {
           critic_timing_[k] = stopWatch.elapsedMilliseconds();
-          // break;
+          break;
         }
       }
       critic_timing_[k] += stopWatch.elapsedMilliseconds();
