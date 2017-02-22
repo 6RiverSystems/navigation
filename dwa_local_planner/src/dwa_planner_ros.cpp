@@ -179,15 +179,13 @@ namespace dwa_local_planner {
     delete dsrv_;
   }
 
-  bool DWAPlannerROS::dwaComputeVelocityCommands(tf::Stamped<tf::Pose> &global_pose, geometry_msgs::Twist& cmd_vel) {
+  bool DWAPlannerROS::dwaComputeVelocityCommands(tf::Stamped<tf::Pose> &global_pose, tf::Stamped<tf::Pose>& robot_vel,
+    geometry_msgs::Twist& cmd_vel) {
     // dynamic window sampling approach to get useful velocity commands
     if(! isInitialized()){
       ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner");
       return false;
     }
-
-    tf::Stamped<tf::Pose> robot_vel;
-    odom_helper_.getEstimatedRobotVel(robot_vel);
 
     /* For timing uncomment
     struct timeval start, end;
@@ -275,9 +273,12 @@ namespace dwa_local_planner {
     }
     ROS_DEBUG_NAMED("dwa_local_planner", "Received a transformed plan with %zu points.", transformed_plan.size());
 
+    tf::Stamped<tf::Pose> robot_vel;
+    odom_helper_.getEstimatedRobotVel(robot_vel);
+
     // update plan in dwa_planner even if we just stop and rotate, to allow checkTrajectory
     srs::ScopedTimingSampleRecorder stsr(tdr_.getRecorder("-UpdatePlanCosts"));
-    dp_->updatePlanAndLocalCosts(current_pose_, transformed_plan);
+    dp_->updatePlanAndLocalCosts(current_pose_, robot_vel, transformed_plan);
     stsr.stopSample();
 
     if (latchedStopRotateController_.isPositionReached(&planner_util_, current_pose_)) {
@@ -297,7 +298,7 @@ namespace dwa_local_planner {
           boost::bind(&DWAPlanner::checkTrajectory, dp_, _1, _2, _3));
     } else {
       srs::ScopedTimingSampleRecorder stsr2(tdr_.getRecorder("-dwaComputeVelCommands"));
-      bool isOk = dwaComputeVelocityCommands(current_pose_, cmd_vel);
+      bool isOk = dwaComputeVelocityCommands(current_pose_, robot_vel, cmd_vel);
       stsr2.stopSample();
       if (isOk) {
         publishGlobalPlan(transformed_plan);

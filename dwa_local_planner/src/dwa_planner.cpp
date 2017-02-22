@@ -64,6 +64,7 @@ namespace dwa_local_planner {
         config.use_dwa,
         sim_period_);
 
+    generator_sim_time_ = config.sim_time;
     double resolution = planner_util_->getCostmap()->getResolution();
     pdist_scale_ = config.path_distance_bias;
     // pdistscale used for both path and alignment, set  forward_point_distance to zero to discard alignment
@@ -269,6 +270,7 @@ namespace dwa_local_planner {
 
   void DWAPlanner::updatePlanAndLocalCosts(
       tf::Stamped<tf::Pose> global_pose,
+      tf::Stamped<tf::Pose> global_vel,
       const std::vector<geometry_msgs::PoseStamped>& new_plan) {
     global_plan_.resize(new_plan.size());
     for (unsigned int i = 0; i < new_plan.size(); ++i) {
@@ -322,6 +324,29 @@ namespace dwa_local_planner {
 
       // costs for going fast near obstacles
       obstacle_costs_.setIgnoreSpeedCost(true);
+    }
+
+    // Change the sim time depending on distance from goal.
+    double max_vel_x = planner_util_->getCurrentLimits().max_vel_x;
+
+    double sq_max_vel_sim_distance = (generator_sim_time_ * max_vel_x) * (generator_sim_time_ * max_vel_x);
+    if (sq_dist > sq_max_vel_sim_distance)
+    {
+      generator_.setSimTime(generator_sim_time_);
+    }
+    else
+    {
+      double max_linear_accel = planner_util_->getCurrentLimits().getAccLimits()[0];
+      if (max_vel_x > 0 && max_linear_accel > 0)
+      {
+        // Shorten the sim time.
+        double time_to_goal_at_max = std::sqrt(sq_dist) / max_vel_x;
+        // We don't want to overshoot the goal either -> leads to spinning around.
+        double time_to_decel_from_max = max_vel_x / max_linear_accel;
+        double time_to_decel_from_current = global_vel.getOrigin().getX() / max_linear_accel;
+        double sim_time = std::max(std::max(time_to_goal_at_max, time_to_decel_from_current), 0.25 * generator_sim_time_);
+        generator_.setSimTime(sim_time);
+      }
     }
 
     // costs for having the wrong heading

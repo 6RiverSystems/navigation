@@ -121,6 +121,7 @@ namespace dwa_local_planner {
        * @param  new_plan The new global plan
        */
       void updatePlanAndLocalCosts(tf::Stamped<tf::Pose> global_pose,
+          tf::Stamped<tf::Pose> global_vel,
           const std::vector<geometry_msgs::PoseStamped>& new_plan);
 
       /**
@@ -157,6 +158,7 @@ namespace dwa_local_planner {
       Eigen::Vector3f vsamples_;
 
       double sim_period_;///< @brief The number of seconds to use to compute max/min vels for dwa
+      double generator_sim_time_;
       base_local_planner::Trajectory result_traj_;
 
       double forward_point_distance_;
