@@ -146,7 +146,7 @@ namespace base_local_planner {
     critic_timing_.assign(critics_.size(), 0);
     srs::StopWatch stopWatch;
     for (std::vector<TrajectorySampleGenerator*>::iterator loop_gen = gen_list_.begin(); loop_gen != gen_list_.end(); ++loop_gen) {
-
+      ROS_WARN("Looping over generators");
       cost_msg.start_v = (*loop_gen)->getStartLinearVelocity();
       cost_msg.start_w = (*loop_gen)->getStartAngularVelocity();
 
@@ -212,10 +212,10 @@ namespace base_local_planner {
         }
       }
       ROS_DEBUG("Evaluated %d trajectories, found %d valid", count, count_valid);
-      if (best_traj_cost >= 0) {
-        // do not try fallback generators
-        break;
-      }
+      // if (best_traj_cost >= 0) {
+      //   // do not try fallback generators
+      //   break;
+      // }
     }
 
     cost_msg.selected_v = traj.xv_;

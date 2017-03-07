@@ -64,6 +64,14 @@ namespace dwa_local_planner {
         config.use_dwa,
         sim_period_);
 
+    follower_generator_.setParameters(
+        config.sim_time,
+        config.sim_granularity,
+        config.follower_generator_kp_theta,
+        config.follower_generator_lookahead_distance,
+        config.follower_generator_num_trajectories
+      );
+
     generator_sim_time_ = config.sim_time;
     double resolution = planner_util_->getCostmap()->getResolution();
     pdist_scale_ = config.path_distance_bias;
@@ -194,7 +202,8 @@ namespace dwa_local_planner {
 
     // trajectory generators
     std::vector<base_local_planner::TrajectorySampleGenerator*> generator_list;
-    generator_list.push_back(&generator_);
+    // generator_list.push_back(&generator_);
+    generator_list.push_back(&follower_generator_);
 
     scored_sampling_planner_ = base_local_planner::SimpleScoredSamplingPlanner(generator_list, critics);
 
@@ -325,8 +334,14 @@ namespace dwa_local_planner {
 
       // costs for going fast near obstacles
       obstacle_costs_.setIgnoreSpeedCost(false);
-
-      euclidean_distance_costs_.setScale(0.0);
+      if (!always_use_euclidean_goal_distance_)
+      {
+        euclidean_distance_costs_.setScale(0.0);
+      }
+      else
+      {
+        euclidean_distance_costs_.setScale(euclidean_distance_scale_);
+      }
     } else {
       // once we are close to goal, trying to keep the nose close to anything destabilizes behavior.
       alignment_costs_.setScale(0.0);
@@ -403,6 +418,10 @@ namespace dwa_local_planner {
         &limits,
         vsamples_,
         true);
+    follower_generator_.setGlobalPlan(global_plan_);
+    follower_generator_.initialise(pos,
+        vel,
+        &limits);
 
     jerk_costs_.setCurrentVelocity(vel);
 
