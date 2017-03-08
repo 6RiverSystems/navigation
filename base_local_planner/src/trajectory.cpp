@@ -56,7 +56,6 @@ namespace base_local_planner {
     vth = vth_pts_[index];
   }
 
-
   void Trajectory::setPoint(unsigned int index, double x, double y, double th, double vx, double vy, double vth){
     x_pts_[index] = x;
     y_pts_[index] = y;

@@ -48,14 +48,13 @@ void FollowerTrajectoryGenerator::initialise(
     const Eigen::Vector3f& vel,
     base_local_planner::LocalPlannerLimits* limits) {
 
-  // Store in case we need them...
+  // Store the current values.
   pos_ = pos;
   vel_ = vel;
   limits_ = limits;
 
-  ////////////////
-  // We will generate a series of trajectories where each one includes a little bit more.
-  ////////////////
+  // We will generate a series of trajectories where each is the previous plus a litle more time
+  // Reset stored information to prepare for next generation
   next_sample_index_ = 0;
 
   stored_trajectory_end_time_ = -1.0;
@@ -80,10 +79,9 @@ void FollowerTrajectoryGenerator::setParameters(
     double kp_theta,
     double lookahead_distance,
     double num_trajectories) {
+
   sim_time_ = sim_time;
   sim_granularity_ = sim_granularity;
-
-  // Going to need some more (unrelated) parameters
   kp_theta_ = kp_theta;
   lookahead_distance_ = lookahead_distance;
   num_trajectories_ = num_trajectories;
@@ -93,7 +91,7 @@ void FollowerTrajectoryGenerator::setParameters(
  * Whether this generator can create more trajectories
  */
 bool FollowerTrajectoryGenerator::hasMoreTrajectories() {
-  ROS_DEBUG("FTG check for more.  next: %d, et size %d, plan empty: %d",
+  ROS_DEBUG("FTG check for more.  next: %d, end_times size %zu, plan empty: %d",
     next_sample_index_, end_times_.size(), global_plan_.empty());
   return enabled_ && next_sample_index_ < end_times_.size() && !global_plan_.empty();
 }
@@ -112,10 +110,6 @@ bool FollowerTrajectoryGenerator::nextTrajectory(Trajectory &comp_traj) {
       result = true;
     }
   }
-  else
-  {
-    ROS_WARN("Out of trajectories.");
-  }
   next_sample_index_++;
   return result;
 }
@@ -133,8 +127,8 @@ bool FollowerTrajectoryGenerator::generateTrajectory(
   traj.cost_   = -1.0; // placed here in case we return early
   double simulation_time = max_sim_time;
   unsigned int start_idx = 0;
-  //trajectory might be reused so we'll make sure to reset it
 
+  // This extends the previously generated trajectory (if it exists)
   Eigen::Vector3f loop_vel;
   if (stored_trajectory_end_time_ > 0.0)
   {
@@ -219,7 +213,7 @@ Eigen::Vector3f FollowerTrajectoryGenerator::computeNewVelocities(const Eigen::V
 
   if (start_idx == found_idx && found_idx == global_plan_.size() -1 )
   {
-    ROS_WARN("At the goal");
+    ROS_DEBUG("At the goal");
     desired_heading = pos[2];
     distance_to_goal = 0;
   }
@@ -227,7 +221,7 @@ Eigen::Vector3f FollowerTrajectoryGenerator::computeNewVelocities(const Eigen::V
   if (distance_to_goal < 0.05)
   {
     desired_heading = pos[2];
-    ROS_DEBUG("Close to goal: start %d found %d size: %d dist %f",
+    ROS_DEBUG("Close to goal: start %d found %d size: %zu dist %f",
       start_idx, found_idx, global_plan_.size(), distance_to_goal);
   }
 
@@ -241,7 +235,6 @@ Eigen::Vector3f FollowerTrajectoryGenerator::computeNewVelocities(const Eigen::V
   {
     heading_error += 2 * M_PI;
   }
-
 
   double desired_angular_velocity = heading_error * kp_theta_;
   // limit it
@@ -318,7 +311,8 @@ void FollowerTrajectoryGenerator::getDesiredHeadingAndGoalDistance(const Eigen::
       distance_to_goal = std::max(0.0, segment_length - distanceAlongLineSegment(pos2, p0, p1));
       pose_of_heading = p1;
       closest_idx = k;
-      ROS_DEBUG("New closest at idx %d, from path %f to goal %f", k, dist_from_path, segment_length - distanceAlongLineSegment(pos2, p0, p1));
+      ROS_DEBUG("New closest at idx %zu, from path %f to goal %f",
+                k, dist_from_path, segment_length - distanceAlongLineSegment(pos2, p0, p1));
     }
     else
     {
@@ -389,7 +383,6 @@ Eigen::Vector2f FollowerTrajectoryGenerator::poseAtDistanceAlongLineSegment(doub
     p0[0], p0[1], p1[0], p1[1], distance, t, projection[0], projection[1]);
   return projection;
 }
-
 
 Eigen::Vector2f FollowerTrajectoryGenerator::poseStampedToVector(geometry_msgs::PoseStamped pose)
 {

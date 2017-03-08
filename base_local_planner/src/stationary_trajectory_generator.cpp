@@ -96,7 +96,7 @@ bool StationaryTrajectoryGenerator::generateTrajectory(
       std::fabs(vel[1]) < epsilon &&
       std::fabs(vel[2]) < epsilon)
   {
-    ROS_WARN("Generating trajectory at %f, %f, %f.", pos[0], pos[1], pos[2]);
+    ROS_DEBUG("Generating trajectory at %f, %f, %f.", pos[0], pos[1], pos[2]);
     traj.resetPoints();
     traj.addPoint(pos[0], pos[1], pos[2], 0.0, 0.0, 0.0);
     traj.xv_ = 0.0;

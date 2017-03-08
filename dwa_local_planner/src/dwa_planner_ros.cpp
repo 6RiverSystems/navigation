@@ -71,7 +71,7 @@ namespace dwa_local_planner {
         ROS_WARN("Could not find mode %d in list of configurations", mode);
         return;
       }
-      ROS_WARN("Switching to mode %d");
+      ROS_INFO("Switching dwa planner to mode %d", mode);
 
       DWAPlannerConfig config = mode_configurations_[mode]->getConfig();
 
@@ -144,7 +144,6 @@ namespace dwa_local_planner {
         ROS_WARN("No modes provided.");
         return;
       }
-      ROS_WARN("Has modes!");
 
       std::vector<std::string> mode_names;
       private_nh.getParam("modes", mode_names);

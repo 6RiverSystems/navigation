@@ -131,8 +131,6 @@ namespace base_local_planner {
       std::vector<double> vx_pts_;
       std::vector<double> vy_pts_;
       std::vector<double> vth_pts_;
-
-
   };
 };
 #endif

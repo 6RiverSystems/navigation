@@ -45,18 +45,7 @@
 namespace base_local_planner {
 
 /**
- * generates trajectories based on equi-distant discretisation of the degrees of freedom.
- * This is supposed to be a simple and robust implementation of the TrajectorySampleGenerator
- * interface, more efficient implementations are thinkable.
- *
- * This can be used for both dwa and trajectory rollout approaches.
- * As an example, assuming these values:
- * sim_time = 1s, sim_period=200ms, dt = 200ms,
- * vsamples_x=5,
- * acc_limit_x = 1m/s^2, vel_x=0 (robot at rest, values just for easy calculations)
- * dwa_planner will sample max-x-velocities from 0m/s to 0.2m/s.
- * trajectory rollout approach will sample max-x-velocities 0m/s up to 1m/s
- * trajectory rollout approach does so respecting the acceleration limit, so it gradually increases velocity
+ * generates a single sample trajectory if the robot isn't moving to remain stationary
  */
 class StationaryTrajectoryGenerator: public base_local_planner::TrajectorySampleGenerator {
 public:
@@ -71,10 +60,6 @@ public:
    * @param pos current robot position
    * @param vel current robot velocity
    * @param limits Current velocity limits
-   * @param vsamples: in how many samples to divide the given dimension
-   * @param use_acceleration_limits: if true use physical model, else idealized robot model
-   * @param additional_samples (deprecated): Additional velocity samples to generate individual trajectories from.
-   * @param discretize_by_time if true, the trajectory is split according in chunks of the same duration, else of same length
    */
   void initialise(
       const Eigen::Vector3f& pos,
@@ -110,4 +95,4 @@ protected:
 };
 
 } /* namespace base_local_planner */
-#endif /* SIMPLE_TRAJECTORY_GENERATOR_H_ */
+#endif /* STATIONARY_TRAJECTORY_GENERATOR_H_ */

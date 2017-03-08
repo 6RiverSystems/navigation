@@ -2,7 +2,7 @@
 *
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 2009, Willow Garage, Inc.
+*  Copyright (c) 2017, 6 River Systems
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: Eitan Marder-Eppstein
+* Author: Daniel Grieneisen
 *********************************************************************/
 #ifndef DWA_LOCAL_PLANNER_DWA_PLANNER_CONFIGURATION_H_
 #define DWA_LOCAL_PLANNER_DWA_PLANNER_CONFIGURATION_H_
@@ -66,7 +66,7 @@ namespace dwa_local_planner {
       ~DWAPlannerConfiguration() {}
 
       /**
-       * @brief Reconfigures the trajectory planner
+       * @brief Reconfigures the dwa planner mode
        */
       void reconfigure(DWAPlannerConfig &cfg, uint32_t level)
       {
