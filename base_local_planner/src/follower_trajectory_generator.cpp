@@ -2,7 +2,7 @@
  *
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2008, Willow Garage, Inc.
+ *  Copyright (c) 2017, 6 River Systems
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: TKruse
+ * Author: DGrieneisen
  *********************************************************************/
 
 #include <base_local_planner/follower_trajectory_generator.h>
@@ -71,7 +71,7 @@ void FollowerTrajectoryGenerator::initialise(
       end_times_.push_back(k * step_t);
     }
   }
-  ROS_WARN("FTG intialized with %d times and end time %f", num_trajectories_, sim_time_);
+  ROS_DEBUG("FTG intialized with %d times and end time %f", num_trajectories_, sim_time_);
 }
 
 void FollowerTrajectoryGenerator::setParameters(
@@ -95,7 +95,7 @@ void FollowerTrajectoryGenerator::setParameters(
 bool FollowerTrajectoryGenerator::hasMoreTrajectories() {
   ROS_DEBUG("FTG check for more.  next: %d, et size %d, plan empty: %d",
     next_sample_index_, end_times_.size(), global_plan_.empty());
-  return next_sample_index_ < end_times_.size() && !global_plan_.empty();
+  return enabled_ && next_sample_index_ < end_times_.size() && !global_plan_.empty();
 }
 
 /**
@@ -173,7 +173,7 @@ bool FollowerTrajectoryGenerator::generateTrajectory(
   //compute a timestep
   double dt = sim_granularity_;
 
-  ROS_WARN("Forward simulating with %d steps for %f, starting at %f to %f",
+  ROS_DEBUG("Forward simulating with %d steps for %f, starting at %f to %f",
     num_steps, simulation_time, stored_trajectory_end_time_, max_sim_time);
   //simulate the trajectory and check for collisions, updating costs along the way
   for (int i = 0; i < num_steps; ++i) {
@@ -217,6 +217,20 @@ Eigen::Vector3f FollowerTrajectoryGenerator::computeNewVelocities(const Eigen::V
   double desired_heading, distance_to_goal;
   getDesiredHeadingAndGoalDistance(pos, start_idx, found_idx, desired_heading, distance_to_goal);
 
+  if (start_idx == found_idx && found_idx == global_plan_.size() -1 )
+  {
+    ROS_WARN("At the goal");
+    desired_heading = pos[2];
+    distance_to_goal = 0;
+  }
+
+  if (distance_to_goal < 0.05)
+  {
+    desired_heading = pos[2];
+    ROS_DEBUG("Close to goal: start %d found %d size: %d dist %f",
+      start_idx, found_idx, global_plan_.size(), distance_to_goal);
+  }
+
   // Simple proportional control with limits
   double heading_error = desired_heading - pos[2];
   while (heading_error > M_PI)
@@ -227,6 +241,7 @@ Eigen::Vector3f FollowerTrajectoryGenerator::computeNewVelocities(const Eigen::V
   {
     heading_error += 2 * M_PI;
   }
+
 
   double desired_angular_velocity = heading_error * kp_theta_;
   // limit it
@@ -240,8 +255,12 @@ Eigen::Vector3f FollowerTrajectoryGenerator::computeNewVelocities(const Eigen::V
   }
 
   // Scale desired linear velocity by heading error and by distance from goal
-  double max_linear_vel = std::min(limits_->max_vel_x, std::sqrt(2 * distance_to_goal * acclimits[0]));
-  double desired_linear_velocity = std::max(0.0, max_linear_vel - 0.75 * heading_error - 0.25 * vel[2]);
+  double max_linear_vel = 0;
+  if (distance_to_goal > 0.0)
+  {
+    max_linear_vel = std::min(limits_->max_vel_x, 0.55 * std::sqrt(2 * distance_to_goal * acclimits[0]));
+  }
+  double desired_linear_velocity = std::max(0.0, max_linear_vel - 0.25 * std::fabs(heading_error) - 0.25 * std::fabs(vel[2]));
 
   // Now scale to within the limits
   if (vel[0] < desired_linear_velocity) {
@@ -256,8 +275,8 @@ Eigen::Vector3f FollowerTrajectoryGenerator::computeNewVelocities(const Eigen::V
     new_vel[2] = std::max(double(desired_angular_velocity), vel[2] - acclimits[2] * dt);
   }
 
-  ROS_WARN("FTG: des h: %f, curr h: %f, h err: %f, w: %f",
-    desired_heading, pos[2], heading_error, desired_angular_velocity);
+  ROS_DEBUG("FTG: des h: %f, curr h: %f, h err: %f, w: %f, v: %f, dist: %f",
+    desired_heading, pos[2], heading_error, desired_angular_velocity, desired_linear_velocity, distance_to_goal);
   return new_vel;
 }
 
@@ -290,18 +309,19 @@ void FollowerTrajectoryGenerator::getDesiredHeadingAndGoalDistance(const Eigen::
     // Pull out the datas
     p0 = poseStampedToVector(global_plan_[k]);
     p1 = poseStampedToVector(global_plan_[k + 1]);
+    double segment_length = (p1 - p0).norm();
     double dist_from_path = distanceToLineSegment(pos2, p0, p1);
     if (dist_from_path < minimum_distance)
     {
       minimum_distance = dist_from_path;
       // Reset distance
-      distance_to_goal = 0;
-      pose_of_heading = Eigen::Vector2f::Zero();
+      distance_to_goal = std::max(0.0, segment_length - distanceAlongLineSegment(pos2, p0, p1));
+      pose_of_heading = p1;
       closest_idx = k;
+      ROS_DEBUG("New closest at idx %d, from path %f to goal %f", k, dist_from_path, segment_length - distanceAlongLineSegment(pos2, p0, p1));
     }
     else
     {
-      double segment_length = (p1 - p0).norm();
       if (distance_to_goal < heading_lookahead_distance)
       {
         if (distance_to_goal + segment_length > heading_lookahead_distance)
@@ -339,6 +359,17 @@ double FollowerTrajectoryGenerator::distanceToLineSegment(const Eigen::Vector2f&
   ROS_DEBUG("dtLS: p0 %f,%f p1 %f, %f, pos %f, %f, t %f, proje %f %f",
     p0[0], p0[1], p1[0], p1[1], pos[0], pos[1], t, projection[0], projection[1]);
   return (pos - projection).norm();
+}
+
+double FollowerTrajectoryGenerator::distanceAlongLineSegment(const Eigen::Vector2f& pos,
+  const Eigen::Vector2f& p0, const Eigen::Vector2f& p1)
+{
+  double l = (p1 - p0).norm();
+  if (l == 0.0)
+  {
+    return 0.0;
+  }
+  return (pos - p0).dot(p1 - p0) / l;
 }
 
 Eigen::Vector2f FollowerTrajectoryGenerator::poseAtDistanceAlongLineSegment(double distance,

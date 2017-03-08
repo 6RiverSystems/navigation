@@ -155,7 +155,7 @@ void SimpleTrajectoryGenerator::setParameters(
  * Whether this generator can create more trajectories
  */
 bool SimpleTrajectoryGenerator::hasMoreTrajectories() {
-  return next_sample_index_ < sample_params_.size();
+  return enabled_ && next_sample_index_ < sample_params_.size();
 }
 
 /**

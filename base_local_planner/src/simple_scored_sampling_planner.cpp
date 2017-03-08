@@ -145,7 +145,9 @@ namespace base_local_planner {
     srs::ScopedTimingSampleRecorder stsr2(tdr_.getRecorder("-scoring trajectories"));
     critic_timing_.assign(critics_.size(), 0);
     srs::StopWatch stopWatch;
+    int gen = -1;
     for (std::vector<TrajectorySampleGenerator*>::iterator loop_gen = gen_list_.begin(); loop_gen != gen_list_.end(); ++loop_gen) {
+      gen++;
       ROS_WARN("Looping over generators");
       cost_msg.start_v = (*loop_gen)->getStartLinearVelocity();
       cost_msg.start_w = (*loop_gen)->getStartAngularVelocity();
@@ -183,6 +185,10 @@ namespace base_local_planner {
             cost_msg.selected_idx = count;
             best_traj_cost = loop_traj_cost;
             best_traj = loop_traj;
+            if (gen > 0)
+            {
+              ROS_WARN("Best is gen 2");
+            }
           } else if (loop_traj_cost == best_traj_cost) {
             std::stringstream ss;
             ss << "Tied best: " << loop_traj_cost << " with critics: ";

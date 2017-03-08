@@ -56,6 +56,7 @@
 #include <base_local_planner/local_planner_util.h>
 #include <base_local_planner/simple_trajectory_generator.h>
 #include <base_local_planner/follower_trajectory_generator.h>
+#include <base_local_planner/stationary_trajectory_generator.h>
 
 #include <base_local_planner/oscillation_cost_function.h>
 #include <base_local_planner/euclidean_distance_cost_function.h>
@@ -185,6 +186,7 @@ namespace dwa_local_planner {
       // see constructor body for explanations
       base_local_planner::SimpleTrajectoryGenerator generator_;
       base_local_planner::FollowerTrajectoryGenerator follower_generator_;
+      base_local_planner::StationaryTrajectoryGenerator stationary_generator_;
 
       base_local_planner::OscillationCostFunction oscillation_costs_;
       base_local_planner::HeadingCostFunction heading_costs_;

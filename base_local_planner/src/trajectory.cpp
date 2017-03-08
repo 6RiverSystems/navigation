@@ -50,6 +50,13 @@ namespace base_local_planner {
     th = th_pts_[index];
   }
 
+  void Trajectory::getVelocity(unsigned int index, double& vx, double& vy, double& vth) const {
+    vx = vx_pts_[index];
+    vy = vy_pts_[index];
+    vth = vth_pts_[index];
+  }
+
+
   void Trajectory::setPoint(unsigned int index, double x, double y, double th, double vx, double vy, double vth){
     x_pts_[index] = x;
     y_pts_[index] = y;
@@ -63,9 +70,9 @@ namespace base_local_planner {
     x_pts_.push_back(x);
     y_pts_.push_back(y);
     th_pts_.push_back(th);
-    vx_pts_.push_back(x);
-    vy_pts_.push_back(y);
-    vth_pts_.push_back(th);
+    vx_pts_.push_back(vx);
+    vy_pts_.push_back(vy);
+    vth_pts_.push_back(vth);
   }
 
   void Trajectory::resetPoints(){

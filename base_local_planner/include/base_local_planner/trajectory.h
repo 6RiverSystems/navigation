@@ -73,6 +73,15 @@ namespace base_local_planner {
       void getPoint(unsigned int index, double& x, double& y, double& th) const;
 
       /**
+       * @brief  Get a point within the trajectory
+       * @param index The index of the point to get
+       * @param x Will be set to the x position of the point
+       * @param y Will be set to the y position of the point
+       * @param th Will be set to the theta position of the point
+       */
+      void getVelocity(unsigned int index, double& vx, double& vy, double& vth) const;
+
+      /**
        * @brief  Set a point within the trajectory
        * @param index The index of the point to set
        * @param x The x position

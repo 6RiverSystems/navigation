@@ -100,6 +100,7 @@ namespace dwa_local_planner {
 
     euclidean_distance_costs_.setScale(config.euclidean_distance_scale);
     euclidean_distance_scale_ = config.euclidean_distance_scale;
+    always_use_euclidean_goal_distance_ = config.always_use_euclidean_goal_distance;
 
     minimum_simulation_time_factor_ = config.minimum_simulation_time_factor;
 
@@ -134,6 +135,10 @@ namespace dwa_local_planner {
     vsamples_[0] = vx_samp;
     vsamples_[1] = vy_samp;
     vsamples_[2] = vth_samp;
+
+    generator_.enable(config.enable_simple_trajectory_generator);
+    follower_generator_.enable(config.enable_follower_trajectory_generator);
+    stationary_generator_.enable(config.enable_stationary_trajectory_generator);
   }
 
   DWAPlanner::DWAPlanner(std::string name, base_local_planner::LocalPlannerUtil *planner_util) :
@@ -202,7 +207,8 @@ namespace dwa_local_planner {
 
     // trajectory generators
     std::vector<base_local_planner::TrajectorySampleGenerator*> generator_list;
-    // generator_list.push_back(&generator_);
+    generator_list.push_back(&generator_);
+    generator_list.push_back(&stationary_generator_);
     generator_list.push_back(&follower_generator_);
 
     scored_sampling_planner_ = base_local_planner::SimpleScoredSamplingPlanner(generator_list, critics);
@@ -422,7 +428,9 @@ namespace dwa_local_planner {
     follower_generator_.initialise(pos,
         vel,
         &limits);
-
+    stationary_generator_.initialise(pos,
+        vel,
+        &limits);
     jerk_costs_.setCurrentVelocity(vel);
 
     result_traj_.cost_ = -7;

@@ -71,6 +71,7 @@ namespace dwa_local_planner {
         ROS_WARN("Could not find mode %d in list of configurations", mode);
         return;
       }
+      ROS_WARN("Switching to mode %d");
 
       DWAPlannerConfig config = mode_configurations_[mode]->getConfig();
 

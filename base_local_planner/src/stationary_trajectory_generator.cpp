@@ -2,7 +2,7 @@
  *
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2008, Willow Garage, Inc.
+ *  Copyright (c) 2017 6 River Systems.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,53 +32,82 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: TKruse
+ * Author: dgrieneisen
  *********************************************************************/
 
-#ifndef TRAJECTORY_SAMPLE_GENERATOR_H_
-#define TRAJECTORY_SAMPLE_GENERATOR_H_
+#include <base_local_planner/stationary_trajectory_generator.h>
+#include <ros/ros.h>
+#include <cmath>
 
-#include <base_local_planner/trajectory.h>
+#include <base_local_planner/velocity_iterator.h>
 
 namespace base_local_planner {
 
+void StationaryTrajectoryGenerator::initialise(
+    const Eigen::Vector3f& pos,
+    const Eigen::Vector3f& vel,
+    base_local_planner::LocalPlannerLimits* limits) {
+
+  // Stored
+  pos_ = pos;
+  vel_ = vel;
+  limits_ = limits;
+
+  trajectory_generated_ = false;
+}
+
 /**
- * @class TrajectorySampleGenerator
- * @brief Provides an interface for navigation trajectory generators
+ * Whether this generator can create more trajectories
  */
-class TrajectorySampleGenerator {
-public:
+bool StationaryTrajectoryGenerator::hasMoreTrajectories() {
+  return enabled_ && !trajectory_generated_;
+}
 
-  /**
-   * Whether this generator can create more trajectories
-   */
-  virtual bool hasMoreTrajectories() = 0;
+/**
+ * Create and return the next sample trajectory
+ */
+bool StationaryTrajectoryGenerator::nextTrajectory(Trajectory &comp_traj) {
+  bool result = false;
+  if (hasMoreTrajectories()) {
+    if (generateTrajectory(
+        pos_,
+        vel_,
+        comp_traj)) {
+      result = true;
+    }
+  }
+  return result;
+}
 
-  /**
-   * Whether this generator can create more trajectories
-   */
-  virtual bool nextTrajectory(Trajectory &traj) = 0;
+/**
+ * @param pos current position of robot
+ * @param vel desired velocity for sampling
+ */
+bool StationaryTrajectoryGenerator::generateTrajectory(
+      Eigen::Vector3f pos,
+      Eigen::Vector3f vel,
+      base_local_planner::Trajectory& traj) {
 
-  /**
-   * @brief  Virtual destructor for the interface
-   */
-  virtual ~TrajectorySampleGenerator() {}
+  trajectory_generated_ = true;
+  traj.cost_   = -1.0; // placed here in case we return early
 
-  virtual double getStartLinearVelocity() { return 0;};
-  virtual double getStartAngularVelocity() { return 0;};
-
-  void enable(bool val)
+  double epsilon = 0.01;
+  if (std::fabs(vel[0]) < epsilon &&
+      std::fabs(vel[1]) < epsilon &&
+      std::fabs(vel[2]) < epsilon)
   {
-    enabled_ = val;
+    ROS_WARN("Generating trajectory at %f, %f, %f.", pos[0], pos[1], pos[2]);
+    traj.resetPoints();
+    traj.addPoint(pos[0], pos[1], pos[2], 0.0, 0.0, 0.0);
+    traj.xv_ = 0.0;
+    traj.yv_ = 0.0;
+    traj.thetav_ = 0.0;
+    traj.time_delta_ = 0.1;
+    return true;
   }
 
+  return false;
+}
 
-protected:
-  TrajectorySampleGenerator() {}
-  bool enabled_ = false;
+} /* namespace base_local_planner */
 
-};
-
-} // end namespace
-
-#endif /* TRAJECTORY_SAMPLE_GENERATOR_H_ */
