@@ -79,7 +79,7 @@ namespace dwa_local_planner {
       base_local_planner::LocalPlannerLimits limits;
       limits.max_trans_vel = config.max_trans_vel;
       limits.min_trans_vel = config.min_trans_vel;
-      limits.max_vel_x = config.max_vel_x;
+      limits.max_vel_x = std::min(main_config.max_vel_x, config.max_vel_x);
       limits.min_vel_x = config.min_vel_x;
       limits.max_vel_y = config.max_vel_y;
       limits.min_vel_y = config.min_vel_y;
