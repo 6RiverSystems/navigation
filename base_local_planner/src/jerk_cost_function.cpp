@@ -99,9 +99,9 @@ void JerkCostFunction::calculateAccelerations(Trajectory* traj, Eigen::Vector3f 
     (*linear_accel) = (traj->xv_ - vel[0]) / traj->time_delta_;
     (*angular_accel) = (traj->thetav_ - vel[2]) / traj->time_delta_;
   }
-  else
+  else if (traj->time_delta_ < 0)
   {
-    ROS_WARN("Non-positive time delta in jerk cost function. %f.  %s", traj->time_delta_, msg.c_str());
+    ROS_WARN("Negative time delta in jerk cost function. %f.  %s", traj->time_delta_, msg.c_str());
   }
 }
 

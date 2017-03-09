@@ -71,7 +71,7 @@ namespace dwa_local_planner {
         ROS_WARN("Could not find mode %d in list of configurations", mode);
         return;
       }
-      ROS_INFO("Switching dwa planner to mode %d", mode);
+      ROS_WARN("Switching dwa planner to mode %d", mode);
 
       DWAPlannerConfig config = mode_configurations_[mode]->getConfig();
 
@@ -141,7 +141,7 @@ namespace dwa_local_planner {
       /////// Set up the different modes.
       if (!private_nh.hasParam("modes"))
       {
-        ROS_WARN("No modes provided.");
+        ROS_ERROR("DWAPlannerROS cannot be initialized because no modes were provided.");
         return;
       }
 
