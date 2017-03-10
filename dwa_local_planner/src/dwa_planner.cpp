@@ -104,6 +104,7 @@ namespace dwa_local_planner {
 
     heading_costs_.setPoseCaptureMinRadius(config.heading_critic_capture_min_radius);
     heading_costs_.setPoseCaptureMaxRadius(config.heading_critic_capture_max_radius);
+    heading_costs_.setRejectionHalfAngle(config.heading_critic_half_angle);
 
     minimum_simulation_time_factor_ = config.minimum_simulation_time_factor;
 
