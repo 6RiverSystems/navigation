@@ -102,6 +102,9 @@ namespace dwa_local_planner {
     euclidean_distance_scale_ = config.euclidean_distance_scale;
     always_use_euclidean_goal_distance_ = config.always_use_euclidean_goal_distance;
 
+    heading_costs_.setPoseCaptureMinRadius(config.heading_critic_capture_min_radius);
+    heading_costs_.setPoseCaptureMaxRadius(config.heading_critic_capture_max_radius);
+
     minimum_simulation_time_factor_ = config.minimum_simulation_time_factor;
 
     // obstacle costs can vary due to scaling footprint feature
