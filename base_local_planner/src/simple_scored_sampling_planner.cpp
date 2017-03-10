@@ -64,7 +64,7 @@ namespace base_local_planner {
       msg->w = traj.thetav_;
     }
 
-    double traj_cost = 0;
+    double traj_cost = traj.cost_;
     int gen_id = 0;
     int k = -1;
     for(std::vector<TrajectoryCostFunction*>::iterator score_function = critics_.begin(); score_function != critics_.end(); ++score_function) {

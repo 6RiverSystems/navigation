@@ -124,7 +124,7 @@ bool FollowerTrajectoryGenerator::generateTrajectory(
       double max_sim_time,
       base_local_planner::Trajectory& traj) {
   double eps = 1e-4;
-  traj.cost_   = -1.0; // placed here in case we return early
+  traj.cost_   = 0.0; // placed here in case we return early
   double simulation_time = max_sim_time;
   unsigned int start_idx = 0;
 

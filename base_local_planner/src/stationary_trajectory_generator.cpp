@@ -89,7 +89,7 @@ bool StationaryTrajectoryGenerator::generateTrajectory(
       base_local_planner::Trajectory& traj) {
 
   trajectory_generated_ = true;
-  traj.cost_   = -1.0; // placed here in case we return early
+  traj.cost_   = 100.0; // placed here in case we return early
 
   double epsilon = 0.01;
   if (std::fabs(vel[0]) < epsilon &&

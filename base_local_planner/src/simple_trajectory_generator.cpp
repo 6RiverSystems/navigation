@@ -187,7 +187,7 @@ bool SimpleTrajectoryGenerator::generateTrajectory(
       base_local_planner::Trajectory& traj) {
   double vmag = hypot(sample_target_vel[0], sample_target_vel[1]);
   double eps = 1e-4;
-  traj.cost_   = -1.0; // placed here in case we return early
+  traj.cost_   = 0.0; // placed here in case we return early
   //trajectory might be reused so we'll make sure to reset it
   traj.resetPoints();
 
