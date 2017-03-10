@@ -152,6 +152,7 @@ namespace dwa_local_planner {
   {
     ros::NodeHandle private_nh("~/" + name);
 
+    goal_costs_.setStopOnFailure( false );
     goal_front_costs_.setStopOnFailure( false );
     alignment_costs_.setStopOnFailure( false );
 
