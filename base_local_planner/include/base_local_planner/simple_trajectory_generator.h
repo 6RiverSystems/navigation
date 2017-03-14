@@ -162,6 +162,8 @@ protected:
   double sim_time_, sim_granularity_, angular_sim_granularity_;
   bool use_dwa_;
   double sim_period_; // only for dwa
+
+  static constexpr double EPSILON = 1e-4;
 };
 
 } /* namespace base_local_planner */

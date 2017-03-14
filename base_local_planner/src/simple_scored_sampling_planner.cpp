@@ -211,10 +211,6 @@ namespace base_local_planner {
         }
       }
       ROS_DEBUG("Evaluated %d trajectories, found %d valid", count, count_valid);
-      // if (best_traj_cost >= 0) {
-      //   // do not try fallback generators
-      //   break;
-      // }
     }
 
     cost_msg.selected_v = traj.xv_;
