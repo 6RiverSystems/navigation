@@ -74,7 +74,7 @@ public:
    */
   double scoreTrajectory(Trajectory &traj);
 
-  void setPreviousTrajectoryAndVelocity(Trajectory* traj, Eigen::Vector3f vel);
+  void setPreviousTrajectoryAndVelocity(const Trajectory& traj, const Eigen::Vector3f& vel);
 
   void setCurrentVelocity(Eigen::Vector3f vel)
   {
@@ -82,8 +82,8 @@ public:
   };
 
 private:
-  void calculateAccelerations(Trajectory* traj, Eigen::Vector3f vel,
-    double* linear_accel, double* angular_accel, std::string msg);
+  void calculateAccelerations(const Trajectory& traj, Eigen::Vector3f vel,
+    std::string msg, double& linear_accel, double& angular_accel);
 
   double EPSILON;
   double old_linear_accel_;

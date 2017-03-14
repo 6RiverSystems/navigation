@@ -492,7 +492,7 @@ namespace dwa_local_planner {
       drive_velocities.setIdentity();
     } else {
       // add it to the jerk costs
-      jerk_costs_.setPreviousTrajectoryAndVelocity(&result_traj_, vel);
+      jerk_costs_.setPreviousTrajectoryAndVelocity(result_traj_, vel);
 
       tf::Vector3 start(result_traj_.xv_, result_traj_.yv_, 0);
       drive_velocities.setOrigin(start);
