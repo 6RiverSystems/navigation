@@ -2,7 +2,7 @@
  *
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2016, 6 River Systems
+ *  Copyright (c) 2017, 6 River Systems
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,69 +32,80 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Daniel Grieneisen
+ * Author: DGrieneisen
  *********************************************************************/
 
-#include <base_local_planner/critics/global_plan_distance_cost_function.h>
-#include <tf/transform_datatypes.h>
 #include <base_local_planner/geometry_math_helpers.h>
+#include <ros/ros.h>
 
 namespace base_local_planner {
 
-GlobalPlanDistanceCostFunction::GlobalPlanDistanceCostFunction(double max_distance_from_plan) :
-    max_allowed_distance_from_plan_(max_distance_from_plan),
-    distance_violation_(false) {}
+double distanceToLineSegment(const Eigen::Vector2f& pos,
+  const Eigen::Vector2f& p0, const Eigen::Vector2f& p1)
+{
+  double l2 = (p1 - p0).squaredNorm();
+  if (l2 == 0.0)
+  {
+    ROS_DEBUG("dtLS early.p0 %f,%f p1 %f, %f, pos %f, %f",
+      p0[0], p0[1], p1[0], p1[1], pos[0], pos[1]);
+    return (pos - p1).norm();
+  }
+  double t = std::max(0.0, std::min(1.0, (pos - p0).dot(p1 - p0) / l2));
 
-void GlobalPlanDistanceCostFunction::setTargetPoses(std::vector<geometry_msgs::PoseStamped> target_poses) {
-  target_poses_ = target_poses;
+  Eigen::Vector2f projection = p0 + t * (p1 - p0);
+
+  ROS_DEBUG("dtLS: p0 %f,%f p1 %f, %f, pos %f, %f, t %f, proje %f %f",
+    p0[0], p0[1], p1[0], p1[1], pos[0], pos[1], t, projection[0], projection[1]);
+  return (pos - projection).norm();
 }
 
-bool GlobalPlanDistanceCostFunction::prepare() {
-
-  distance_violation_ = true;
-
-  if (target_poses_.size() == 0)
+double distanceAlongLineSegment(const Eigen::Vector2f& pos,
+  const Eigen::Vector2f& p0, const Eigen::Vector2f& p1)
+{
+  double l = (p1 - p0).norm();
+  if (l == 0.0)
   {
-    distance_violation_ = false;
-    return true;
+    return 0.0;
   }
-
-  // Go forwards through the poses and see if any are within the minimum distance
-  Eigen::Vector2f current_pose_vector = poseStampedToVector(current_pose_);
-  // Vectors for storage
-  Eigen::Vector2f p0 = Eigen::Vector2f::Zero();
-  Eigen::Vector2f p1 = Eigen::Vector2f::Zero();
-
-  for (size_t k = 0; k < target_poses_.size() - 1; ++k)
-  {
-    // Pull out the datas
-    p0 = poseStampedToVector(target_poses_[k]);
-    p1 = poseStampedToVector(target_poses_[k + 1]);
-    if (distanceToLineSegment(current_pose_vector, p0, p1) < max_allowed_distance_from_plan_)
-    {
-      distance_violation_ = false;
-      break;
-    }
-  }
-
-  if (distance_violation_)
-  {
-    ROS_WARN("Global plan is too far from the current robot pose.");
-  }
-  return true;
+  return (pos - p0).dot(p1 - p0) / l;
 }
 
-double GlobalPlanDistanceCostFunction::scoreTrajectory(Trajectory &traj) {
-
-  if (distance_violation_)
+Eigen::Vector2f poseAtDistanceAlongLineSegment(double distance,
+  const Eigen::Vector2f& p0, const Eigen::Vector2f& p1)
+{
+  double l2 = (p1 - p0).squaredNorm();
+  if (l2 == 0.0)
   {
-    // Check to see if the trajectory is coming to a stop
-    if (std::fabs(traj.thetav_) > EPSILON || std::fabs(traj.xv_) > EPSILON)
-    {
-      return -1.0;
-    }
+    return p1;
   }
-  return 0.0;
+
+  double t = distance / l2;
+
+  Eigen::Vector2f projection = p0 + t * (p1 - p0);
+
+  ROS_DEBUG("paDtLS: p0 %f,%f p1 %f, %f, dist %f, t %f, proje %f %f",
+    p0[0], p0[1], p1[0], p1[1], distance, t, projection[0], projection[1]);
+  return projection;
 }
 
-} /* namespace base_local_planner */
+Eigen::Vector2f poseStampedToVector(geometry_msgs::PoseStamped pose)
+{
+  Eigen::Vector2f p = Eigen::Vector2f::Zero();
+  p[0] = pose.pose.position.x;
+  p[1] = pose.pose.position.y;
+  return p;
+}
+
+double angleMinusPiToPi(double val)
+{
+  while (val > M_PI)
+  {
+    val -= 2 * M_PI;
+  }
+  while (val < -M_PI)
+  {
+    val += 2 * M_PI;
+  }
+}
+
+}

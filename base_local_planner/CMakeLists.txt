@@ -88,6 +88,7 @@ add_library(base_local_planner
     src/critics/prefer_forward_cost_function.cpp
     src/follower_trajectory_generator.cpp
     src/footprint_helper.cpp
+    src/geometry_math_helpers.cpp
     src/goal_functions.cpp
     src/map_cell.cpp
     src/map_grid.cpp
@@ -145,6 +146,7 @@ if(CATKIN_ENABLE_TESTING)
     test/utest.cpp
     test/velocity_iterator_test.cpp
     test/footprint_helper_test.cpp
+    test/geometry_math_helpers_test.cpp
     test/trajectory_generator_test.cpp
     test/follower_trajectory_generator_test.cpp
     test/global_plan_distance_cost_function_test.cpp
