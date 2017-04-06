@@ -82,6 +82,7 @@ add_library(base_local_planner
     src/footprint_helper.cpp
     src/goal_functions.cpp
     src/heading_cost_function.cpp
+    src/global_plan_distance_cost_function.cpp
     src/jerk_cost_function.cpp
     src/map_cell.cpp
     src/map_grid.cpp

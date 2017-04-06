@@ -61,6 +61,7 @@
 #include <base_local_planner/oscillation_cost_function.h>
 #include <base_local_planner/euclidean_distance_cost_function.h>
 #include <base_local_planner/heading_cost_function.h>
+#include <base_local_planner/global_plan_distance_cost_function.h>
 #include <base_local_planner/jerk_cost_function.h>
 #include <base_local_planner/velocity_cost_function.h>
 #include <base_local_planner/map_grid_cost_function.h>
@@ -190,6 +191,7 @@ namespace dwa_local_planner {
 
       base_local_planner::OscillationCostFunction oscillation_costs_;
       base_local_planner::HeadingCostFunction heading_costs_;
+      base_local_planner::GlobalPlanDistanceCostFunction global_plan_distance_costs_;
       base_local_planner::EuclideanDistanceCostFunction euclidean_distance_costs_;
       base_local_planner::JerkCostFunction jerk_costs_;
       base_local_planner::VelocityCostFunction velocity_costs_;
