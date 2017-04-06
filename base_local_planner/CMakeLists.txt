@@ -146,6 +146,7 @@ if(CATKIN_ENABLE_TESTING)
     test/footprint_helper_test.cpp
     test/trajectory_generator_test.cpp
     test/follower_trajectory_generator_test.cpp
+    test/global_plan_distance_cost_function_test.cpp
     test/map_grid_test.cpp)
   target_link_libraries(base_local_planner_utest
       base_local_planner trajectory_planner_ros
