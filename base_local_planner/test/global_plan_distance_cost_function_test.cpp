@@ -5,9 +5,9 @@
  */
 #include <gtest/gtest.h>
 
-#include <base_local_planner/global_plan_distance_cost_function.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <tf/transform_datatypes.h>
+#include <base_local_planner/critics/global_plan_distance_cost_function.h>
+
+#include "critic_test_helpers.h"
 
 namespace base_local_planner {
 
@@ -19,41 +19,9 @@ GlobalPlanDistanceCostFunction createGPDCF()
   return gpdcf;
 }
 
-geometry_msgs::PoseStamped createPoseStamped(float x, float y, float yaw)
-{
-  geometry_msgs::PoseStamped p;
-  p.pose.position.x = x;
-  p.pose.position.y = y;
-  p.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
-  return p;
-}
-
-std::vector<geometry_msgs::PoseStamped> createGlobalPlan()
-{
-  // Create a global plan
-  std::vector<geometry_msgs::PoseStamped> out;
-
-  // Create a straight line down the x axis
-  double x = 0.0;
-  double y = 0.0;
-  double yaw = 0.0;
-
-  for (x = 0.0; x <= 5.0; x += 0.1)
-  {
-    out.push_back(createPoseStamped(x, y, yaw));
-  }
-  return out;
-}
-
-Trajectory createTrajectory(double v, double w)
-{
-  return Trajectory(v, 0, w, 0.1, 1);
-}
-
 
 TEST(GlobalPlanDistanceCostFunction, test)
 {
-
   GlobalPlanDistanceCostFunction cf = createGPDCF();
   Trajectory traj;
 

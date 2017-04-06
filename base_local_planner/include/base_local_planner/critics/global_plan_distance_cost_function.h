@@ -38,7 +38,7 @@
 #ifndef GLOBAL_PLAN_DISTANCE_COST_FUNCTION_H_
 #define GLOBAL_PLAN_DISTANCE_COST_FUNCTION_H_
 
-#include <base_local_planner/trajectory_cost_function.h>
+#include <base_local_planner/critics/trajectory_cost_function.h>
 #include <geometry_msgs/PoseStamped.h>
 
 namespace base_local_planner {

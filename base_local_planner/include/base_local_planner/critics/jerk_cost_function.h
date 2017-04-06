@@ -38,7 +38,7 @@
 #ifndef JERK_COST_FUNCTION_H_
 #define JERK_COST_FUNCTION_H_
 
-#include <base_local_planner/trajectory_cost_function.h>
+#include <base_local_planner/critics/trajectory_cost_function.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <Eigen/Core>
 

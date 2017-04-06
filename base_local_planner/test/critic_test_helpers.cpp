@@ -34,59 +34,78 @@
  *
  * Author: Daniel Grieneisen
  *********************************************************************/
+#include "critic_test_helpers.h"
 
-#include <base_local_planner/global_plan_distance_cost_function.h>
-#include <tf/transform_datatypes.h>
-
-namespace base_local_planner {
-
-GlobalPlanDistanceCostFunction::GlobalPlanDistanceCostFunction(double max_distance_from_plan) :
-    max_allowed_distance_from_plan_(max_distance_from_plan),
-    distance_violation_(false) {}
-
-void GlobalPlanDistanceCostFunction::setTargetPoses(std::vector<geometry_msgs::PoseStamped> target_poses) {
-  target_poses_ = target_poses;
+geometry_msgs::PoseStamped createPoseStamped(float x, float y, float yaw)
+{
+  geometry_msgs::PoseStamped p;
+  p.pose.position.x = x;
+  p.pose.position.y = y;
+  p.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
+  return p;
 }
 
-bool GlobalPlanDistanceCostFunction::prepare() {
+std::vector<geometry_msgs::PoseStamped> createGlobalPlan()
+{
+  // Create a global plan
+  std::vector<geometry_msgs::PoseStamped> out;
 
-  distance_violation_ = true;
+  // Create a straight line down the x axis
+  double x = 0.0;
+  double y = 0.0;
+  double yaw = 0.0;
 
-  if (target_poses_.size() == 0)
+  for (x = 0.0; x <= 5.0; x += 0.1)
   {
-    distance_violation_ = false;
-    return true;
+    out.push_back(createPoseStamped(x, y, yaw));
   }
-
-  // Go forwards through the poses and see if any are within the minimum distance
-  double distance_limit_squared = max_allowed_distance_from_plan_ * max_allowed_distance_from_plan_;
-
-  for (size_t k = 0; k < target_poses_.size(); ++k)
-  {
-    if (poseDistanceSquared(target_poses_[k], current_pose_) < distance_limit_squared)
-    {
-      distance_violation_ = false;
-      break;
-    }
-  }
-  if (distance_violation_)
-  {
-    ROS_WARN("Global plan is too far from the current robot pose.");
-  }
-  return true;
+  return out;
 }
 
-double GlobalPlanDistanceCostFunction::scoreTrajectory(Trajectory &traj) {
-
-  if (distance_violation_)
-  {
-    // Check to see if the trajectory is coming to a stop
-    if (std::fabs(traj.thetav_) > EPSILON || std::fabs(traj.xv_) > EPSILON)
-    {
-      return -1.0;
-    }
-  }
-  return 0.0;
+base_local_planner::Trajectory createTrajectory(double v, double w)
+{
+  return base_local_planner::Trajectory(v, 0, w, 0.1, 1);
 }
 
-} /* namespace base_local_planner */
+Eigen::Vector3f createVector(float x, float y, float yaw)
+{
+  Eigen::Vector3f out = Eigen::Vector3f::Zero();
+  out[0] = x;
+  out[1] = y;
+  out[2] = yaw;
+  return out;
+}
+
+Eigen::Vector2f create2DVector(float x, float y)
+{
+  Eigen::Vector2f out = Eigen::Vector2f::Zero();
+  out[0] = x;
+  out[1] = y;
+  return out;
+}
+
+bool vector2DEqual(Eigen::Vector2f a, Eigen::Vector2f b)
+{
+  double epsilon = 0.0001;
+  return (std::fabs(a[0] - b[0]) < epsilon && std::fabs(a[0] - b[0]) < epsilon);
+}
+
+void printTrajectory(const base_local_planner::Trajectory& traj)
+{
+  std::stringstream ss;
+
+  ss << "Print trajectory" << std::endl
+    << " xv: " << traj.xv_ << ", thetav: " << traj.thetav_ << std::endl
+    << " cost: " << traj.cost_ << ", td: " << traj.time_delta_ << ", samples: " << traj.getPointsSize() << std::endl;
+
+  for (unsigned int k = 0; k < traj.getPointsSize(); ++k)
+  {
+    double x, y, th;
+    traj.getPoint(k, x, y, th);
+    double vx, vy, vth;
+    traj.getVelocity(k, vx, vy, vth);
+    ss << "  " << k << ": [" << x << ", " << y << ", " << th << "] ["
+      << vx << ", " << vy << ", " << vth << "]" << std::endl;
+  }
+  std::cerr << ss.str();
+}

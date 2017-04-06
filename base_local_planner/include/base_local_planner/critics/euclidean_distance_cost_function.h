@@ -2,7 +2,7 @@
  *
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2008, Willow Garage, Inc.
+ *  Copyright (c) 2016, 6 River Systems
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,58 +32,67 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: TKruse
+ * Author: Daniel Grieneisen
  *********************************************************************/
 
-#ifndef OSCILLATION_COST_FUNCTION_H_
-#define OSCILLATION_COST_FUNCTION_H_
+#ifndef EUCLIDEAN_DISTANCE_COST_FUNCTION_H_
+#define EUCLIDEAN_DISTANCE_COST_FUNCTION_H_
 
-#include <base_local_planner/trajectory_cost_function.h>
-#include <Eigen/Core>
+#include <base_local_planner/critics/trajectory_cost_function.h>
+#include <geometry_msgs/PoseStamped.h>
 
 namespace base_local_planner {
 
-class OscillationCostFunction: public base_local_planner::TrajectoryCostFunction {
+/**
+ * This class provides cost based on the heading of the robot relative to the trajectory.
+ *
+ * It will reject trajectories that are not turn in place if the path goes behind the robot.
+ */
+class EuclideanDistanceCostFunction: public base_local_planner::TrajectoryCostFunction {
 public:
-  OscillationCostFunction();
-  virtual ~OscillationCostFunction();
+  /**
+   * Constructor
+   * @param rejection_half_angle Sets the rejection_half_angle (see other comments)
+   */
+  EuclideanDistanceCostFunction();
 
+  /**
+   * Destructor
+   */
+  ~EuclideanDistanceCostFunction() {}
+
+  /**
+   * Set the target poses (global plan)
+   * @param target_poses The target poses
+   */
+  void setTargetPoses(std::vector<geometry_msgs::PoseStamped> target_poses);
+
+  /**
+   * Set the current pose of the robot
+   * @param pose The current pose
+   */
+  void setCurrentPose(geometry_msgs::PoseStamped pose) {current_pose_ = pose;}
+
+  /**
+   * Prepare for operation.
+   * @return true if preparations were successful
+   */
+  bool prepare();
+
+  /**
+   * Scores the trajectory.  Returns a negative value for rejected trajectories.
+   * @param traj The trajectory
+   * @return Non-negative value if the trajectory is valid, negative otherwise.
+   *     -1 indicates that there is no angular velocity and the heading is in violation
+   *     -2 indicates that there is some linear velocity and the heading is in violation
+   */
   double scoreTrajectory(Trajectory &traj);
 
-  bool prepare() {return true;};
-
-  /**
-   * @brief  Reset the oscillation flags for the local planner
-   */
-  void resetOscillationFlags();
-
-
-  void updateOscillationFlags(Eigen::Vector3f pos, base_local_planner::Trajectory* traj, double min_vel_trans);
-
-  void setOscillationResetDist(double dist, double angle);
-
 private:
+  std::vector<geometry_msgs::PoseStamped> target_poses_;
 
-  void resetOscillationFlagsIfPossible(const Eigen::Vector3f& pos, const Eigen::Vector3f& prev);
-
-  /**
-   * @brief  Given a trajectory that's selected, set flags if needed to
-   * prevent the robot from oscillating
-   * @param  t The selected trajectory
-   * @return True if a flag was set, false otherwise
-   */
-  bool setOscillationFlags(base_local_planner::Trajectory* t, double min_vel_trans);
-
-  // flags
-  bool strafe_pos_only_, strafe_neg_only_, strafing_pos_, strafing_neg_;
-  bool rot_pos_only_, rot_neg_only_, rotating_pos_, rotating_neg_;
-  bool forward_pos_only_, forward_neg_only_, forward_pos_, forward_neg_;
-
-  // param
-  double oscillation_reset_dist_, oscillation_reset_angle_;
-
-  Eigen::Vector3f prev_stationary_pos_;
+  geometry_msgs::PoseStamped current_pose_;
 };
 
 } /* namespace base_local_planner */
-#endif /* OSCILLATION_COST_FUNCTION_H_ */
+#endif /* EUCLIDEAN_DISTANCE_COST_FUNCTION_H_ */

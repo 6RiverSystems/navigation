@@ -2,7 +2,7 @@
  *
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2008, Willow Garage, Inc.
+ *  Copyright (c) 2016, 6 River Systems
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,33 +32,61 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: TKruse
+ * Author: Daniel Grieneisen
  *********************************************************************/
 
-#ifndef PREFER_FORWARD_COST_FUNCTION_H_
-#define PREFER_FORWARD_COST_FUNCTION_H_
-
-#include <base_local_planner/trajectory_cost_function.h>
+#include <base_local_planner/critics/global_plan_distance_cost_function.h>
+#include <tf/transform_datatypes.h>
 
 namespace base_local_planner {
 
-class PreferForwardCostFunction: public base_local_planner::TrajectoryCostFunction {
-public:
+GlobalPlanDistanceCostFunction::GlobalPlanDistanceCostFunction(double max_distance_from_plan) :
+    max_allowed_distance_from_plan_(max_distance_from_plan),
+    distance_violation_(false) {}
 
-  PreferForwardCostFunction(double penalty) : penalty_(penalty) {}
-  ~PreferForwardCostFunction() {}
+void GlobalPlanDistanceCostFunction::setTargetPoses(std::vector<geometry_msgs::PoseStamped> target_poses) {
+  target_poses_ = target_poses;
+}
 
-  double scoreTrajectory(Trajectory &traj);
+bool GlobalPlanDistanceCostFunction::prepare() {
 
-  bool prepare() {return true;};
+  distance_violation_ = true;
 
-  void setPenalty(double penalty) {
-    penalty_ = penalty;
+  if (target_poses_.size() == 0)
+  {
+    distance_violation_ = false;
+    return true;
   }
 
-private:
-  double penalty_;
-};
+  // Go forwards through the poses and see if any are within the minimum distance
+  double distance_limit_squared = max_allowed_distance_from_plan_ * max_allowed_distance_from_plan_;
+
+  for (size_t k = 0; k < target_poses_.size(); ++k)
+  {
+    if (poseDistanceSquared(target_poses_[k], current_pose_) < distance_limit_squared)
+    {
+      distance_violation_ = false;
+      break;
+    }
+  }
+  if (distance_violation_)
+  {
+    ROS_WARN("Global plan is too far from the current robot pose.");
+  }
+  return true;
+}
+
+double GlobalPlanDistanceCostFunction::scoreTrajectory(Trajectory &traj) {
+
+  if (distance_violation_)
+  {
+    // Check to see if the trajectory is coming to a stop
+    if (std::fabs(traj.thetav_) > EPSILON || std::fabs(traj.xv_) > EPSILON)
+    {
+      return -1.0;
+    }
+  }
+  return 0.0;
+}
 
 } /* namespace base_local_planner */
-#endif /* PREFER_FORWARD_COST_FUNCTION_H_ */
