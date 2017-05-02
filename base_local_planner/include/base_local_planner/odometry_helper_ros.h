@@ -40,6 +40,7 @@
 
 #include <tf/transform_datatypes.h>
 #include <nav_msgs/Odometry.h>
+#include <Eigen/Core>
 #include <ros/ros.h>
 #include <boost/thread.hpp>
 
@@ -63,9 +64,14 @@ public:
 
   void getOdom(nav_msgs::Odometry& base_odom);
 
+  void getEstimatedOdom(nav_msgs::Odometry& base_odom);
+
   void getRobotVel(tf::Stamped<tf::Pose>& robot_vel);
 
   void getEstimatedRobotVel(tf::Stamped<tf::Pose>& robot_vel);
+
+  void getEstimatedOdomPose(tf::Stamped<tf::Pose>& pose);
+
 
   /** @brief Set the odometry topic.  This overrides what was set in the constructor, if anything.
    *
@@ -83,6 +89,31 @@ public:
 
   void setExpectedVelocityLoopDelay(double delay);
 
+  void setWheelbase(double wheelbase);
+
+
+  // Some of these will become private or something after testing
+  nav_msgs::Odometry calculateEstimatedOdometry();
+
+  nav_msgs::Odometry forwardEstimateOdometry(geometry_msgs::Twist cmd_vel,
+    const nav_msgs::Odometry& current_odom, double estimate_dt);
+
+  static Eigen::Vector3f computeNewPositions(Eigen::Vector3f pos,
+    Eigen::Vector3f vel, double dt);
+
+  static Eigen::Vector3f computeNewVelocities(Eigen::Vector3f desired_vel,
+    Eigen::Vector3f vel, double wheel_limits, double wheelbase, double dt);
+
+  static void scaleWheelSpeedChanges(double& dPrimary, double& dSecondary,
+    double accel, double dt);
+
+  static void getWheelGroundSpeedsFromVel(const Eigen::Vector3f& vel, double wheel_base,
+    double& left_ms, double& right_ms);
+
+  static Eigen::Vector3f getVelFromWheelGroundSpeeds(double wheel_base, double left_ms,
+    double right_ms);
+
+
 private:
   double forwardEstimateVelocity(double old, double cmd, double accel, double dt);
   geometry_msgs::Twist estimateRobotVel();
@@ -92,6 +123,7 @@ private:
   double velocity_loop_delays_;
   double linear_acceleration_rate_;
   double angular_acceleration_rate_;
+  double wheelbase_;
   double cmd_vel_timeout_;
 
   //odom topic
