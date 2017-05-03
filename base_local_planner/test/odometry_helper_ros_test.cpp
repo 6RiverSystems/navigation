@@ -11,7 +11,7 @@
 #include "critic_test_helpers.h"
 
 namespace base_local_planner {
-const double WHEELBASE = 0.26;
+const double WHEELBASE = 0.5;
 const double EPSILON = 0.00001;
 
 TEST(OdometryHelperRosTest, wheel_speeds){
@@ -70,7 +70,6 @@ TEST(OdometryHelperRosTest, velocity_iteration)
   Eigen::Vector3f vel = Eigen::Vector3f::Zero();
   Eigen::Vector3f res = Eigen::Vector3f::Zero();
 
-  double wheelbase = 0.5;
   double wheel_limits = 0.7;
   double dt = 0.1;
 
@@ -79,35 +78,35 @@ TEST(OdometryHelperRosTest, velocity_iteration)
     OdometryHelperRos::computeNewVelocities(
       createVector(0.0, 0.0, 0.0), // desired
       createVector(0.0, 0.0, 0.0), // current
-      wheel_limits, wheelbase, dt)));
+      wheel_limits, WHEELBASE, dt)));
 
   // TIP small
   EXPECT_TRUE(vector3fEqual(createVector(0.0, 0.0, 0.05),  // result
     OdometryHelperRos::computeNewVelocities(
       createVector(0.0, 0.0, 0.05), // desired
       createVector(0.0, 0.0, 0.0), // current
-      wheel_limits, wheelbase, dt)));
+      wheel_limits, WHEELBASE, dt)));
 
   // Forwards small
   EXPECT_TRUE(vector3fEqual(createVector(0.05, 0.0, 0.0),  // result
     OdometryHelperRos::computeNewVelocities(
       createVector(0.05, 0.0, 0.0), // desired
       createVector(0.0, 0.0, 0.0), // current
-      wheel_limits, wheelbase, dt)));
+      wheel_limits, WHEELBASE, dt)));
 
   // TIP big
   EXPECT_TRUE(vector3fEqual(createVector(0.0, 0.0, 0.28),  // result
     OdometryHelperRos::computeNewVelocities(
       createVector(0.0, 0.0, 1.00), // desired
       createVector(0.0, 0.0, 0.0), // current
-      wheel_limits, wheelbase, dt)));
+      wheel_limits, WHEELBASE, dt)));
 
   // Forwards big
   EXPECT_TRUE(vector3fEqual(createVector(0.07, 0.0, 0.0),  // result
     OdometryHelperRos::computeNewVelocities(
       createVector(1.0, 0.0, 0.0), // desired
       createVector(0.0, 0.0, 0.0), // current
-      wheel_limits, wheelbase, dt)));
+      wheel_limits, WHEELBASE, dt)));
 }
 
 TEST(OdometryHelperRosTest, pose_update)
@@ -116,11 +115,11 @@ TEST(OdometryHelperRosTest, pose_update)
   double dt = 0.1;
 
   // Basic test
-  // EXPECT_TRUE(odometryEqual(createOdometry(0, 0, 0, 0, 0), // result
-  //   ohr->forwardEstimateOdometry(
-  //     createTwist(0.0, 0.0), // command velocity
-  //     createOdometry(0, 0, 0, 0, 0), // input odometry
-  //     dt)));
+  EXPECT_TRUE(odometryEqual(createOdometry(0, 0, 0, 0, 0), // result
+    ohr->forwardEstimateOdometry(
+      createTwist(0.0, 0.0), // command velocity
+      createOdometry(0, 0, 0, 0, 0), // input odometry
+      dt)));
 
   // Test with velocity
   EXPECT_TRUE(odometryEqual(createOdometry(0.0035, 0, 0, 0.07, 0), // result

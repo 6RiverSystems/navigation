@@ -40,9 +40,9 @@
 namespace base_local_planner {
 
 OdometryHelperRos::OdometryHelperRos(std::string odom_topic) :
-    cmd_vel_time_(0.0), velocity_loop_delays_(0.067), linear_acceleration_rate_(0.7),
+    cmd_vel_time_(0.0), forward_estimation_time_(0.067), linear_acceleration_rate_(0.7),
     angular_acceleration_rate_(2.3), cmd_vel_timeout_(0.2),
-    wheelbase_(0.523) {
+    wheelbase_(0.5235) {
   setOdomTopic( odom_topic );
 }
 
@@ -141,13 +141,10 @@ void OdometryHelperRos::setWheelbase(double wheelbase)
   wheelbase_= wheelbase;
 }
 
-
-void OdometryHelperRos::setExpectedVelocityLoopDelay(double delay)
+void OdometryHelperRos::setForwardEstimationTime(double time)
 {
-  velocity_loop_delays_ = delay;
+  forward_estimation_time_ = time;
 }
-
-
 
 nav_msgs::Odometry OdometryHelperRos::calculateEstimatedOdometry()
 {
@@ -186,12 +183,11 @@ nav_msgs::Odometry OdometryHelperRos::calculateEstimatedOdometry()
   }
   else
   {
-    double estimate_dt = time_since_measurement + velocity_loop_delays_;
+    double estimate_dt = time_since_measurement + forward_estimation_time_;
     ROS_DEBUG("Estimate dt: %f", estimate_dt);
     return forwardEstimateOdometry(cmd_vel, reported_odom, estimate_dt);
   }
 }
-
 
 nav_msgs::Odometry OdometryHelperRos::forwardEstimateOdometry(geometry_msgs::Twist cmd_vel,
   const nav_msgs::Odometry& current_odom, double estimate_dt)
@@ -226,7 +222,7 @@ nav_msgs::Odometry OdometryHelperRos::forwardEstimateOdometry(geometry_msgs::Twi
   output.pose.pose = vector3fToPose(pos);
   output.twist.twist = vector3fToTwist(vel);
 
-  ROS_INFO("Updated odom pose from [%f, %f, %f] to [%f, %f, %f] and vel from [%f, %f] to [%f, %f]",
+  ROS_DEBUG("Updated odom pose from [%f, %f, %f] to [%f, %f, %f] and vel from [%f, %f] to [%f, %f]",
     start_pos[0], start_pos[1], start_pos[2], pos[0], pos[1], pos[2],
     start_vel[0], start_vel[2], vel[0], vel[2]);
   return output;
@@ -240,7 +236,6 @@ Eigen::Vector3f OdometryHelperRos::computeNewPositions(Eigen::Vector3f pos,
   new_pos[2] = pos[2] + vel[2] * dt;
   return new_pos;
 }
-
 
 /**
  * cheange vel using acceleration limits to converge towards sample_target-vel
@@ -325,7 +320,5 @@ Eigen::Vector3f OdometryHelperRos::getVelFromWheelGroundSpeeds(double wheel_base
   }
   return vel;
 }
-
-
 
 } /* namespace base_local_planner */

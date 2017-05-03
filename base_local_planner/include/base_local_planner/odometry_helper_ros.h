@@ -87,7 +87,7 @@ public:
 
   void setAccelerationRates(double linear, double angular);
 
-  void setExpectedVelocityLoopDelay(double delay);
+  void setForwardEstimationTime(double time);
 
   void setWheelbase(double wheelbase);
 
@@ -120,7 +120,7 @@ private:
 
   geometry_msgs::Twist cmd_vel_;
   double cmd_vel_time_;
-  double velocity_loop_delays_;
+  double forward_estimation_time_;
   double linear_acceleration_rate_;
   double angular_acceleration_rate_;
   double wheelbase_;
