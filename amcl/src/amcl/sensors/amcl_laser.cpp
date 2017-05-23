@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
-#include <ros/ros.h>
+
 #include "amcl_laser.h"
 
 using namespace amcl;
@@ -299,7 +299,6 @@ double AMCLLaser::LikelihoodFieldModel(AMCLLaserData *data, pf_sample_set_t* set
       p += pz*pz*pz;
     }
     sample->confidence = confidence / total_confidence;
-    ROS_ERROR("sample confidence: %f", sample->confidence);
     sample->weight *= p;
     total_weight += sample->weight;
   }
