@@ -50,6 +50,7 @@
 #include "nav_msgs/GetMap.h"
 #include "nav_msgs/SetMap.h"
 #include "std_srvs/Empty.h"
+#include "std_msgs/Float64.h"
 
 // For transform support
 #include "tf/transform_broadcaster.h"
@@ -241,6 +242,7 @@ class AmclNode
     ros::NodeHandle private_nh_;
     ros::Publisher pose_pub_;
     ros::Publisher particlecloud_pub_;
+    ros::Publisher pose_weight_pub_;
     ros::ServiceServer global_loc_srv_;
     ros::ServiceServer nomotion_update_srv_; //to let amcl update samples without requiring motion
     ros::ServiceServer set_map_srv_;
@@ -432,6 +434,7 @@ AmclNode::AmclNode() :
 
   pose_pub_ = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("amcl_pose", 2, true);
   particlecloud_pub_ = nh_.advertise<geometry_msgs::PoseArray>("particlecloud", 2, true);
+  pose_weight_pub_ = nh_.advertise<std_msgs::Float64>("amcl_pose_weight", 2, true);
   global_loc_srv_ = nh_.advertiseService("global_localization",
 					 &AmclNode::globalLocalizationCallback,
                                          this);
@@ -1312,6 +1315,9 @@ AmclNode::laserReceived(const sensor_msgs::LaserScanConstPtr& laser_scan)
          pf_matrix_fprintf(hyps[max_weight_hyp].pf_pose_cov, stdout, "%6.3f");
          puts("");
        */
+      std_msgs::Float64 pose_weight;
+      pose_weight.data = hyps[max_weight_hyp].weight;
+      pose_weight_pub_.publish(pose_weight);
 
       geometry_msgs::PoseWithCovarianceStamped p;
       // Fill in the header
