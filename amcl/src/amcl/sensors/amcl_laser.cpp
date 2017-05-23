@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
-
+#include <ros/ros.h>
 #include "amcl_laser.h"
 
 using namespace amcl;
@@ -218,6 +218,8 @@ double AMCLLaser::LikelihoodFieldModel(AMCLLaserData *data, pf_sample_set_t* set
   double p;
   double obs_range, obs_bearing;
   double total_weight;
+  double confidence;
+  double total_confidence;
   pf_sample_t *sample;
   pf_vector_t pose;
   pf_vector_t hit;
@@ -237,6 +239,9 @@ double AMCLLaser::LikelihoodFieldModel(AMCLLaserData *data, pf_sample_set_t* set
 
     p = 1.0;
 
+    // Initialze confidence and total_confidence
+    confidence = 0.0;
+    total_confidence = 0.0;
     // Pre-compute a couple of things
     double z_hit_denom = 2 * self->sigma_hit * self->sigma_hit;
     double z_rand_mult = 1.0/data->range_max;
@@ -249,6 +254,7 @@ double AMCLLaser::LikelihoodFieldModel(AMCLLaserData *data, pf_sample_set_t* set
 
     for (i = 0; i < data->range_count; i += step)
     {
+      total_confidence += 1.0;
       obs_range = data->ranges[i][0];
       obs_bearing = data->ranges[i][1];
 
@@ -282,7 +288,7 @@ double AMCLLaser::LikelihoodFieldModel(AMCLLaserData *data, pf_sample_set_t* set
       pz += self->z_hit * exp(-(z * z) / z_hit_denom);
       // Part 2: random measurements
       pz += self->z_rand * z_rand_mult;
-
+      confidence += pz;
       // TODO: outlier rejection for short readings
 
       assert(pz <= 1.0);
@@ -292,7 +298,8 @@ double AMCLLaser::LikelihoodFieldModel(AMCLLaserData *data, pf_sample_set_t* set
       // works well, though...
       p += pz*pz*pz;
     }
-
+    sample->confidence = confidence / total_confidence;
+    ROS_ERROR("sample confidence: %f", sample->confidence);
     sample->weight *= p;
     total_weight += sample->weight;
   }

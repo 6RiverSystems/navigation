@@ -63,6 +63,8 @@ typedef struct
 
   // Weight for this pose
   double weight;
+
+  double confidence;
   
 } pf_sample_t;
 
