@@ -492,7 +492,7 @@ void pf_cluster_stats(pf_t *pf, pf_sample_set_t *set)
   pf_cluster_t *cluster;
   
   // Workspace
-  double m[4], c[2][2];
+  double m[4], c[2][2], f;
   size_t count;
   double weight;
 
@@ -507,8 +507,10 @@ void pf_cluster_stats(pf_t *pf, pf_sample_set_t *set)
     cluster = set->clusters + i;
     cluster->count = 0;
     cluster->weight = 0;
+    cluster->confidence = 0;
     cluster->mean = pf_vector_zero();
     cluster->cov = pf_matrix_zero();
+    cluster->f = 0.0;
 
     for (j = 0; j < 4; j++)
       cluster->m[j] = 0.0;
@@ -520,6 +522,7 @@ void pf_cluster_stats(pf_t *pf, pf_sample_set_t *set)
   // Initialize overall filter stats
   count = 0;
   weight = 0.0;
+  f = 0.0;
   set->mean = pf_vector_zero();
   set->cov = pf_matrix_zero();
   for (j = 0; j < 4; j++)
@@ -556,11 +559,13 @@ void pf_cluster_stats(pf_t *pf, pf_sample_set_t *set)
     cluster->m[1] += sample->weight * sample->pose.v[1];
     cluster->m[2] += sample->weight * cos(sample->pose.v[2]);
     cluster->m[3] += sample->weight * sin(sample->pose.v[2]);
+    cluster->f += sample->weight * sample->confidence;
 
     m[0] += sample->weight * sample->pose.v[0];
     m[1] += sample->weight * sample->pose.v[1];
     m[2] += sample->weight * cos(sample->pose.v[2]);
     m[3] += sample->weight * sin(sample->pose.v[2]);
+    f += sample->weight * sample->confidence;
 
     // Compute covariance in linear components
     for (j = 0; j < 2; j++)
@@ -579,7 +584,7 @@ void pf_cluster_stats(pf_t *pf, pf_sample_set_t *set)
     cluster->mean.v[0] = cluster->m[0] / cluster->weight;
     cluster->mean.v[1] = cluster->m[1] / cluster->weight;
     cluster->mean.v[2] = atan2(cluster->m[3], cluster->m[2]);
-
+    cluster->confidence = cluster->f / cluster->weight;
     cluster->cov = pf_matrix_zero();
 
     // Covariance in linear components
@@ -602,7 +607,7 @@ void pf_cluster_stats(pf_t *pf, pf_sample_set_t *set)
   set->mean.v[0] = m[0] / weight;
   set->mean.v[1] = m[1] / weight;
   set->mean.v[2] = atan2(m[3], m[2]);
-
+  set->confidence = f / weight;
   // Covariance in linear components
   for (j = 0; j < 2; j++)
     for (k = 0; k < 2; k++)
@@ -653,7 +658,7 @@ void pf_get_cep_stats(pf_t *pf, pf_vector_t *mean, double *var)
 
 
 // Get the statistics for a particular cluster.
-int pf_get_cluster_stats(pf_t *pf, int clabel, double *weight,
+int pf_get_cluster_stats(pf_t *pf, int clabel, double *weight, double *confidence,
                          pf_vector_t *mean, pf_matrix_t *cov)
 {
   pf_sample_set_t *set;
@@ -666,6 +671,7 @@ int pf_get_cluster_stats(pf_t *pf, int clabel, double *weight,
   cluster = set->clusters + clabel;
 
   *weight = cluster->weight;
+  *confidence = cluster->confidence;
   *mean = cluster->mean;
   *cov = cluster->cov;
 

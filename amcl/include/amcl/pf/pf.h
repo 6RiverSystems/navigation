@@ -78,12 +78,15 @@ typedef struct
   // Total weight of samples in this cluster
   double weight;
 
+  // Weighted confidence based on all the samples in this cluster
+  double confidence;
+
   // Cluster statistics
   pf_vector_t mean;
   pf_matrix_t cov;
 
   // Workspace
-  double m[4], c[2][2];
+  double m[4], c[2][2], f;
   
 } pf_cluster_t;
 
@@ -105,6 +108,7 @@ typedef struct _pf_sample_set_t
   // Filter statistics
   pf_vector_t mean;
   pf_matrix_t cov;
+  double confidence;
   int converged; 
 } pf_sample_set_t;
 
@@ -166,7 +170,7 @@ void pf_get_cep_stats(pf_t *pf, pf_vector_t *mean, double *var);
 
 // Compute the statistics for a particular cluster.  Returns 0 if
 // there is no such cluster.
-int pf_get_cluster_stats(pf_t *pf, int cluster, double *weight,
+int pf_get_cluster_stats(pf_t *pf, int cluster, double *weight, double *confidence,
                          pf_vector_t *mean, pf_matrix_t *cov);
 
 // Display the sample set

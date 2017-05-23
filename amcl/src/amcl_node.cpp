@@ -82,6 +82,9 @@ typedef struct
   // Total weight (weights sum to 1)
   double weight;
 
+  // Laser matching confidence
+  double confidence;
+
   // Mean of pose esimate
   pf_vector_t pf_pose_mean;
 
@@ -1284,15 +1287,17 @@ AmclNode::laserReceived(const sensor_msgs::LaserScanConstPtr& laser_scan)
         hyp_count < pf_->sets[pf_->current_set].cluster_count; hyp_count++)
     {
       double weight;
+      double confidence;
       pf_vector_t pose_mean;
       pf_matrix_t pose_cov;
-      if (!pf_get_cluster_stats(pf_, hyp_count, &weight, &pose_mean, &pose_cov))
+      if (!pf_get_cluster_stats(pf_, hyp_count, &weight, &confidence, &pose_mean, &pose_cov))
       {
         ROS_ERROR("Couldn't get stats on cluster %d", hyp_count);
         break;
       }
 
       hyps[hyp_count].weight = weight;
+      hyps[hyp_count].confidence = confidence;
       hyps[hyp_count].pf_pose_mean = pose_mean;
       hyps[hyp_count].pf_pose_cov = pose_cov;
 
@@ -1315,9 +1320,9 @@ AmclNode::laserReceived(const sensor_msgs::LaserScanConstPtr& laser_scan)
          pf_matrix_fprintf(hyps[max_weight_hyp].pf_pose_cov, stdout, "%6.3f");
          puts("");
        */
-      //std_msgs::Float64 pose_confidence;
-      //pose_confidence.data = hyps[max_weight_hyp].confidence;
-      //pose_confidence_pub_.publish(pose_confidence);
+      std_msgs::Float64 pose_confidence;
+      pose_confidence.data = hyps[max_weight_hyp].confidence;
+      pose_confidence_pub_.publish(pose_confidence);
 
       geometry_msgs::PoseWithCovarianceStamped p;
       // Fill in the header
