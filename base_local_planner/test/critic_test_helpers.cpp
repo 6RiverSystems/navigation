@@ -126,6 +126,16 @@ Eigen::Vector2f create2DVector(float x, float y)
   return out;
 }
 
+costmap_2d::ObstructionMsg createObstructionMsg(double x, double y, std::string frame, int type, bool cleared)
+{
+  costmap_2d::ObstructionMsg out;
+  out.x = x;
+  out.y = y;
+  out.type = type;
+  out.cleared = cleared;
+  out.frame_id = frame;
+}
+
 nav_msgs::Odometry createOdometry(double x, double y, double yaw, double v, double w)
 {
   nav_msgs::Odometry odom;
