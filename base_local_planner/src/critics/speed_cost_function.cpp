@@ -111,7 +111,10 @@ double SpeedCostFunction::calculateAllowedSpeed(costmap_2d::ObstructionMsg obs)
 
 void SpeedCostFunction::setCurrentPose(geometry_msgs::PoseStamped pose)
 {
-  world_frame_id_ = pose.header.frame_id;
+  if (!pose.header.frame_id.empty())
+  {
+    world_frame_id_ = pose.header.frame_id;
+  }
   tf::Stamped<tf::Transform> current_pose_tf;
   tf::poseStampedMsgToTF(pose, current_pose_tf);
 
@@ -140,6 +143,7 @@ costmap_2d::ObstructionMsg SpeedCostFunction::obstructionToBodyFrame(const costm
   tf::Vector3 pt_out = current_pose_inv_tf_ * pt_in;
   out.x = pt_out[0];
   out.y = pt_out[1];
+  ROS_DEBUG("Converted point from [%f, %f] to [%f, %f]", in.x, in.y, out.x, out.y);
   return out;
 }
 

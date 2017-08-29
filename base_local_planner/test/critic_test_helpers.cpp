@@ -134,6 +134,7 @@ costmap_2d::ObstructionMsg createObstructionMsg(double x, double y, std::string 
   out.type = type;
   out.cleared = cleared;
   out.frame_id = frame;
+  return out;
 }
 
 nav_msgs::Odometry createOdometry(double x, double y, double yaw, double v, double w)
