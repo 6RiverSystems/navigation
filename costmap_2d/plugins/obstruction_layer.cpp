@@ -421,7 +421,7 @@ void ObstructionLayer::updateObstructions(double* min_x, double* min_y, double* 
   }
 
   // Clear the stored obstruction messages
-  std::shared_ptr<std::vector<ObstructionMsg>> obstruction_msgs;
+  auto obstruction_msgs = std::make_shared<std::vector<ObstructionMsg>>();
 
   ObstructionListMsg msg;
   msg.costmap_name = name_;
@@ -557,7 +557,7 @@ void ObstructionLayer::checkObservation(const Observation& obs, double* min_x, d
       // Check to see if it is in the master grid already.
       if (type != ObstructionType::STATIC)
       {
-        ROS_INFO("Creating new obstacle at %f, %f, %d, type: %d", px, py, index, static_cast<int>(type));
+        ROS_DEBUG("Creating new obstacle at %f, %f, %d, type: %d", px, py, index, static_cast<int>(type));
         // Create a new one.  Store in list and map.
         auto obs = std::make_shared<Obstruction>(px, py, type, cloud.header.frame_id);
         obstruction_list_.push_back(obs);
@@ -575,7 +575,7 @@ ObstructionType ObstructionLayer::getObstructionType(double px, double py)
 {
   double distance_from_static = layered_costmap_->getDistanceFromStaticMap(px, py) * resolution_;
 
-  ROS_INFO("Getting type at: %f, %f.  distance: %f, thresh: %f",
+  ROS_DEBUG("Getting type at: %f, %f.  distance: %f, thresh: %f",
     px, py, distance_from_static, distance_threshold_);
 
   if (distance_from_static == 0.0)

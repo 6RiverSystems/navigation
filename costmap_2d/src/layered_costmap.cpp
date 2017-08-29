@@ -77,12 +77,15 @@ void LayeredCostmap::addPlugin(boost::shared_ptr<Layer> plugin)
 
 std::shared_ptr<std::vector<ObstructionMsg>> LayeredCostmap::getObstructions()
 {
-  auto output = std::shared_ptr<std::vector<ObstructionMsg>>();
+  auto output = std::make_shared<std::vector<ObstructionMsg>>();
 
   for (auto layer : obstruction_layers_)
   {
     auto obs = layer->getObstructions();
-    output->insert(output->end(), obs->begin(), obs->end());
+    if (obs)
+    {
+      output->insert(output->end(), obs->begin(), obs->end());
+    }
   }
 
   return output;

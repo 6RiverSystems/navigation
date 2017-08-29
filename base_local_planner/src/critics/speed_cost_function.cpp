@@ -84,6 +84,7 @@ bool SpeedCostFunction::prepare() {
       max_allowed_vel_ = speed;
     }
   }
+  ROS_INFO_THROTTLE(5, "Setting max speed to %f", max_allowed_vel_);
 
   return true;
 }
