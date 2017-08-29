@@ -125,10 +125,12 @@ namespace dwa_local_planner {
     // obstacle costs can vary due to scaling footprint feature
     obstacle_costs_.setParams(config.max_trans_vel, config.max_scaling_factor, config.scaling_speed);
 
-
     speed_costs_.setMaxVelocity(config.max_vel_x);
     speed_costs_.setMinVelocity(config.min_slow_vel_x);
     speed_costs_.setAcceleration(config.acc_lim_x);
+    speed_costs_.setXBuffer(config.speed_cost_x_buffer);
+    speed_costs_.setYBuffer(config.speed_cost_y_buffer);
+    speed_costs_.setHalfAngle(config.speed_cost_half_angle);
 
     oscillation_reset_plan_divergence_distance_ = config.oscillation_reset_plan_divergence_distance;
 
@@ -435,7 +437,8 @@ namespace dwa_local_planner {
 
     velocity_costs_.setGoalDistanceSquared(sq_dist);
 
-    speed_costs_.setCircumscribedRadius(planner_util_->getCostmap2DROS()->getLayeredCostmap()->getCircumscribedRadius());
+    // speed_costs_.setCircumscribedRadius(planner_util_->getCostmap2DROS()->getLayeredCostmap()->getCircumscribedRadius());
+    speed_costs_.setFootprint(planner_util_->getCostmap2DROS()->getRobotFootprint());
     speed_costs_.setObstructions(planner_util_->getCostmap2DROS()->getLayeredCostmap()->getObstructions());
     speed_costs_.setCurrentPose(global_pose_as_pose);
   }

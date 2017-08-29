@@ -45,10 +45,15 @@ SpeedCostFunction::SpeedCostFunction() :
     min_linear_velocity_(0.0),
     max_allowed_vel_(1.0),
     linear_acceleration_(0.7),
-    circumscribed_radius_(0.6),
     half_angle_(1.6),
     min_distance_to_stop_(0.0),
     max_distance_to_stop_(0.0),
+    y_buffer_(0.3),
+    x_buffer_(0.3),
+    footprint_min_y_(-0.4),
+    footprint_min_x_(-0.4),
+    footprint_max_y_(0.4),
+    footprint_max_x_(0.4),
     body_frame_id_("base_link"),
     world_frame_id_("odom") {}
 
@@ -84,7 +89,7 @@ bool SpeedCostFunction::prepare() {
       max_allowed_vel_ = speed;
     }
   }
-  ROS_INFO_THROTTLE(5, "Setting max speed to %f", max_allowed_vel_);
+  ROS_INFO_THROTTLE(0.2, "Setting max speed to %f", max_allowed_vel_);
 
   return true;
 }
@@ -98,7 +103,36 @@ double SpeedCostFunction::getBearingToObstacle(costmap_2d::ObstructionMsg obs)
 double SpeedCostFunction::calculateAllowedSpeed(costmap_2d::ObstructionMsg obs)
 {
   // Use circumscribed radius or footprint?
-  double distance_to_obstruction = std::max(0.0, std::sqrt(obs.x * obs.x + obs.y * obs.y) - circumscribed_radius_);
+  // double distance_to_obstruction = std::max(0.0, std::sqrt(obs.x * obs.x + obs.y * obs.y) - (circumscribed_radius_ + min_buffer_));
+
+  // double abs_y_dist = obs.y < 0 ? std::min(0.0, footprint_min_y_ - obs.y) : std::max(0.0, obs.y - footprint_max_y_);
+  // double abs_x_dist = obs.x < 0 ? std::min(0.0, footprint_min_x_ - obs.x) : std::max(0.0, obs.x - footprint_max_x_);
+  double abs_y_dist = 0;
+  if (obs.y < footprint_min_y_)
+  {
+    abs_y_dist = footprint_min_y_ - obs.y;
+  }
+  else if (obs.y > footprint_max_y_)
+  {
+    abs_y_dist = obs.y - footprint_max_y_;
+  }
+
+  double abs_x_dist = 0;
+  if (obs.x < footprint_min_x_)
+  {
+    abs_x_dist = footprint_min_x_ - obs.x;
+  }
+  else if (obs.x > footprint_max_x_)
+  {
+    abs_x_dist = obs.x - footprint_max_x_;
+  }
+
+  double x_dist_with_buffer = std::max(0.0, abs_x_dist - x_buffer_);
+  double y_dist_with_buffer = std::max(0.0, abs_y_dist - y_buffer_);
+
+
+  double distance_to_obstruction = std::sqrt(x_dist_with_buffer * x_dist_with_buffer + y_dist_with_buffer * y_dist_with_buffer);
+  ROS_DEBUG("Obs: %f, %f.  abs x: %f, abs y: %f, Dist: %f", obs.x, obs.y, abs_x_dist, abs_y_dist, distance_to_obstruction);
 
   // These should be constants
 
@@ -134,7 +168,6 @@ costmap_2d::ObstructionMsg SpeedCostFunction::obstructionToBodyFrame(const costm
     return in;
   }
 
-
   costmap_2d::ObstructionMsg out = in;
 
   // transform the point
@@ -151,6 +184,34 @@ void SpeedCostFunction::calculateStopDistances()
 {
   max_distance_to_stop_ = 0.5 * max_linear_velocity_ * max_linear_velocity_ / linear_acceleration_;
   min_distance_to_stop_ = 0.5 * min_linear_velocity_ * min_linear_velocity_ / linear_acceleration_;
+}
+
+void SpeedCostFunction::calculateFootprintBounds(std::vector<geometry_msgs::Point> footprint)
+{
+  if (footprint.empty())
+  {
+    // Set 0 values
+    footprint_max_x_ = 0;
+    footprint_max_y_ = 0;
+    footprint_min_y_ = 0;
+    footprint_min_x_ = 0;
+  }
+  else
+  {
+    // Reset the bounds
+    footprint_max_x_ = -std::numeric_limits<double>::max();
+    footprint_max_y_ = -std::numeric_limits<double>::max();
+    footprint_min_y_ = std::numeric_limits<double>::max();
+    footprint_min_x_ = std::numeric_limits<double>::max();
+
+    for (auto pt : footprint)
+    {
+      if (pt.x < footprint_min_x_) {footprint_min_x_ = pt.x;}
+      if (pt.x > footprint_max_x_) {footprint_max_x_ = pt.x;}
+      if (pt.y < footprint_min_y_) {footprint_min_y_ = pt.y;}
+      if (pt.y > footprint_max_y_) {footprint_max_y_ = pt.y;}
+    }
+  }
 }
 
 double SpeedCostFunction::scoreTrajectory(Trajectory &traj) {

@@ -110,9 +110,34 @@ public:
     world_frame_id_ = id;
   }
 
-  void setCircumscribedRadius(double rad)
+  // void setCircumscribedRadius(double rad)
+  // {
+  //   circumscribed_radius_ = rad;
+  // }
+
+  void setFootprint(std::vector<geometry_msgs::Point> footprint)
   {
-    circumscribed_radius_ = rad;
+    calculateFootprintBounds(footprint);
+  }
+
+  // void setMinBuffer(double buffer)
+  // {
+  //   min_buffer_ = buffer;
+  // }
+
+  void setYBuffer(double buffer)
+  {
+    y_buffer_ = buffer;
+  }
+
+  void setXBuffer(double buffer)
+  {
+    x_buffer_ = buffer;
+  }
+
+  void setHalfAngle(double val)
+  {
+    half_angle_ = val;
   }
 
 private:
@@ -125,6 +150,9 @@ private:
 
   void calculateStopDistances();
 
+  void calculateFootprintBounds(std::vector<geometry_msgs::Point> footprint);
+
+
   std::vector<geometry_msgs::PoseStamped> target_poses_;
   std::shared_ptr<std::vector<costmap_2d::ObstructionMsg>>  obstructions_;
 
@@ -136,8 +164,15 @@ private:
   double max_linear_velocity_;
   double min_linear_velocity_;
   double linear_acceleration_;
-  double circumscribed_radius_;
+  // double circumscribed_radius_;
   double half_angle_;
+  double x_buffer_;
+  double y_buffer_;
+
+  double footprint_min_x_;
+  double footprint_max_x_;
+  double footprint_min_y_;
+  double footprint_max_y_;
 
   tf::Transform current_pose_inv_tf_;
 
