@@ -164,7 +164,6 @@ private:
   double max_linear_velocity_;
   double min_linear_velocity_;
   double linear_acceleration_;
-  // double circumscribed_radius_;
   double half_angle_;
   double x_buffer_;
   double y_buffer_;

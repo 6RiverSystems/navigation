@@ -82,7 +82,6 @@ bool SpeedCostFunction::prepare() {
       continue;
     }
 
-    // Now calculate the speed
     double speed = calculateAllowedSpeed(obs_body_frame);
     if (speed < max_allowed_vel_)
     {
@@ -96,17 +95,11 @@ bool SpeedCostFunction::prepare() {
 
 double SpeedCostFunction::getBearingToObstacle(costmap_2d::ObstructionMsg obs)
 {
-  // Now calculate the bearing
   return atan2(obs.y, obs.x);
 }
 
 double SpeedCostFunction::calculateAllowedSpeed(costmap_2d::ObstructionMsg obs)
 {
-  // Use circumscribed radius or footprint?
-  // double distance_to_obstruction = std::max(0.0, std::sqrt(obs.x * obs.x + obs.y * obs.y) - (circumscribed_radius_ + min_buffer_));
-
-  // double abs_y_dist = obs.y < 0 ? std::min(0.0, footprint_min_y_ - obs.y) : std::max(0.0, obs.y - footprint_max_y_);
-  // double abs_x_dist = obs.x < 0 ? std::min(0.0, footprint_min_x_ - obs.x) : std::max(0.0, obs.x - footprint_max_x_);
   double abs_y_dist = 0;
   if (obs.y < footprint_min_y_)
   {
