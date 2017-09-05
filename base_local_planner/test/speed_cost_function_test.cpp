@@ -18,10 +18,13 @@ SpeedCostFunction createSCF()
 {
   SpeedCostFunction cf = SpeedCostFunction();
   cf.setWorldFrameId(WORLD_FRAME);
-  cf.setMaxVelocity(1.0);
-  cf.setMinVelocity(0.3);
+  cf.setMaxLinearVelocity(1.0);
+  cf.setMinLinearVelocity(0.3);
   cf.setAcceleration(0.7);
-  cf.setCircumscribedRadius(0.5);
+  cf.setXBuffer(0.1);
+  cf.setYBuffer(0.1);
+  cf.setHalfAngle(1.6);
+  cf.setFootprint(createFootprint(0.5, 0.5));
 
   return cf;
 }

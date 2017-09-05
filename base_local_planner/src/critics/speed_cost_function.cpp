@@ -88,7 +88,7 @@ bool SpeedCostFunction::prepare() {
       max_allowed_vel_ = speed;
     }
   }
-  ROS_INFO_THROTTLE(0.2, "Setting max speed to %f", max_allowed_vel_);
+  ROS_DEBUG_THROTTLE(0.2, "Setting max speed to %f", max_allowed_vel_);
 
   return true;
 }
@@ -157,7 +157,7 @@ costmap_2d::ObstructionMsg SpeedCostFunction::obstructionToBodyFrame(const costm
   }
   else if (in.frame_id != world_frame_id_)
   {
-    ROS_WARN_THROTTLE(1.0, "Received obstruction with unknown frame_id %s", in.frame_id.c_str());
+    ROS_ERROR_THROTTLE(1.0, "Received obstruction with unknown frame_id %s", in.frame_id.c_str());
     return in;
   }
 
@@ -183,6 +183,7 @@ void SpeedCostFunction::calculateFootprintBounds(std::vector<geometry_msgs::Poin
 {
   if (footprint.empty())
   {
+    ROS_ERROR_THROTTLE(1.0, "Trying to calculate footprint bounds in speed cost function, but footprint is empty");
     // Set 0 values
     footprint_max_x_ = 0;
     footprint_max_y_ = 0;

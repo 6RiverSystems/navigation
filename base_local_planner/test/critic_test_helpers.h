@@ -38,6 +38,7 @@
 #define BASE_LOCAL_PLANNER_CRITIC_TEST_HELPERS_H_
 
 #include <base_local_planner/trajectory.h>
+#include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseWithCovariance.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -61,6 +62,8 @@ geometry_msgs::TwistWithCovariance createTwistWithCovariance(float v, float w);
 geometry_msgs::TwistStamped createTwistStamped(float v, float w);
 
 nav_msgs::Odometry createOdometry(double x, double y, double yaw, double v, double w);
+
+std::vector<geometry_msgs::Point> createFootprint(double length, double width);
 
 std::vector<geometry_msgs::PoseStamped> createGlobalPlan();
 

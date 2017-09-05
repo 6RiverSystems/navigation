@@ -125,8 +125,8 @@ namespace dwa_local_planner {
     // obstacle costs can vary due to scaling footprint feature
     obstacle_costs_.setParams(config.max_trans_vel, config.max_scaling_factor, config.scaling_speed);
 
-    speed_costs_.setMaxVelocity(config.max_vel_x);
-    speed_costs_.setMinVelocity(config.min_slow_vel_x);
+    speed_costs_.setMaxLinearVelocity(config.max_vel_x);
+    speed_costs_.setMinLinearVelocity(config.min_slow_vel_x);
     speed_costs_.setAcceleration(config.acc_lim_x);
     speed_costs_.setXBuffer(config.speed_cost_x_buffer);
     speed_costs_.setYBuffer(config.speed_cost_y_buffer);

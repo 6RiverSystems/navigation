@@ -89,12 +89,12 @@ public:
    */
   double scoreTrajectory(Trajectory &traj);
 
-  void setMaxVelocity(double vel) {
+  void setMaxLinearVelocity(double vel) {
     max_linear_velocity_ = vel;
     calculateStopDistances();
   }
 
-  void setMinVelocity(double vel) {
+  void setMinLinearVelocity(double vel) {
     min_linear_velocity_ = vel;
     calculateStopDistances();
   }
@@ -110,20 +110,10 @@ public:
     world_frame_id_ = id;
   }
 
-  // void setCircumscribedRadius(double rad)
-  // {
-  //   circumscribed_radius_ = rad;
-  // }
-
   void setFootprint(std::vector<geometry_msgs::Point> footprint)
   {
     calculateFootprintBounds(footprint);
   }
-
-  // void setMinBuffer(double buffer)
-  // {
-  //   min_buffer_ = buffer;
-  // }
 
   void setYBuffer(double buffer)
   {
