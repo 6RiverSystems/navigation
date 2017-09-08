@@ -76,7 +76,10 @@ namespace base_local_planner {
         {
           msg->costs[k] = 0.0;
         }
-        if (critic_timing_.size() > k) {critic_timing_[k] += stopWatch.elapsedMilliseconds();}
+        if (critic_timing_.size() > k)
+        {
+          critic_timing_[k] += stopWatch.elapsedMilliseconds();
+        }
         continue;
       }
       double cost = score_function_p->scoreTrajectory(traj);
@@ -84,8 +87,14 @@ namespace base_local_planner {
         ROS_DEBUG("Velocity %.3lf, %.3lf, %.3lf discarded by cost function  %d with cost: %f", traj.xv_, traj.yv_, traj.thetav_, gen_id, cost);
         traj_cost = cost;
 
-        if (critic_timing_.size() > k) {critic_timing_[k] += stopWatch.elapsedMilliseconds();}
-        if (critic_costs_.size() > k) {critic_costs_[k] = cost;}
+        if (critic_timing_.size() > k)
+        {
+          critic_timing_[k] += stopWatch.elapsedMilliseconds();
+        }
+        if (critic_costs_.size() > k)
+        {
+          critic_costs_[k] = cost;
+        }
         if (msg != nullptr)
         {
           msg->costs[k] = cost;
@@ -106,11 +115,17 @@ namespace base_local_planner {
       if (best_traj_cost > 0) {
         // since we keep adding positives, once we are worse than the best, we will stay worse
         if (traj_cost > best_traj_cost) {
-          if (critic_timing_.size() > k) {critic_timing_[k] = stopWatch.elapsedMilliseconds();}
+          if (critic_timing_.size() > k)
+          {
+            critic_timing_[k] = stopWatch.elapsedMilliseconds();
+          }
           break;
         }
       }
-      if (critic_timing_.size() > k) {critic_timing_[k] += stopWatch.elapsedMilliseconds();}
+      if (critic_timing_.size() > k)
+      {
+        critic_timing_[k] += stopWatch.elapsedMilliseconds();
+      }
       gen_id ++;
     }
 
