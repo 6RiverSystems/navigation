@@ -314,7 +314,7 @@ namespace dwa_local_planner {
         &limits,
         vsamples_,
         true);
-    generator_.generateTrajectory(pos, vel, vel_samples, traj);
+    generator_.generateTrajectory(pos, vel, vel_samples, traj, true);
     double cost = scored_sampling_planner_.scoreTrajectory(traj, -1, nullptr);
     //if the trajectory is a legal one... the check passes
     if(cost >= 0) {
