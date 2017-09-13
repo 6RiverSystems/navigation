@@ -35,31 +35,25 @@
  * Author: Daniel Grieneisen
  *********************************************************************/
 
-#include <base_local_planner/critics/speed_cost_function.h>
+#include <base_local_planner/speed_limiter.h>
 #include <tf/transform_datatypes.h>
 
 namespace base_local_planner {
 
-SpeedCostFunction::SpeedCostFunction() :
-    max_linear_velocity_(1.0),
-    min_linear_velocity_(0.0),
-    max_allowed_vel_(1.0),
-    linear_acceleration_(0.7),
-    half_angle_(1.6),
-    min_distance_to_stop_(0.0),
-    max_distance_to_stop_(0.0),
-    y_buffer_(0.3),
-    x_buffer_(0.3),
+SpeedLimiter::SpeedLimiter() :
     footprint_min_y_(-0.4),
     footprint_min_x_(-0.4),
     footprint_max_y_(0.4),
     footprint_max_x_(0.4),
+    circumscribed_radius_(0.0),
     body_frame_id_("base_link"),
     world_frame_id_("odom") {}
 
-bool SpeedCostFunction::prepare() {
+bool SpeedLimiter::calculateLimits(double& max_allowed_linear_vel, double& max_allowed_angular_vel) {
   // Reset the maximum allowed velocity
-  max_allowed_vel_ = max_linear_velocity_;
+  max_allowed_linear_vel = params_.max_linear_velocity_;
+  max_allowed_angular_vel = params_.max_angular_velocity_;
+
   if (!obstructions_)
   {
     ROS_WARN_THROTTLE(1.0, "No obstructions");
@@ -77,28 +71,34 @@ bool SpeedCostFunction::prepare() {
     }
     costmap_2d::ObstructionMsg obs_body_frame = obstructionToBodyFrame(obs);
     // Check if the bearing to the obstacle is acceptable
-    if (std::fabs(getBearingToObstacle(obs_body_frame)) > half_angle_)
+    if (std::fabs(getBearingToObstacle(obs_body_frame)) > params_.half_angle_)
     {
       continue;
     }
 
-    double speed = calculateAllowedSpeed(obs_body_frame);
-    if (speed < max_allowed_vel_)
+    double linear_speed = calculateAllowedLinearSpeed(obs_body_frame);
+    if (linear_speed < max_allowed_linear_vel)
     {
-      max_allowed_vel_ = speed;
+      max_allowed_linear_vel = linear_speed;
+    }
+
+    double angular_speed = calculateAllowedAngularSpeed(obs_body_frame);
+    if (angular_speed < max_allowed_angular_vel)
+    {
+      max_allowed_angular_vel = angular_speed;
     }
   }
-  ROS_DEBUG_THROTTLE(0.2, "Setting max speed to %f", max_allowed_vel_);
+  ROS_INFO_THROTTLE(0.2, "Setting max speed to %f, %f", max_allowed_linear_vel, max_allowed_angular_vel);
 
   return true;
 }
 
-double SpeedCostFunction::getBearingToObstacle(costmap_2d::ObstructionMsg obs)
+double SpeedLimiter::getBearingToObstacle(costmap_2d::ObstructionMsg obs)
 {
   return atan2(obs.y, obs.x);
 }
 
-double SpeedCostFunction::calculateAllowedSpeed(costmap_2d::ObstructionMsg obs)
+double SpeedLimiter::calculateAllowedLinearSpeed(costmap_2d::ObstructionMsg obs)
 {
   double abs_y_dist = 0;
   if (obs.y < footprint_min_y_)
@@ -120,36 +120,48 @@ double SpeedCostFunction::calculateAllowedSpeed(costmap_2d::ObstructionMsg obs)
     abs_x_dist = obs.x - footprint_max_x_;
   }
 
-  double x_dist_with_buffer = std::max(0.0, abs_x_dist - x_buffer_);
-  double y_dist_with_buffer = std::max(0.0, abs_y_dist - y_buffer_);
+  double x_dist_with_buffer = std::max(0.0, abs_x_dist - params_.x_buffer_);
+  double y_dist_with_buffer = std::max(0.0, abs_y_dist - params_.y_buffer_);
 
 
   double distance_to_obstruction = std::sqrt(x_dist_with_buffer * x_dist_with_buffer + y_dist_with_buffer * y_dist_with_buffer);
   ROS_DEBUG("Obs: %f, %f.  abs x: %f, abs y: %f, Dist: %f", obs.x, obs.y, abs_x_dist, abs_y_dist, distance_to_obstruction);
 
-  // These should be constants
-
   double distance_scalar = std::max(0.0,
     std::min(1.0,
       (distance_to_obstruction - min_distance_to_stop_) / (max_distance_to_stop_ - min_distance_to_stop_)));
 
-  return min_linear_velocity_ + (max_linear_velocity_ - min_linear_velocity_) * distance_scalar;
+  return params_.min_linear_velocity_ + (params_.max_linear_velocity_ - params_.min_linear_velocity_) * distance_scalar;
 }
 
-void SpeedCostFunction::setCurrentPose(geometry_msgs::PoseStamped pose)
+double SpeedLimiter::calculateAllowedAngularSpeed(costmap_2d::ObstructionMsg obs)
 {
-  if (!pose.header.frame_id.empty())
-  {
-    world_frame_id_ = pose.header.frame_id;
-  }
-  tf::Stamped<tf::Transform> current_pose_tf;
-  tf::poseStampedMsgToTF(pose, current_pose_tf);
 
-  current_pose_inv_tf_ = current_pose_tf.inverse();
+  double distance_to_obstruction = std::sqrt(obs.x * obs.x + obs.y * obs.y) - circumscribed_radius_;
+
+
+  double distance_scalar = std::max(0.0,
+    std::min(1.0,
+      (distance_to_obstruction - params_.min_angular_velocity_effect_distance_)
+      / (params_.max_angular_velocity_effect_distance_ - params_.min_angular_velocity_effect_distance_)));
+
+  return params_.min_angular_velocity_ + (params_.max_angular_velocity_ - params_.min_angular_velocity_) * distance_scalar;
+}
+
+void SpeedLimiter::setCurrentPose(tf::Stamped<tf::Pose> pose)
+{
+  if (!pose.frame_id_.empty()
+    && world_frame_id_ != pose.frame_id_)
+  {
+    ROS_WARN("Received pose in frame %s, but world frame is %s",
+      pose.frame_id_.c_str(), world_frame_id_.c_str());
+  }
+
+  current_pose_inv_tf_ = pose.inverse();
 }
 
 
-costmap_2d::ObstructionMsg SpeedCostFunction::obstructionToBodyFrame(const costmap_2d::ObstructionMsg& in)
+costmap_2d::ObstructionMsg SpeedLimiter::obstructionToBodyFrame(const costmap_2d::ObstructionMsg& in)
 {
   if (in.frame_id == body_frame_id_)
   {
@@ -173,13 +185,13 @@ costmap_2d::ObstructionMsg SpeedCostFunction::obstructionToBodyFrame(const costm
   return out;
 }
 
-void SpeedCostFunction::calculateStopDistances()
+void SpeedLimiter::calculateStopDistances()
 {
-  max_distance_to_stop_ = 0.5 * max_linear_velocity_ * max_linear_velocity_ / linear_acceleration_;
-  min_distance_to_stop_ = 0.5 * min_linear_velocity_ * min_linear_velocity_ / linear_acceleration_;
+  max_distance_to_stop_ = 0.5 * params_.max_linear_velocity_ * params_.max_linear_velocity_ / params_.linear_acceleration_;
+  min_distance_to_stop_ = 0.5 * params_.min_linear_velocity_ * params_.min_linear_velocity_ / params_.linear_acceleration_;
 }
 
-void SpeedCostFunction::calculateFootprintBounds(std::vector<geometry_msgs::Point> footprint)
+void SpeedLimiter::calculateFootprintBounds(std::vector<geometry_msgs::Point> footprint)
 {
   if (footprint.empty())
   {
@@ -189,6 +201,8 @@ void SpeedCostFunction::calculateFootprintBounds(std::vector<geometry_msgs::Poin
     footprint_max_y_ = 0;
     footprint_min_y_ = 0;
     footprint_min_x_ = 0;
+
+    circumscribed_radius_ = 0;
   }
   else
   {
@@ -198,23 +212,18 @@ void SpeedCostFunction::calculateFootprintBounds(std::vector<geometry_msgs::Poin
     footprint_min_y_ = std::numeric_limits<double>::max();
     footprint_min_x_ = std::numeric_limits<double>::max();
 
+    circumscribed_radius_ = std::numeric_limits<double>::max();
+
     for (auto pt : footprint)
     {
       if (pt.x < footprint_min_x_) {footprint_min_x_ = pt.x;}
       if (pt.x > footprint_max_x_) {footprint_max_x_ = pt.x;}
       if (pt.y < footprint_min_y_) {footprint_min_y_ = pt.y;}
       if (pt.y > footprint_max_y_) {footprint_max_y_ = pt.y;}
+      double dist = std::sqrt(pt.x * pt.x + pt.y * pt.y);
+      if (dist < circumscribed_radius_) {circumscribed_radius_ = dist;}
     }
   }
-}
-
-double SpeedCostFunction::scoreTrajectory(Trajectory &traj) {
-  if (std::fabs(traj.xv_) > max_allowed_vel_)
-  {
-    return -1.0;
-  }
-
-  return 0.0;
 }
 
 } /* namespace base_local_planner */
