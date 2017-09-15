@@ -70,11 +70,6 @@ bool SpeedLimiter::calculateLimits(double& max_allowed_linear_vel, double& max_a
       continue;
     }
     costmap_2d::ObstructionMsg obs_body_frame = obstructionToBodyFrame(obs);
-    // Check if the bearing to the obstacle is acceptable
-    if (std::fabs(getBearingToObstacle(obs_body_frame)) > params_.half_angle_)
-    {
-      continue;
-    }
 
     double linear_speed = calculateAllowedLinearSpeed(obs_body_frame);
     if (linear_speed < max_allowed_linear_vel)
@@ -100,6 +95,12 @@ double SpeedLimiter::getBearingToObstacle(costmap_2d::ObstructionMsg obs)
 
 double SpeedLimiter::calculateAllowedLinearSpeed(costmap_2d::ObstructionMsg obs)
 {
+  // Check if the bearing to the obstacle is acceptable
+  if (std::fabs(getBearingToObstacle(obs)) > params_.half_angle_)
+  {
+    return params_.max_linear_velocity_;
+  }
+
   double abs_y_dist = 0;
   if (obs.y < footprint_min_y_)
   {
@@ -212,7 +213,7 @@ void SpeedLimiter::calculateFootprintBounds(std::vector<geometry_msgs::Point> fo
     footprint_min_y_ = std::numeric_limits<double>::max();
     footprint_min_x_ = std::numeric_limits<double>::max();
 
-    circumscribed_radius_ = std::numeric_limits<double>::max();
+    circumscribed_radius_ = 0;
 
     for (auto pt : footprint)
     {
@@ -221,7 +222,7 @@ void SpeedLimiter::calculateFootprintBounds(std::vector<geometry_msgs::Point> fo
       if (pt.y < footprint_min_y_) {footprint_min_y_ = pt.y;}
       if (pt.y > footprint_max_y_) {footprint_max_y_ = pt.y;}
       double dist = std::sqrt(pt.x * pt.x + pt.y * pt.y);
-      if (dist < circumscribed_radius_) {circumscribed_radius_ = dist;}
+      if (dist > circumscribed_radius_) {circumscribed_radius_ = dist;}
     }
   }
 }
