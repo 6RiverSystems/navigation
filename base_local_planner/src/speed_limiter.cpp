@@ -37,6 +37,7 @@
 
 #include <base_local_planner/speed_limiter.h>
 #include <tf/transform_datatypes.h>
+#include <costmap_2d/footprint.h>
 
 namespace base_local_planner {
 
@@ -69,6 +70,7 @@ bool SpeedLimiter::calculateLimits(double& max_allowed_linear_vel, double& max_a
     {
       continue;
     }
+
     costmap_2d::ObstructionMsg obs_body_frame = obstructionToBodyFrame(obs);
 
     double linear_speed = calculateAllowedLinearSpeed(obs_body_frame);
@@ -137,9 +139,7 @@ double SpeedLimiter::calculateAllowedLinearSpeed(costmap_2d::ObstructionMsg obs)
 
 double SpeedLimiter::calculateAllowedAngularSpeed(costmap_2d::ObstructionMsg obs)
 {
-
   double distance_to_obstruction = std::sqrt(obs.x * obs.x + obs.y * obs.y) - circumscribed_radius_;
-
 
   double distance_scalar = std::max(0.0,
     std::min(1.0,
@@ -182,7 +182,9 @@ costmap_2d::ObstructionMsg SpeedLimiter::obstructionToBodyFrame(const costmap_2d
   tf::Vector3 pt_out = current_pose_inv_tf_ * pt_in;
   out.x = pt_out[0];
   out.y = pt_out[1];
+
   ROS_DEBUG("Converted point from [%f, %f] to [%f, %f]", in.x, in.y, out.x, out.y);
+
   return out;
 }
 
@@ -221,10 +223,12 @@ void SpeedLimiter::calculateFootprintBounds(std::vector<geometry_msgs::Point> fo
       if (pt.x > footprint_max_x_) {footprint_max_x_ = pt.x;}
       if (pt.y < footprint_min_y_) {footprint_min_y_ = pt.y;}
       if (pt.y > footprint_max_y_) {footprint_max_y_ = pt.y;}
-      double dist = std::sqrt(pt.x * pt.x + pt.y * pt.y);
-      if (dist > circumscribed_radius_) {circumscribed_radius_ = dist;}
     }
   }
+
+  double inscribed_radius = 0.0;
+
+  costmap_2d::calculateMinAndMaxDistances(footprint, inscribed_radius, circumscribed_radius_);
 }
 
 } /* namespace base_local_planner */
