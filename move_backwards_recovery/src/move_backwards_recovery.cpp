@@ -24,6 +24,11 @@ void MoveBackRecovery::initialize(std::string name, tf::TransformListener* tf,
     private_nh.param("backwards_velocity", backwards_velocity_, -0.05);
 
     footprint_ = costmap_2d::makeFootprintFromParams(private_nh);
+    if (footprint_.size() < 3) {
+      ROS_INFO_NAMED("move_backwards_recovery", "Using local costmap footprint for move backwards");
+    } else {
+      ROS_INFO_NAMED("move_backwards_recovery", "Using move backwards footprint for move backwards");
+    }
 
     world_model_ = new base_local_planner::CostmapModel(*local_costmap_->getCostmap());
     initialized_ = true;
@@ -83,9 +88,6 @@ void MoveBackRecovery::runBehavior(){
   std::vector<geometry_msgs::Point> footprint = footprint_;
   if (footprint.size() < 3) {
     footprint = local_costmap_->getRobotFootprint();
-    ROS_INFO_NAMED("move_backwards_recovery", "Using default footprint for move backwards");
-  } else {
-    ROS_INFO_NAMED("move_backwards_recovery", "Using loaded footprint for move backwards");
   }
 
   while(n.ok()){
