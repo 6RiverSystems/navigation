@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
+#include <ros/console.h>
 
 #include "amcl_laser.h"
 
@@ -161,7 +162,6 @@ double AMCLLaser::BeamModel(AMCLLaserData *data, pf_sample_set_t* set)
   for (j = 0; j < set->sample_count; j++)
   {
     sample = set->samples + j;
-    pose = sample->pose;
 
     if(!isValidSample(self, sample))
     {
@@ -169,6 +169,8 @@ double AMCLLaser::BeamModel(AMCLLaserData *data, pf_sample_set_t* set)
 
       continue;
     }
+
+    pose = sample->pose;
 
     // Take account of the laser pose relative to the robot
     pose = pf_vector_coord_add(self->laser_pose, pose);
@@ -243,7 +245,6 @@ double AMCLLaser::LikelihoodFieldModel(AMCLLaserData *data, pf_sample_set_t* set
   for (j = 0; j < set->sample_count; j++)
   {
     sample = set->samples + j;
-    pose = sample->pose;
 
     if(!isValidSample(self, sample))
     {
@@ -251,6 +252,8 @@ double AMCLLaser::LikelihoodFieldModel(AMCLLaserData *data, pf_sample_set_t* set
 
       continue;
     }
+
+    pose = sample->pose;
 
     // Take account of the laser pose relative to the robot
     pose = pf_vector_coord_add(self->laser_pose, pose);
@@ -399,7 +402,6 @@ double AMCLLaser::LikelihoodFieldModelProb(AMCLLaserData *data, pf_sample_set_t*
   for (j = 0; j < set->sample_count; j++)
   {
     sample = set->samples + j;
-    pose = sample->pose;
 
     if(!isValidSample(self, sample))
     {
@@ -407,6 +409,8 @@ double AMCLLaser::LikelihoodFieldModelProb(AMCLLaserData *data, pf_sample_set_t*
 
       continue;
     }
+
+    pose = sample->pose;
 
     // Take account of the laser pose relative to the robot
     pose = pf_vector_coord_add(self->laser_pose, pose);
