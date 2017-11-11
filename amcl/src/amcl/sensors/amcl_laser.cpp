@@ -218,8 +218,6 @@ double AMCLLaser::BeamModel(AMCLLaserData *data, pf_sample_set_t* set)
     total_weight += sample->weight;
   }
 
-  ROS_WARN("AMCL particles passed over obstacle and have been invalidated: %d", invalidSamples);
-
   return(total_weight);
 }
 
@@ -319,8 +317,6 @@ double AMCLLaser::LikelihoodFieldModel(AMCLLaserData *data, pf_sample_set_t* set
     sample->weight *= p;
     total_weight += sample->weight;
   }
-
-  ROS_WARN("AMCL particles passed over obstacle and have been invalidated: %d", invalidSamples);
 
   return(total_weight);
 }
@@ -542,8 +538,6 @@ double AMCLLaser::LikelihoodFieldModelProb(AMCLLaserData *data, pf_sample_set_t*
 
   delete [] obs_count; 
   delete [] obs_mask;
-
-  ROS_WARN("AMCL particles passed over obstacle and have been invalidated: %d", invalidSamples);
 
   return(total_weight);
 }
