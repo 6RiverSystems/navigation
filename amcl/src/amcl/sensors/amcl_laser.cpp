@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
-#include <ros/console.h>
 
 #include "amcl_laser.h"
 
