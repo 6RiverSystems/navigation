@@ -156,8 +156,6 @@ double AMCLLaser::BeamModel(AMCLLaserData *data, pf_sample_set_t* set)
 
   total_weight = 0.0;
 
-  int invalidSamples = 0;
-
   // Compute the sample weights
   for (j = 0; j < set->sample_count; j++)
   {
@@ -165,8 +163,6 @@ double AMCLLaser::BeamModel(AMCLLaserData *data, pf_sample_set_t* set)
 
     if(!isValidSample(self, sample))
     {
-      invalidSamples++;
-
       continue;
     }
 
@@ -237,8 +233,6 @@ double AMCLLaser::LikelihoodFieldModel(AMCLLaserData *data, pf_sample_set_t* set
 
   total_weight = 0.0;
 
-  int invalidSamples = 0;
-
   // Compute the sample weights
   for (j = 0; j < set->sample_count; j++)
   {
@@ -246,8 +240,6 @@ double AMCLLaser::LikelihoodFieldModel(AMCLLaserData *data, pf_sample_set_t* set
 
     if(!isValidSample(self, sample))
     {
-      invalidSamples++;
-
       continue;
     }
 
@@ -392,8 +384,6 @@ double AMCLLaser::LikelihoodFieldModelProb(AMCLLaserData *data, pf_sample_set_t*
     }
   }
 
-  int invalidSamples = 0;
-
   // Compute the sample weights
   for (j = 0; j < set->sample_count; j++)
   {
@@ -401,8 +391,6 @@ double AMCLLaser::LikelihoodFieldModelProb(AMCLLaserData *data, pf_sample_set_t*
 
     if(!isValidSample(self, sample))
     {
-      invalidSamples++;
-
       continue;
     }
 
