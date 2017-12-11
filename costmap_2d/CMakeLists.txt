@@ -88,7 +88,6 @@ catkin_package(
         voxel_grid
         srslib_timing
     DEPENDS
-        PCL
         Boost
 )
 
