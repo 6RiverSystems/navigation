@@ -106,7 +106,7 @@ if(CATKIN_ENABLE_TESTING)
 #    http://download.ros.org/data/amcl/texas_greenroom_loop_indexed.bag
 #    DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
 #    MD5 6e3432115cccdca1247f6c807038e13d)
-#  catkin_download_test_data(${PROJECT_NAME}_texas_willow_hallway_loop_indexed.bag
+  catkin_download_test_data(${PROJECT_NAME}_texas_willow_hallway_loop_indexed.bag
     http://download.ros.org/data/amcl/texas_willow_hallway_loop_indexed.bag
     DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
     MD5 27deb742fdcd3af44cf446f39f2688a8)
