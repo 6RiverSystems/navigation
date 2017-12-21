@@ -177,7 +177,7 @@ namespace dwa_local_planner {
     //when we get a new plan, we also want to clear any latch we may have on goal tolerances
     latchedStopRotateController_.resetLatching();
 
-    ROS_INFO("Got new plan");
+    ROS_DEBUG("Got new plan");
     return dp_->setPlan(orig_global_plan);
   }
 
