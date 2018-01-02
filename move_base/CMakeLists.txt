@@ -42,6 +42,7 @@ add_library(move_base
 target_link_libraries(move_base
     ${Boost_LIBRARIES}
     ${catkin_LIBRARIES}
+    flann_cuda flann_cuda_s
     )
 add_dependencies(move_base move_base_gencfg)
 add_dependencies(move_base ${catkin_EXPORTED_TARGETS})

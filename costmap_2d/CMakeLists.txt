@@ -28,6 +28,8 @@ find_package(catkin REQUIRED
 find_package(PCL 1.8 REQUIRED QUIET)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(CUDA REQUIRED)
+
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
@@ -109,6 +111,8 @@ target_link_libraries(costmap_2d
   ${PCL_LIBRARIES}
   ${Boost_LIBRARIES}
   ${catkin_LIBRARIES}
+  flann_cuda flann_cuda_s
+  ${CUDA_LIBRARIES}
 )
 
 add_library(layers
