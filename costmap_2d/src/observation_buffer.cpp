@@ -174,6 +174,8 @@ void ObservationBuffer::bufferCloud(const pcl::PointCloud<pcl::PointXYZ>& cloud)
       }
     }
 
+    ROS_INFO_THROTTLE(1.0, "observation cloud size: %d", observation_cloud.points.size());
+
     // resize the cloud for the number of legal points
     observation_cloud.points.resize(point_count);
     observation_cloud.header.stamp = cloud.header.stamp;

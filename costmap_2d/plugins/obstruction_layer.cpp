@@ -76,7 +76,7 @@ void ObstructionLayer::onInitialize()
   std::string topics_string;
   // get the topics that we'll subscribe to from the parameter server
   nh.param("observation_sources", topics_string, std::string(""));
-  ROS_INFO("    Subscribed to Topics: %s", topics_string.c_str());
+  ROS_INFO("Subscribed to Topics: %s", topics_string.c_str());
 
   timingDataRecorder_ = srs::MasterTimingDataRecorder(global_frame_ + "-" + name_);
 
@@ -260,6 +260,7 @@ ObstructionLayer::~ObstructionLayer()
 void ObstructionLayer::reconfigureCB(costmap_2d::ObstructionPluginConfig &config, uint32_t level)
 {
   enabled_ = config.enabled;
+  min_obstacle_height_ = config.min_obstacle_height;
   max_obstacle_height_ = config.max_obstacle_height;
   obstruction_half_life_ = ros::Duration(config.obstruction_half_life);
   num_obstruction_levels_ = config.num_obstruction_levels;
@@ -522,7 +523,13 @@ void ObstructionLayer::checkObservation(const Observation& obs, double* min_x, d
     // if the obstacle is too high or too far away from the robot we won't add it
     if (pz > max_obstacle_height_)
     {
-      ROS_DEBUG("The point is too high");
+      ROS_INFO_THROTTLE(1.0, "The point is too high");
+      continue;
+    }
+
+    if (pz < min_obstacle_height_)
+    {
+      ROS_INFO_THROTTLE(1.0, "The point is too low");
       continue;
     }
 
