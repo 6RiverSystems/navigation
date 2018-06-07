@@ -163,7 +163,7 @@ void ObservationBuffer::bufferCloud(const pcl::PointCloud<pcl::PointXYZ>& cloud)
     unsigned int cloud_size = global_frame_cloud.points.size();
     observation_cloud.points.resize(cloud_size);
     unsigned int point_count = 0;
-
+    unsigned int counter = 0;
     // copy over the points that are within our height bounds
     for (unsigned int i = 0; i < cloud_size; ++i)
     {
@@ -171,10 +171,14 @@ void ObservationBuffer::bufferCloud(const pcl::PointCloud<pcl::PointXYZ>& cloud)
           && global_frame_cloud.points[i].z >= min_obstacle_height_)
       {
         observation_cloud.points[point_count++] = global_frame_cloud.points[i];
+      } else {
+        counter++;
+        ROS_ERROR_THROTTLE(1.0, "reject a point with height: %f", global_frame_cloud.points[i].z);
       }
     }
 
-    ROS_INFO_THROTTLE(1.0, "observation cloud size: %d", observation_cloud.points.size());
+    ROS_INFO_THROTTLE(1.0, "reject %d points", counter);
+    ROS_INFO_THROTTLE(1.0, "original size: %d, observation cloud size: %d", cloud_size, observation_cloud.points.size());
 
     // resize the cloud for the number of legal points
     observation_cloud.points.resize(point_count);
