@@ -12,7 +12,8 @@
 #include <iostream>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <thread>
+#include <sys/syscall.h>
+#include <sys/types.h>
 
 #ifndef _GNU_SOURCE
 	#define _GNU_SOURCE
@@ -40,11 +41,11 @@ bool setThreadAffinity(int core_id)
 
 void niceThread(std::string name, int priority)
 {
-    pthread_t current_thread = pthread_self();
+    pid_t tid = syscall(SYS_gettid);
 
-    ROS_INFO_STREAM("Setting thread priority: " << priority << " for " << name << " on thread " << current_thread);
+    ROS_INFO_STREAM("Setting thread priority: " << priority << " for " << name << " on thread " << tid);
 
-    if (::setpriority(PRIO_PROCESS, current_thread, priority))
+    if (::setpriority(PRIO_PROCESS, tid, priority))
     {
         ROS_ERROR("Could not set %s thread nice value to %d", name.c_str(), priority);
     }
