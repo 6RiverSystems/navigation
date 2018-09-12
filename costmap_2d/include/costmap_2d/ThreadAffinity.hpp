@@ -40,12 +40,12 @@ bool setThreadAffinity(int core_id)
 
 void niceThread(std::string name, int priority)
 {
-    auto thread_id = syscall(SYS_gettid);
+    pthread_t current_thread = pthread_self();
 
-    ROS_INFO_STREAM("Setting thread priority: " << priority << " for " << name << " on thread " << thread_id);
+    ROS_INFO_STREAM("Setting thread priority: " << priority << " for " << name << " on thread " << current_thread);
 
-    if (::setpriority(PRIO_PROCESS, thread_id, priority))
+    if (::setpriority(PRIO_PROCESS, current_thread, priority))
     {
-        ROS_ERROR("Could not set map update thread nice value to %d", priority);
+        ROS_ERROR("Could not set %s thread nice value to %d", name.c_str(), priority);
     }
 }

@@ -83,9 +83,9 @@ namespace move_base {
     private_nh.param("oscillation_distance", oscillation_distance_, 0.5);
 
     private_nh.param("planner_thread_affinity", planner_thread_affinity_, -1);
-    private_nh.param("planner_thread_nice", planner_thread_nice_, -1);
+    private_nh.param("planner_thread_nice", planner_thread_nice_, 0);
     private_nh.param("controller_thread_affinity", controller_thread_affinity_, -1);
-    private_nh.param("controller_thread_nice", controller_thread_nice_, -1);
+    private_nh.param("controller_thread_nice", controller_thread_nice_, 0);
 
     //set up plan triple buffer
     planner_plan_ = new std::vector<geometry_msgs::PoseStamped>();
