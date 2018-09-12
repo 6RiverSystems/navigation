@@ -10,15 +10,21 @@
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <iostream>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <thread>
 
 #ifndef _GNU_SOURCE
 	#define _GNU_SOURCE
 #endif
 
-bool setThreadAffinity(int core_id) {
+bool setThreadAffinity(int core_id)
+{
    int num_cores = sysconf(_SC_NPROCESSORS_ONLN);
    if (core_id < 0 || core_id >= num_cores)
+   {
       return false;
+   }
 
    cpu_set_t cpuset;
    CPU_ZERO(&cpuset);
@@ -30,4 +36,16 @@ bool setThreadAffinity(int core_id) {
 
    int res = pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset);
    return res == 0;
+}
+
+void niceThread(std::string name, int priority)
+{
+    auto thread_id = syscall(SYS_gettid);
+
+    ROS_INFO_STREAM("Setting thread priority: " << priority << " for " << name << " on thread " << thread_id);
+
+    if (::setpriority(PRIO_PROCESS, thread_id, priority))
+    {
+        ROS_ERROR("Could not set map update thread nice value to %d", priority);
+    }
 }
