@@ -386,7 +386,7 @@ void Costmap2DROS::mapUpdateLoop(double frequency)
     return;
   }
 
-  niceThread("costmap_2d" + name_, map_update_thread_nice_);
+  niceThread("costmap_2d-" + name_, map_update_thread_nice_);
 
   if (map_update_thread_affinity_ >= 0)
   {
