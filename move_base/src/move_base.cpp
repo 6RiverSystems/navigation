@@ -768,7 +768,7 @@ namespace move_base {
 
     notifyRecoveriesOfNewGoal();
 
-    niceThread("controller", controller_thread_nice_)
+    niceThread("controller", controller_thread_nice_);
 
     if (controller_thread_affinity_ >= 0)
     {
