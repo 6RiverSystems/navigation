@@ -54,7 +54,7 @@ void setThreadAffinity(std::string name, std::string affinity)
 {
     if (affinity.empty() || affinity == "-1")
     {
-        ROS_INFO("Not setting affinity for %s", name.c_str());
+        ROS_INFO("Not setting affinity for %s, %s", name.c_str(), affinity.c_str());
         
         return;
     }
