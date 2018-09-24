@@ -256,7 +256,7 @@ private:
   float footprint_padding_;
   costmap_2d::Costmap2DConfig old_config_;
 
-  int map_update_thread_affinity_;
+  std::string map_update_thread_affinity_;
   int map_update_thread_nice_;
 
   // Add timing data recorder

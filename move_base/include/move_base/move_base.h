@@ -260,9 +260,9 @@ namespace move_base {
       srs::MasterTimingDataRecorder timingDataRecorder_;
 
       // Thread affinities
-      int planner_thread_affinity_;
+      std::string planner_thread_affinity_;
       int planner_thread_nice_;
-      int controller_thread_affinity_;
+      std::string controller_thread_affinity_;
       int controller_thread_nice_;
 
       srs::ControlLoopAnalyzer control_loop_analyzer_;
