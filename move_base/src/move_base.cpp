@@ -82,9 +82,10 @@ namespace move_base {
     private_nh.param("oscillation_timeout", oscillation_timeout_, 0.0);
     private_nh.param("oscillation_distance", oscillation_distance_, 0.5);
 
-    private_nh.param("planner_thread_affinity", planner_thread_affinity_, -1);
+    private_nh.param("planner_thread_affinity", planner_thread_affinity_, std::string(""));
     private_nh.param("planner_thread_nice", planner_thread_nice_, 0);
-    private_nh.param("controller_thread_affinity", controller_thread_affinity_, -1);
+
+    private_nh.param("controller_thread_affinity", controller_thread_affinity_, std::string(""));
     private_nh.param("controller_thread_nice", controller_thread_nice_, 0);
 
     //set up plan triple buffer
@@ -654,17 +655,8 @@ namespace move_base {
   {
     niceThread("global planner", planner_thread_nice_);
 
-    if (planner_thread_affinity_ >= 0)
-    {
-      if (setThreadAffinity(planner_thread_affinity_))
-      {
-        ROS_INFO("Set planner thread affinity to %d", planner_thread_affinity_);
-      }
-      else
-      {
-        ROS_WARN("Could not set planner thread affinity to %d", planner_thread_affinity_);
-      }
-    }
+    setThreadAffinity("global planner", planner_thread_affinity_);
+
     ROS_DEBUG_NAMED("move_base_plan_thread","Starting planner thread...");
     ros::NodeHandle n;
     ros::Timer timer;
@@ -769,18 +761,8 @@ namespace move_base {
     notifyRecoveriesOfNewGoal();
 
     niceThread("controller", controller_thread_nice_);
-
-    if (controller_thread_affinity_ >= 0)
-    {
-      if (setThreadAffinity(controller_thread_affinity_))
-      {
-        ROS_INFO("Set controller thread affinity to %d", controller_thread_affinity_);
-      }
-      else
-      {
-        ROS_WARN("Could not set controller thread affinity to %d", controller_thread_affinity_);
-      }
-    }
+  
+    setThreadAffinity("controller", controller_thread_affinity_);
 
     ROS_DEBUG("Executing goal with frame %s", move_base_goal->target_pose.header.frame_id.c_str());
     geometry_msgs::PoseStamped goal;
