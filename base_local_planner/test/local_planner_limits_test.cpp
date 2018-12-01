@@ -7,6 +7,7 @@
 
 #include <base_local_planner/local_planner_limits.h>
 #include <base_local_planner/trajectory.h>
+#include <geometry_msgs/Twist.h>
 
 #include "critic_test_helpers.h"
 
@@ -39,6 +40,15 @@ Trajectory createTrajectory(float vx, float vtheta)
   traj.yv_ = 0;
   traj.thetav_ = vtheta;
   return traj;
+}
+
+geometry_msgs::Twist createTestTwist(float vx, float vtheta)
+{
+  auto twist = geometry_msgs::Twist();
+  twist.linear.x = vx;
+  twist.linear.y = 0;
+  twist.angular.z = vtheta;
+  return twist;
 }
 
 TEST(LocalPlannerLimits, applyNoLimiting){
@@ -107,6 +117,18 @@ TEST(LocalPlannerLimits, limitBoth){
   EXPECT_LE(traj.xv_, 1.3);
   EXPECT_LE(traj.thetav_, 0.75);
   EXPECT_NEAR(traj.xv_ / traj.thetav_, vstart / wstart, 1e-5);
+}
+
+TEST(LocalPlannerLimits, limitBothTwist){
+  float vstart = 2.0;
+  float wstart = 1.0;
+  auto lims = makeLimits(1.3, 0.75);
+  auto twist = createTestTwist(vstart, wstart);
+
+  lims->applyToTwist(twist);
+  EXPECT_LE(twist.linear.x, 1.3);
+  EXPECT_LE(twist.angular.z, 0.75);
+  EXPECT_NEAR(twist.linear.x / twist.angular.z, vstart / wstart, 1e-5);
 }
 
 }

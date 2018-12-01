@@ -39,6 +39,7 @@
 #include <Eigen/Core>
 
 #include <base_local_planner/trajectory.h>
+#include <geometry_msgs/Twist.h>
 
 namespace base_local_planner
 {
@@ -132,10 +133,32 @@ public:
     return acc_limits;
   }
 
+  void applyToTwist(geometry_msgs::Twist& twist) {
+    float vx = twist.linear.x;
+    float vy = twist.linear.y;
+    float vtheta = twist.angular.z;
+
+    applyToVelocities(vx, vy, vtheta);
+    
+    twist.linear.x = vx;
+    twist.linear.y = vy;
+    twist.angular.z = vtheta;
+  }
+  
   void applyToTrajectory(base_local_planner::Trajectory& traj) {
     float vx = traj.xv_;
     float vy = traj.yv_;
     float vtheta = traj.thetav_;
+
+    applyToVelocities(vx, vy, vtheta);
+
+    traj.xv_ = vx;
+    traj.yv_ = vy;
+    traj.thetav_ = vtheta;
+  }
+
+
+  void applyToVelocities(float& vx, float& vy, float& vtheta) {
     float vx_start = vx;
     float vy_start = vy;
     float vtheta_start = vtheta;
@@ -158,10 +181,6 @@ public:
     if (fabs(vtheta_mid) > 1e-3) {
       vx = vtheta / vtheta_mid * vx_mid;
     }
-    traj.xv_ = vx;
-    traj.yv_ = vy;
-    traj.thetav_ = vtheta;
-
   }
 
 };
