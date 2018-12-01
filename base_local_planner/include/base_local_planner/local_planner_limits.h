@@ -38,6 +38,8 @@
 
 #include <Eigen/Core>
 
+#include <base_local_planner/trajectory.h>
+
 namespace base_local_planner
 {
 class LocalPlannerLimits
@@ -128,6 +130,38 @@ public:
     acc_limits[1] = acc_lim_y;
     acc_limits[2] = acc_lim_theta;
     return acc_limits;
+  }
+
+  void applyToTrajectory(base_local_planner::Trajectory& traj) {
+    float vx = traj.xv_;
+    float vy = traj.yv_;
+    float vtheta = traj.thetav_;
+    float vx_start = vx;
+    float vy_start = vy;
+    float vtheta_start = vtheta;
+    
+    // First, correct x
+    if (fabs(vx) > max_vel_x) {
+      vx = vx > 0 ? max_vel_x : -max_vel_x;
+    }
+    float vx_mid = vx;
+    // Then scale theta by change to x
+    if (fabs(vx_start) > 1e-3) {
+      vtheta = vx / vx_start * vtheta_start;
+    }
+    float vtheta_mid = vtheta;
+    // Then limit theta
+    if (fabs(vtheta) > max_rot_vel) {
+      vtheta = vtheta > 0 ? max_rot_vel : -max_rot_vel;
+    }
+    // Then scale x back by change to theta
+    if (fabs(vtheta_mid) > 1e-3) {
+      vx = vtheta / vtheta_mid * vx_mid;
+    }
+    traj.xv_ = vx;
+    traj.yv_ = vy;
+    traj.thetav_ = vtheta;
+
   }
 
 };
