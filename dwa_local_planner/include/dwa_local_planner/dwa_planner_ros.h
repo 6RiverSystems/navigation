@@ -93,7 +93,7 @@ namespace dwa_local_planner {
        * @param cmd_vel Will be filled with the velocity command to be passed to the robot base
        * @return True if a valid trajectory was found, false otherwise
        */
-      bool computeVelocityCommands(geometry_msgs::Twist& cmd_vel);
+      bool computeVelocityCommands(geometry_msgs::Twist& cmd_vel, std::string& limiterString);
 
       bool getDistanceAndTimeEstimates(double& distance, double& time);
 

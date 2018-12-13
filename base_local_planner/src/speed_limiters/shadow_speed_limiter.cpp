@@ -52,6 +52,7 @@ void ShadowSpeedLimiter::initialize(std::string name)
   configServer_->setCallback(boost::bind(&ShadowSpeedLimiter::reconfigure, this, _1, _2));
 
   initialized_ = true;
+  limiter_name = "Shadow";
 }
 
 bool ShadowSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, double& max_allowed_angular_vel) {

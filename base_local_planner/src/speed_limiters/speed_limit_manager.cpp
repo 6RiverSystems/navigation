@@ -78,10 +78,12 @@ void SpeedLimitManager::initialize(costmap_2d::Costmap2DROS* costmap) {
  * Calculate limits
  * @return true if preparations were successful
  */
-bool SpeedLimitManager::calculateLimits(double& max_allowed_linear_vel, double& max_allowed_angular_vel) {
+
+// 1 = Obstacle, 2 - Shadow, 3 - Path, 4 - External  
+bool SpeedLimitManager::calculateLimits(double& max_allowed_linear_vel, double& max_allowed_angular_vel, std::string& limiterString) {
   max_allowed_linear_vel = max_linear_velocity_;
   max_allowed_angular_vel = max_angular_velocity_;
-
+  std::string tempLimiter = "Nothing";
   for (const auto& limiter : limiters_)
   {
     double linear = 0, angular = 0;
@@ -92,9 +94,13 @@ bool SpeedLimitManager::calculateLimits(double& max_allowed_linear_vel, double& 
       max_allowed_angular_vel = 0;
       return false;
     }
+    if(linear < max_allowed_linear_vel){
+      tempLimiter = limiter->limiter_name;
+    }
     max_allowed_linear_vel = std::min(max_allowed_linear_vel, linear);
     max_allowed_angular_vel = std::min(max_allowed_angular_vel, angular);
   }
+  limiterString = tempLimiter;
   ROS_DEBUG_THROTTLE(0.2, "Limits: %f, %f", max_allowed_linear_vel, max_allowed_angular_vel);
   return true;
 }

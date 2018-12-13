@@ -43,6 +43,7 @@
 #include <boost/thread.hpp>
 
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/String.h>
 
 #include <srslib_timing/ScopedTimingSampleRecorder.hpp>
 #include <costmap_2d/ThreadAffinity.hpp>
@@ -97,6 +98,7 @@ namespace move_base {
 
     //for comanding the base
     vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+    limiter_pub_ = nh.advertise<std_msgs::String>("limiter_string", 1);
     current_goal_pub_ = private_nh.advertise<geometry_msgs::PoseStamped>("current_goal", 0 );
     control_loop_missing_pub_ = private_nh.advertise<move_base_msgs::LoopMiss>("control_loop_miss", 1);
 
@@ -1065,7 +1067,8 @@ namespace move_base {
          boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(controller_costmap_ros_->getCostmap()->getMutex()));
 
         srs::ScopedTimingSampleRecorder stsr_controller_execution(timingDataRecorder_.getRecorder("-ControllerExecution"));
-        bool successfulCalc = tc_->computeVelocityCommands(cmd_vel);
+        std::string limiterString = "Nothing";
+        bool successfulCalc = tc_->computeVelocityCommands(cmd_vel, limiterString);
         stsr_controller_execution.stopSample();
 
         if(successfulCalc){
@@ -1074,6 +1077,7 @@ namespace move_base {
           last_valid_control_ = ros::Time::now();
           //make sure that we send the velocity command to the base
           vel_pub_.publish(cmd_vel);
+          limiter_pub_.publish(limiterString);
           if(recovery_trigger_ == CONTROLLING_R)
             recovery_index_ = 0;
         }

@@ -376,7 +376,7 @@ namespace base_local_planner {
     return true;
   }
 
-  bool TrajectoryPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel){
+  bool TrajectoryPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel, std::string& limiterString){
     if (! isInitialized()) {
       ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner");
       return false;

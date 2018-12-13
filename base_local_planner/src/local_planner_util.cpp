@@ -72,7 +72,8 @@ void LocalPlannerUtil::reconfigureCB(LocalPlannerLimits &config, bool restore_de
     nominal_limits_ = LocalPlannerLimits(config);
     ROS_INFO("Nominal limits tolerance: %f", nominal_limits_.xy_goal_tolerance);
   }
-  updateLimits();
+  std::string temp;
+  updateLimits(temp);
 }
 
 costmap_2d::Costmap2D* LocalPlannerUtil::getCostmap() {
@@ -161,7 +162,7 @@ bool LocalPlannerUtil::getLocalPlan(tf::Stamped<tf::Pose>& global_pose, std::vec
 }
 
 
-void LocalPlannerUtil::updateLimits() {
+void LocalPlannerUtil::updateLimits(std::string& limiterString) {
 
   tf::Stamped<tf::Pose> robot_pose;
   if (!costmap_->getRobotPose(robot_pose)) {
@@ -175,7 +176,7 @@ void LocalPlannerUtil::updateLimits() {
   speed_limit_manager_.setPlan(transformed_plan);
 
   double v_lim = 0, w_lim = 0;
-  speed_limit_manager_.calculateLimits(v_lim, w_lim);
+  speed_limit_manager_.calculateLimits(v_lim, w_lim, limiterString);
 
 
   boost::mutex::scoped_lock l(limits_configuration_mutex_);

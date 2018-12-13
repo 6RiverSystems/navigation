@@ -291,7 +291,7 @@ namespace dwa_local_planner {
     return true;
   }
 
-  bool DWAPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel) {
+  bool DWAPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel, std::string& limiterString) {
     // dispatches to either dwa sampling control or stop and rotate control, depending on whether we have been close enough to goal
     if (loopTimingStatistics_.isValid())
     {
@@ -322,7 +322,7 @@ namespace dwa_local_planner {
     odom_helper_.getEstimatedRobotVel(robot_vel);
 
     // Update the speed limits
-    planner_util_.updateLimits();
+    planner_util_.updateLimits(limiterString);
 
     // update plan in dwa_planner even if we just stop and rotate, to allow checkTrajectory
     srs::ScopedTimingSampleRecorder stsr(tdr_.getRecorder("-UpdatePlanCosts"));

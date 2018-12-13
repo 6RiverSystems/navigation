@@ -66,7 +66,7 @@ public:
    * Calculate limits
    * @return true if preparations were successful
    */
-  bool calculateLimits(double& max_allowed_linear_vel, double& max_allowed_angular_vel);
+  bool calculateLimits(double& max_allowed_linear_vel, double& max_allowed_angular_vel, std::string& limiterString);
   
   void setPlan(const std::vector<geometry_msgs::PoseStamped>& plan);
 

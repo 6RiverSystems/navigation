@@ -107,7 +107,7 @@ public:
     return costmap_;
   }
 
-  void updateLimits();
+  void updateLimits(std::string& limiterString);
 
   bool calculateSpeedLimits(double& v_lim, double& w_lim);
 

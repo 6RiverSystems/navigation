@@ -79,6 +79,7 @@ public:
     max_angular_velocity_ = angular;
   };
 
+  std::string limiter_name;
 protected:
   bool getCurrentPose(tf::Stamped<tf::Pose>& pose) {
     if (!costmap_->getRobotPose(pose)) {
