@@ -98,7 +98,7 @@ namespace move_base {
 
     //for comanding the base
     vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-    limiter_pub_ = nh.advertise<std_msgs::String>("limiter_string", 1);
+    limiter_pub_ = private_nh.advertise<std_msgs::String>("limiter_string", 1);
     current_goal_pub_ = private_nh.advertise<geometry_msgs::PoseStamped>("current_goal", 0 );
     control_loop_missing_pub_ = private_nh.advertise<move_base_msgs::LoopMiss>("control_loop_miss", 1);
 
