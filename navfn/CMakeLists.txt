@@ -58,12 +58,14 @@ catkin_package(
 add_library (navfn src/navfn.cpp src/navfn_ros.cpp)
 target_link_libraries(navfn
     ${catkin_LIBRARIES}
+    flann_cuda flann_cuda_s
     )
 add_dependencies(navfn ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 add_executable(navfn_node src/navfn_node.cpp)
 target_link_libraries(navfn_node
     navfn
+    flann_cuda flann_cuda_s
     )
 
 install(TARGETS navfn navfn_node

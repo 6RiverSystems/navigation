@@ -125,6 +125,7 @@ target_link_libraries(base_local_planner
     ${catkin_LIBRARIES}
     ${PCL_LIBRARIES}
     ${Boost_LIBRARIES}
+    flann_cuda flann_cuda_s
     )
 
 add_library(trajectory_planner_ros
@@ -132,10 +133,10 @@ add_library(trajectory_planner_ros
     src/trajectory_planner_ros.cpp)
 add_dependencies(trajectory_planner_ros nav_msgs_gencpp)
 target_link_libraries(trajectory_planner_ros
-     base_local_planner)
+     base_local_planner flann_cuda flann_cuda_s)
 
 add_executable(point_grid src/point_grid.cpp)
-target_link_libraries(point_grid ${catkin_LIBRARIES})
+target_link_libraries(point_grid ${catkin_LIBRARIES} flann_cuda flann_cuda_s)
 
 install(TARGETS
             base_local_planner
@@ -169,7 +170,7 @@ if(CATKIN_ENABLE_TESTING)
     test/odometry_helper_ros_test.cpp
     )
   target_link_libraries(base_local_planner_utest
-      base_local_planner trajectory_planner_ros
+      base_local_planner trajectory_planner_ros flann_cuda flann_cuda_s
       )
 
 
