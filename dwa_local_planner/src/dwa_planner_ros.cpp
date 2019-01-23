@@ -49,6 +49,7 @@
 #include <srslib_timing/ScopedTimingSampleRecorder.hpp>
 #include <srslib_timing/ScopedRollingTimingStatistics.hpp>
 
+#include <std_msgs/Int32.h>
 
 //register this planner as a BaseLocalPlanner plugin
 PLUGINLIB_EXPORT_CLASS(dwa_local_planner::DWAPlannerROS, nav_core::BaseLocalPlanner)
@@ -110,6 +111,11 @@ namespace dwa_local_planner {
 
       // update dwa specific configuration
       dp_->reconfigure(config);
+
+      // publish changes to the mode
+      std_msgs::Int32 modeMsg;
+      modeMsg.data = mode;
+      mode_pub_.publish(modeMsg);
   }
 
   DWAPlannerROS::DWAPlannerROS() : initialized_(false),
@@ -144,6 +150,9 @@ namespace dwa_local_planner {
       {
         odom_helper_.setOdomTopic( odom_topic_ );
       }
+
+      private_nh.param<std::string>( "mode_topic", mode_topic_, "mode" );
+      mode_pub_ = private_nh.advertise<std_msgs::Int32>(mode_topic_, 1);
 
       /////// Set up the different modes.
       if (!private_nh.hasParam("modes"))
