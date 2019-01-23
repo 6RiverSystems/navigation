@@ -168,7 +168,7 @@ namespace dwa_local_planner {
       }
 
       private_nh.param<std::string>( "mode_topic", mode_topic_, "mode" );
-      mode_pub_ = private_nh.advertise<std_msgs::Int32>(mode_topic_, 1);
+      mode_pub_ = private_nh.advertise<std_msgs::Int32>(mode_topic_, 1, true);
       // publish default mode on startup
       // todo check if there is a way to get default programmatically
       std_msgs::Int32 modeMsg;
