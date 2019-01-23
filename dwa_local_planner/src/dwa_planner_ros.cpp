@@ -114,7 +114,7 @@ namespace dwa_local_planner {
 
       // publish changes to the mode
       std_msgs::Int32 mode_msg;
-      modeMsg.data = mode;
+      mode_msg.data = mode;
       mode_pub_.publish(mode_msg);
   }
 
