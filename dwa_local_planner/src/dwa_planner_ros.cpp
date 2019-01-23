@@ -113,9 +113,9 @@ namespace dwa_local_planner {
       dp_->reconfigure(config);
 
       // publish changes to the mode
-      std_msgs::Int32 modeMsg;
+      std_msgs::Int32 mode_msg;
       modeMsg.data = mode;
-      mode_pub_.publish(modeMsg);
+      mode_pub_.publish(mode_msg);
   }
 
   DWAPlannerROS::DWAPlannerROS() : initialized_(false),
