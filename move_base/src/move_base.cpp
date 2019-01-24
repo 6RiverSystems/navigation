@@ -1056,7 +1056,7 @@ namespace move_base {
 
     //update feedback to correspond to estimated time / distance to goal
     double distance_to_go = 0, time_to_go = 0;
-    if (!getDistanceAndTimeEstimates(global_pose, *controller_plan_, distance_to_go, time_to_go))
+    if (!getDistanceAndTimeEstimates(global_pose, *controller_plan_, distance_to_go, time_to_go) || state_ == PLANNING)
     {
       distance_to_go = -1;
       time_to_go = -1;
@@ -1079,7 +1079,7 @@ namespace move_base {
       if(recovery_trigger_ == OSCILLATION_R)
         recovery_index_ = 0;
     }
-    
+
     //the move_base state machine, handles the control logic for navigation
     switch(state_){
       //if we are in a planning state, then we'll attempt to make a plan
