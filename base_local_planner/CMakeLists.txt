@@ -123,6 +123,7 @@ add_library(base_local_planner
     src/voxel_grid_model.cpp)
 
 add_dependencies(base_local_planner
+    base_local_planner_generate_messages_cpp
     ${catkin_EXPORTED_TARGETS})
 target_link_libraries(base_local_planner
     ${catkin_LIBRARIES}
