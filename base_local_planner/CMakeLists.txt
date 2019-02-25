@@ -122,7 +122,8 @@ add_library(base_local_planner
     src/trajectory.cpp
     src/voxel_grid_model.cpp)
 
-add_dependencies(base_local_planner ${catkin_EXPORTED_TARGETS})
+add_dependencies(base_local_planner
+    ${catkin_EXPORTED_TARGETS})
 target_link_libraries(base_local_planner
     ${catkin_LIBRARIES}
     ${PCL_LIBRARIES}
