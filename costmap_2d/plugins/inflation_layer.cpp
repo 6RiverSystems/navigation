@@ -55,6 +55,7 @@ InflationLayer::InflationLayer()
   : inflation_radius_(0)
   , weight_(0)
   , cell_inflation_radius_(0)
+  , lane_width_(0.5)
   , cached_cell_inflation_radius_(0)
   , dsrv_(NULL)
   , seen_(NULL)
@@ -99,7 +100,7 @@ void InflationLayer::onInitialize()
 
 void InflationLayer::reconfigureCB(costmap_2d::InflationPluginConfig &config, uint32_t level)
 {
-  setInflationParameters(config.inflation_radius, config.cost_scaling_factor);
+  setInflationParameters(config.inflation_radius, config.cost_scaling_factor, config.lane_width);
 
   if (enabled_ != config.enabled) {
     enabled_ = config.enabled;
@@ -363,7 +364,7 @@ void InflationLayer::deleteKernels()
   }
 }
 
-void InflationLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor)
+void InflationLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor, double lane_width)
 {
   ROS_DEBUG_STREAM("Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor);
   if (weight_ != cost_scaling_factor || inflation_radius_ != inflation_radius)
@@ -375,6 +376,7 @@ void InflationLayer::setInflationParameters(double inflation_radius, double cost
     inflation_radius_ = inflation_radius;
     cell_inflation_radius_ = cellDistance(inflation_radius_);
     weight_ = cost_scaling_factor;
+    lane_width_ = lane_width;
     need_reinflation_ = true;
     ROS_DEBUG_STREAM("About to cache with " << inflation_radius_ << ", "
       << cell_inflation_radius_ << ", " << weight_);

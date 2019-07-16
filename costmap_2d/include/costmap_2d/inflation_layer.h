@@ -112,14 +112,12 @@ public:
       double euclidean_distance = distance * resolution_;
       double factor = exp(-1.0 * weight_ * (euclidean_distance - inscribed_radius_));
       
-      double LANE_WIDTH = 0.5;
       double cell_dist = euclidean_distance - inscribed_radius_;
-      double lane_dist = LANE_WIDTH - inscribed_radius_;
-      double cell_from_lane_dist = cell_dist - lane_dist;
+      double cell_from_lane_dist = cell_dist - lane_width_;
       // double sigma = 1 / (2 * M_PI) * exp(weight_ * lane_dist);
       // double sub_factor = 1 / (2 * M_PI * sigma) 
       //                     * exp(-1 * (cell_from_lane_dist * cell_from_lane_dist) / (2 * sigma * sigma));
-      double sigma = 0.5 * lane_dist;
+      double sigma = 0.5 * lane_width_;
       double sub_factor = exp(-1 * (cell_from_lane_dist * cell_from_lane_dist) / (2 * sigma * sigma));
 
       double full_factor = factor * (1 - sub_factor);
@@ -127,8 +125,8 @@ public:
       if (std::fabs(cell_from_lane_dist) < resolution_ / 2) {
         cost = 0;
       }
-      ROS_INFO("inflation: %f, lane_dist: %f, sigma: %f, cell_dist: %f, factor %f, sub_factor %f", 
-      inscribed_radius_, lane_dist, sigma, cell_dist, factor, sub_factor);
+      ROS_INFO("inflation: %f, lane_width: %f, sigma: %f, cell_dist: %f, factor %f, sub_factor %f", 
+      inscribed_radius_, lane_width_, sigma, cell_dist, factor, sub_factor);
 
     }
     return cost;
@@ -139,7 +137,7 @@ public:
    * @param inflation_radius The new inflation radius
    * @param cost_scaling_factor The new weight
    */
-  void setInflationParameters(double inflation_radius, double cost_scaling_factor);
+  void setInflationParameters(double inflation_radius, double cost_scaling_factor, double lane_width);
 
   virtual bool needsUpdate() {return need_reinflation_;};
 
@@ -196,6 +194,8 @@ private:
   std::map<double, std::vector<CellData> > inflation_cells_;
 
   double resolution_;
+
+  double lane_width_;
 
   bool* seen_;
   int seen_size_;
