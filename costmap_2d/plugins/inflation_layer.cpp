@@ -367,7 +367,7 @@ void InflationLayer::deleteKernels()
 void InflationLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor, double lane_width)
 {
   ROS_DEBUG_STREAM("Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor);
-  if (weight_ != cost_scaling_factor || inflation_radius_ != inflation_radius)
+  if (weight_ != cost_scaling_factor || inflation_radius_ != inflation_radius || lane_width_ != lane_width)
   {
     // Lock here so that reconfiguring the inflation radius doesn't cause segfaults
     // when accessing the cached arrays
