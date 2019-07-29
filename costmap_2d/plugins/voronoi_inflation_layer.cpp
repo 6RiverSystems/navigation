@@ -93,7 +93,7 @@ void VoronoiInflationLayer::onInitialize()
 
 void VoronoiInflationLayer::reconfigureCB(costmap_2d::InflationPluginConfig &config, uint32_t level)
 {
-  setInflationParameters(config.inflation_radius, config.cost_scaling_factor);
+  setInflationParameters(config.inflation_radius, config.cost_scaling_factor, config.lane_width);
 
   if (enabled_ != config.enabled) {
     enabled_ = config.enabled;
@@ -445,10 +445,11 @@ void VoronoiInflationLayer::deleteKernels()
   cached_costs_.clear();
 }
 
-void VoronoiInflationLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor)
+void VoronoiInflationLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor, double lane_width)
 {
   ROS_DEBUG_STREAM("Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor);
-  if (weight_ != cost_scaling_factor || inflation_radius_ != inflation_radius)
+  if (weight_ != cost_scaling_factor || inflation_radius_ != inflation_radius 
+    || lane_width_ != lane_width)
   {
     // Lock here so that reconfiguring the inflation radius doesn't cause segfaults
     // when accessing the cached arrays
@@ -457,6 +458,8 @@ void VoronoiInflationLayer::setInflationParameters(double inflation_radius, doub
     inflation_radius_ = inflation_radius;
     cell_inflation_radius_ = cellDistance(inflation_radius_);
     weight_ = cost_scaling_factor;
+    lane_width_ = lane_width;
+    max_effect_distance_ = (lane_width_ + inscribed_radius_) * 2.0;
     need_reinflation_ = true;
     ROS_DEBUG_STREAM("About to cache with " << inflation_radius_ << ", "
       << cell_inflation_radius_ << ", " << weight_);
