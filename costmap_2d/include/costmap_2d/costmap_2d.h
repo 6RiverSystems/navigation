@@ -98,6 +98,17 @@ public:
                          double win_size_y);
 
   /**
+   * @brief  Turn this costmap into a copy of a window of a costmap pointer passed in
+   * @param  map The costmap to copy
+   * @param win_origin_x The x origin (lower left corner) for the window to copy, in meters
+   * @param win_origin_y The y origin (lower left corner) for the window to copy, in meters
+   * @param win_size_x The x size of the window, in meters
+   * @param win_size_y The y size of the window, in meters
+   */
+  bool copyCostmapWindow(Costmap2D* map, double win_origin_x, double win_origin_y, double win_size_x,
+                         double win_size_y);
+
+  /**
    * @brief  Default constructor
    */
   Costmap2D();
