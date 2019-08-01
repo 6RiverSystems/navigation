@@ -347,6 +347,7 @@ namespace base_local_planner{
     mx = (int)((wx - origin_x_) / resolution);
     my = (int)((wy - origin_y_) / resolution);
 
+
     if (mx < size_x_ && my < size_y_)
       return true;
 
