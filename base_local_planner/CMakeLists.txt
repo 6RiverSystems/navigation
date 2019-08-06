@@ -16,6 +16,7 @@ find_package(catkin REQUIRED
             pluginlib
             angles
             srslib_timing
+            std_msgs
         )
 
 find_package(Boost REQUIRED

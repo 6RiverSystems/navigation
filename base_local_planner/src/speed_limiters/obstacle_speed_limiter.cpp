@@ -88,6 +88,7 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
   double distance_nearest = max_obstacle_distance;
   double heading_nearest = 0;
   std::string name_nearest, name_limiting;
+  std_msgs::time time_limiting, time_nearest;
 
   double obstacle_speed_nearest = max_allowed_linear_vel;
 
@@ -109,6 +110,7 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
         distance_limiting = result.distance;
         heading_limiting = result.heading;
         name_limiting = obs_body_frame.costmap_name;
+        time_limiting = obs_body_frame.last_sighting_time;
       }
       else if(result.speed == max_allowed_linear_vel) //could reach min_linear_velocity. Takes minimum distance instead
       {
@@ -117,6 +119,7 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
           distance_limiting = result.distance;
           heading_limiting = result.heading;
           name_limiting = obs_body_frame.costmap_name;
+          time_limiting = obs_body_frame.last_sighting_time;
         }
       }
     }
@@ -126,6 +129,7 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
       distance_nearest = result.distance;
       heading_nearest = result.heading;
       name_nearest = obs_body_frame.costmap_name;
+      time_nearest = obs_body_frame.last_sighting_time;
     }
     else if(result.speed == obstacle_speed_nearest) //could reach min_linear_velocity. Takes minimum distance instead
     {
@@ -134,6 +138,7 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
         distance_nearest = result.distance;
         heading_nearest = result.heading;
         name_nearest = obs_body_frame.costmap_name;
+        time_nearest = obs_body_frame.last_sighting_time;
       }
     }
 
@@ -155,9 +160,11 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
   obstacle_msg.limiting.distance = distance_limiting;
   obstacle_msg.limiting.heading = heading_limiting;
   obstacle_msg.limiting.layer_name = name_limiting;
+  obstacle_msg.limiting.last_seen = time_limiting;
   obstacle_msg.nearest.distance = distance_nearest;
   obstacle_msg.nearest.heading = heading_nearest;
   obstacle_msg.nearest.layer_name = name_nearest;
+  obstacle_msg.nearest.last_seen = time_nearest;
   obstacle_pub.publish(obstacle_msg);
   return true;
 }

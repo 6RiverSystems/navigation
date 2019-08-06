@@ -42,6 +42,7 @@
 #include <base_local_planner/ObstacleSpeedLimiterConfig.h>
 #include <costmap_2d/ObstructionMsg.h>
 #include <tf/tf.h>
+#include <std_msgs/time.h>
 
 namespace base_local_planner {
 
