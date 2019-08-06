@@ -88,7 +88,7 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
   double distance_nearest = max_obstacle_distance;
   double heading_nearest = 0;
   std::string name_nearest, name_limiting;
-  std_msgs::time time_limiting, time_nearest;
+  ros::Time time_limiting, time_nearest;
 
   double obstacle_speed_nearest = max_allowed_linear_vel;
 
