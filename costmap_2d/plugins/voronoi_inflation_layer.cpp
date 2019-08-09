@@ -89,6 +89,7 @@ void VoronoiInflationLayer::onInitialize()
   }
 
   matchSize();
+  need_reinflation_ = true;
 }
 
 void VoronoiInflationLayer::reconfigureCB(costmap_2d::InflationPluginConfig &config, uint32_t level)
@@ -167,6 +168,11 @@ void VoronoiInflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int 
   if (!enabled_)
     return;
 
+  ROS_DEBUG_STREAM("VOR update costs ir: " << inflation_radius_ << ", cir: "
+    << cell_inflation_radius_ << ", w: " << weight_
+    << ", insc: " << inscribed_radius_ << ", res: " << resolution_
+    << ", frame: " << layered_costmap_->getGlobalFrameID());
+
   // Create all of the arrays and queues
   unsigned char* master_array = master_grid.getCharMap();
   unsigned int size_x = master_grid.getSizeInCellsX(), size_y = master_grid.getSizeInCellsY();
@@ -216,7 +222,7 @@ void VoronoiInflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int 
       }
     }
   }
-  ROS_INFO_STREAM("Gathered " << obs_bin.size() << " obstacles to inflate");
+  ROS_DEBUG_STREAM("Gathered " << obs_bin.size() << " obstacles to inflate");
 
 
   // Process cells by increasing distance; new cells are appended to the corresponding distance bin, so they
@@ -272,6 +278,23 @@ void VoronoiInflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int 
         }
       }
 
+      unsigned int h_inf = std::max(std::abs((int)mx - (int)sx), std::abs((int)my - (int)sy));
+      unsigned int dist = dist_bin.first;
+
+      // Calculate the cost for the final cost value.
+      // unsigned char cost =  128;
+      // if (dist * resolution_ > 0.7) {
+      //   unsigned char cost = costLookup((*obstacle_distance_map_)[index], vor_dist[index]);
+
+      // } else {
+         unsigned char cost = costLookup(h_inf, 1);
+      unsigned char old_cost = master_array[index];
+      if (old_cost == NO_INFORMATION && cost >= INSCRIBED_INFLATED_OBSTACLE)
+        master_array[index] = cost;
+      else
+        master_array[index] = std::max(old_cost, cost);
+      // }
+
       // attempt to put the neighbors of the current cell onto the inflation list
       if (mx > 0)
         enqueue(index - 1, mx - 1, my, sx, sy, obs_cells);
@@ -286,72 +309,83 @@ void VoronoiInflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int 
 
   obs_cells.clear();
   ROS_INFO("Finished obstacle cells.");
-  ROS_INFO_STREAM("Gathered " << vor_cells[0].size() << " voronoi cells to back inflate");
+  // ROS_INFO_STREAM("Gathered " << vor_cells[0].size() << " voronoi cells to back inflate");
 // return;
   // Next, expand the voronoi cells and calculate the actual cost.
 
-  // Process cells by increasing distance; new cells are appended to the corresponding distance bin, so they
-  // can overtake previously inserted but farther away cells
-  for (auto& dist_bin: vor_cells)
-  {
-    for (auto& current_cell: dist_bin.second)
-    {
-      // process all cells at distance dist_bin.first
-      unsigned int index = current_cell.index_;
+  // // Process cells by increasing distance; new cells are appended to the corresponding distance bin, so they
+  // // can overtake previously inserted but farther away cells
+  // for (auto& dist_bin: vor_cells)
+  // {
+  //   for (auto& current_cell: dist_bin.second)
+  //   {
+  //     // process all cells at distance dist_bin.first
+  //     unsigned int index = current_cell.index_;
 
-      // ignore if already visited
-      if (vor_dist[index] >= -0.1)
-      {
-        continue;
-      }
+  //     // ignore if already visited
+  //     if (vor_dist[index] >= -0.1)
+  //     {
+  //       continue;
+  //     }
 
-      // If the obstacle distance is < 0, ignore this point
-      if ((*obstacle_distance_map_)[index] < 0 || master_array[index] == LETHAL_OBSTACLE)
-      {
-        continue;
-      }
-
-
-      // Put the distance for this cell into the array
-      vor_dist[index] = dist_bin.first;
-
-      unsigned int mx = current_cell.x_;
-      unsigned int my = current_cell.y_;
-      unsigned int sx = current_cell.src_x_;
-      unsigned int sy = current_cell.src_y_;
-
-      if (std::abs((int)mx - (int)sx) > cell_inflation_radius_ + 2) {
-        ROS_INFO("od: %f, vd: %f, mx: %d, my %d, sx: %d, sy %d",
-         (*obstacle_distance_map_)[index], vor_dist[index],
-         mx, my, sx, sy);
-      }
-
-      // Calculate the cost for the final cost value.
-      unsigned char cost = costLookup((*obstacle_distance_map_)[index], vor_dist[index]);
-      unsigned char old_cost = master_array[index];
-      if (old_cost == NO_INFORMATION && cost >= INSCRIBED_INFLATED_OBSTACLE)
-        master_array[index] = cost;
-      else
-        master_array[index] = std::max(old_cost, cost);
-
-      if (dist_bin.first > cell_inflation_radius_ + 1)
-      {
-        continue;
-      }
+  //     // If the obstacle distance is < 0, ignore this point
+  //     if ((*obstacle_distance_map_)[index] < 0 || master_array[index] == LETHAL_OBSTACLE)
+  //     {
+  //       continue;
+  //     }
 
 
+  //     // Put the distance for this cell into the array
+  //     vor_dist[index] = dist_bin.first;
 
-      // attempt to put the neighbors of the current cell onto the inflation list
-      if (mx > 0)
-        enqueue(index - 1, mx - 1, my, sx, sy, vor_cells);
-      if (my > 0)
-        enqueue(index - size_x, mx, my - 1, sx, sy, vor_cells);
-      if (mx < size_x - 1)
-        enqueue(index + 1, mx + 1, my, sx, sy, vor_cells);
-      if (my < size_y - 1)
-        enqueue(index + size_x, mx, my + 1, sx, sy, vor_cells);
-    }
-  }
+  //     unsigned int mx = current_cell.x_;
+  //     unsigned int my = current_cell.y_;
+  //     unsigned int sx = current_cell.src_x_;
+  //     unsigned int sy = current_cell.src_y_;
+
+  //     if (std::abs((int)mx - (int)sx) > cell_inflation_radius_ + 2) {
+  //       ROS_INFO("od: %f, vd: %f, mx: %d, my %d, sx: %d, sy %d",
+  //        (*obstacle_distance_map_)[index], vor_dist[index],
+  //        mx, my, sx, sy);
+  //     }
+
+  //     unsigned int h_inf = std::max(std::abs(mx - sx), std::abs(my - sy));
+  //     unsigned int dist = (*obstacle_distance_map_)[index];
+
+  //     // Calculate the cost for the final cost value.
+  //     unsigned char cost =  128;
+  //     if (dist * resolution_ > 0.7) {
+  //       unsigned char cost = costLookup((*obstacle_distance_map_)[index], vor_dist[index]);
+
+  //     } else {
+  //        unsigned char cost = costLookup(h_inf, vor_dist[index]);
+
+  //     }
+
+  //     // unsigned char old_cost = master_array[index];
+  //     // if (old_cost == NO_INFORMATION && cost >= INSCRIBED_INFLATED_OBSTACLE)
+  //     //   master_array[index] = cost;
+  //     // else
+  //     //   master_array[index] = std::max(old_cost, cost);
+
+  //     if (dist_bin.first > cell_inflation_radius_ + 1)
+  //     {
+  //       continue;
+  //     }
+
+
+
+  //     // attempt to put the neighbors of the current cell onto the inflation list
+  //     if (mx > 0)
+  //       enqueue(index - 1, mx - 1, my, sx, sy, vor_cells);
+  //     if (my > 0)
+  //       enqueue(index - size_x, mx, my - 1, sx, sy, vor_cells);
+  //     if (mx < size_x - 1)
+  //       enqueue(index + 1, mx + 1, my, sx, sy, vor_cells);
+  //     if (my < size_y - 1)
+  //       enqueue(index + size_x, mx, my + 1, sx, sy, vor_cells);
+  //   }
+  // }
   vor_cells.clear();
 
   // Clean in all up.
@@ -384,9 +418,10 @@ inline void VoronoiInflationLayer::enqueue(unsigned int index, unsigned int mx, 
 void VoronoiInflationLayer::computeCaches()
 {
 
-  ROS_INFO_STREAM("Cache compute with ir: " << inflation_radius_ << ", cir: "
+  ROS_DEBUG_STREAM("VOR Cache compute with ir: " << inflation_radius_ << ", cir: "
     << cell_inflation_radius_ << ", w: " << weight_
-    << ", insc: " << inscribed_radius_ << ", res: " << resolution_);
+    << ", insc: " << inscribed_radius_ << ", res: " << resolution_
+    << ", frame: " << layered_costmap_->getGlobalFrameID());
   if (cell_inflation_radius_ == 0)
     return;
 
@@ -447,7 +482,7 @@ void VoronoiInflationLayer::deleteKernels()
 
 void VoronoiInflationLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor, double lane_width)
 {
-  ROS_DEBUG_STREAM("Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor);
+  ROS_DEBUG_STREAM("VOR Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor);
   if (weight_ != cost_scaling_factor || inflation_radius_ != inflation_radius 
     || lane_width_ != lane_width)
   {
@@ -465,6 +500,7 @@ void VoronoiInflationLayer::setInflationParameters(double inflation_radius, doub
       << cell_inflation_radius_ << ", " << weight_);
     computeCaches();
   }
+  need_reinflation_ = true;
 }
 
 }  // namespace costmap_2d

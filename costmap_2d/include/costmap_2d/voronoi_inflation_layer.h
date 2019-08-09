@@ -197,6 +197,7 @@ private:
   {
     unsigned int dx = abs(mx - src_x);
     unsigned int dy = abs(my - src_y);
+    // return std::max(dx, dy);
     return cached_distances_[dx][dy];
   }
 

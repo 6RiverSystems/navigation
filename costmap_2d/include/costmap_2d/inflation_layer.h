@@ -111,23 +111,7 @@ public:
       // make sure cost falls off by Euclidean distance
       double euclidean_distance = distance * resolution_;
       double factor = exp(-1.0 * weight_ * (euclidean_distance - inscribed_radius_));
-      
-      double cell_dist = euclidean_distance - inscribed_radius_;
-      double cell_from_lane_dist = cell_dist - lane_width_;
-      // double sigma = 1 / (2 * M_PI) * exp(weight_ * lane_dist);
-      // double sub_factor = 1 / (2 * M_PI * sigma) 
-      //                     * exp(-1 * (cell_from_lane_dist * cell_from_lane_dist) / (2 * sigma * sigma));
-      double sigma = 0.5 * lane_width_;
-      double sub_factor = exp(-1 * (cell_from_lane_dist * cell_from_lane_dist) / (2 * sigma * sigma));
-
-      double full_factor = factor * (1 - sub_factor);
-      cost = (unsigned char)((INSCRIBED_INFLATED_OBSTACLE - 1) * full_factor);
-      if (std::fabs(cell_from_lane_dist) < resolution_ / 2) {
-        cost = 0;
-      }
-      ROS_INFO("inflation: %f, lane_width: %f, sigma: %f, cell_dist: %f, factor %f, sub_factor %f", 
-      inscribed_radius_, lane_width_, sigma, cell_dist, factor, sub_factor);
-
+      cost = (unsigned char)((INSCRIBED_INFLATED_OBSTACLE - 1) * factor);
     }
     return cost;
   }
