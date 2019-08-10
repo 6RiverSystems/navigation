@@ -84,7 +84,7 @@ void StaticLayerWithInflation::onInitialize()
   nh.param("trinary_costmap", trinary_costmap_, true);
 
   nh.param("inflation_layer_type", inflation_layer_type_, std::string("costmap_2d::VoronoiInflationLayer"));
-  nh.param("secondary_inflation_layer_type", secondary_inflation_layer_type_, std::string("costmap_2d::InflationLayer"));
+  nh.param("secondary_inflation_layer_type", secondary_inflation_layer_type_, std::string(""));
 
   nh.param("impassible", impassible_, true);
 
@@ -266,7 +266,7 @@ void StaticLayerWithInflation::incomingMap(const nav_msgs::OccupancyGridConstPtr
     inflation_layer_ = plugin;
     inflation_layer_->initialize(layered_costmap_, name_ + "/inflation", tf_);
   }
-  if (!secondary_inflation_layer_){
+  if (!secondary_inflation_layer_ && secondary_inflation_layer_type_.size() > 0){
     ROS_INFO("Creating secondary inflation layer in static layer.");
 
     boost::shared_ptr<Layer> plugin = plugin_loader_.createInstance(secondary_inflation_layer_type_);

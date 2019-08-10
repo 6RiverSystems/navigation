@@ -224,10 +224,10 @@ void InflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, 
 
       if (cost == LETHAL_OBSTACLE) 
       {
-        unsigned char cost_n_lethal = master_array[master_grid.getIndex(i + 1, j)] == LETHAL_OBSTACLE;
-        unsigned char cost_s_lethal = master_array[master_grid.getIndex(i - 1, j)] == LETHAL_OBSTACLE;
-        unsigned char cost_e_lethal = master_array[master_grid.getIndex(i, j + 1)] == LETHAL_OBSTACLE;
-        unsigned char cost_w_lethal = master_array[master_grid.getIndex(i, j - 1)] == LETHAL_OBSTACLE;
+        bool cost_n_lethal = master_array[master_grid.getIndex(i + 1, j)] == LETHAL_OBSTACLE;
+        bool cost_s_lethal = master_array[master_grid.getIndex(i - 1, j)] == LETHAL_OBSTACLE;
+        bool cost_e_lethal = master_array[master_grid.getIndex(i, j + 1)] == LETHAL_OBSTACLE;
+        bool cost_w_lethal = master_array[master_grid.getIndex(i, j - 1)] == LETHAL_OBSTACLE;
 
         if ((cost_n_lethal != cost_s_lethal) && (cost_e_lethal != cost_w_lethal))
         {
