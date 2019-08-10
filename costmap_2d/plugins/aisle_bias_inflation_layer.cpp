@@ -36,13 +36,13 @@
  *         David V. Lu!!
  *********************************************************************/
 #include <algorithm>
-#include <costmap_2d/voronoi_inflation_layer.h>
+#include <costmap_2d/aisle_bias_inflation_layer.h>
 #include <costmap_2d/costmap_math.h>
 #include <costmap_2d/footprint.h>
 #include <boost/thread.hpp>
 #include <pluginlib/class_list_macros.h>
 
-PLUGINLIB_EXPORT_CLASS(costmap_2d::VoronoiInflationLayer, costmap_2d::Layer)
+PLUGINLIB_EXPORT_CLASS(costmap_2d::AisleBiasInflationLayer, costmap_2d::Layer)
 
 using costmap_2d::LETHAL_OBSTACLE;
 using costmap_2d::INSCRIBED_INFLATED_OBSTACLE;
@@ -51,7 +51,7 @@ using costmap_2d::NO_INFORMATION;
 namespace costmap_2d
 {
 
-VoronoiInflationLayer::VoronoiInflationLayer()
+AisleBiasInflationLayer::AisleBiasInflationLayer()
   : inflation_radius_(0)
   , weight_(0)
   , cell_inflation_radius_(0)
@@ -66,7 +66,7 @@ VoronoiInflationLayer::VoronoiInflationLayer()
   inflation_access_ = new boost::recursive_mutex();
 }
 
-void VoronoiInflationLayer::onInitialize()
+void AisleBiasInflationLayer::onInitialize()
 {
   {
     boost::unique_lock < boost::recursive_mutex > lock(*inflation_access_);
@@ -75,7 +75,7 @@ void VoronoiInflationLayer::onInitialize()
     need_reinflation_ = false;
 
     dynamic_reconfigure::Server<costmap_2d::InflationPluginConfig>::CallbackType cb = boost::bind(
-        &VoronoiInflationLayer::reconfigureCB, this, _1, _2);
+        &AisleBiasInflationLayer::reconfigureCB, this, _1, _2);
 
     if (dsrv_ != NULL){
       dsrv_->clearCallback();
@@ -92,7 +92,7 @@ void VoronoiInflationLayer::onInitialize()
   need_reinflation_ = true;
 }
 
-void VoronoiInflationLayer::reconfigureCB(costmap_2d::InflationPluginConfig &config, uint32_t level)
+void AisleBiasInflationLayer::reconfigureCB(costmap_2d::InflationPluginConfig &config, uint32_t level)
 {
   setInflationParameters(config.inflation_radius, config.cost_scaling_factor, config.lane_width);
 
@@ -102,7 +102,7 @@ void VoronoiInflationLayer::reconfigureCB(costmap_2d::InflationPluginConfig &con
   }
 }
 
-void VoronoiInflationLayer::matchSize()
+void AisleBiasInflationLayer::matchSize()
 {
   boost::unique_lock < boost::recursive_mutex > lock(*inflation_access_);
   costmap_2d::Costmap2D* costmap = layered_costmap_->getCostmap();
@@ -111,7 +111,7 @@ void VoronoiInflationLayer::matchSize()
   computeCaches();
 }
 
-void VoronoiInflationLayer::updateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x,
+void AisleBiasInflationLayer::updateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x,
                                            double* min_y, double* max_x, double* max_y)
 {
   if (min_x == nullptr || min_y == nullptr || max_x == nullptr || max_y == nullptr)
@@ -151,18 +151,18 @@ void VoronoiInflationLayer::updateBounds(double robot_x, double robot_y, double 
   }
 }
 
-void VoronoiInflationLayer::onFootprintChanged()
+void AisleBiasInflationLayer::onFootprintChanged()
 {
   inscribed_radius_ = layered_costmap_->getInscribedRadius();
   cell_inflation_radius_ = cellDistance(inflation_radius_);
   computeCaches();
   need_reinflation_ = true;
-  ROS_DEBUG("VoronoiInflationLayer::onFootprintChanged(): num footprint points: %lu,"
+  ROS_DEBUG("AisleBiasInflationLayer::onFootprintChanged(): num footprint points: %lu,"
             " inscribed_radius_ = %.3f, inflation_radius_ = %.3f",
             layered_costmap_->getFootprint().size(), inscribed_radius_, inflation_radius_);
 }
 
-void VoronoiInflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j)
+void AisleBiasInflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j)
 {
   boost::unique_lock < boost::recursive_mutex > lock(*inflation_access_);
   if (!enabled_)
@@ -391,7 +391,6 @@ void VoronoiInflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int 
   // Clean in all up.
   delete[] vor_dist;
 
-ROS_INFO("Finished voronoi cells.");
 }
 
 /**
@@ -403,7 +402,7 @@ ROS_INFO("Finished voronoi cells.");
  * @param  src_x The x index of the obstacle point inflation started at
  * @param  src_y The y index of the obstacle point inflation started at
  */
-inline void VoronoiInflationLayer::enqueue(unsigned int index, unsigned int mx, unsigned int my,
+inline void AisleBiasInflationLayer::enqueue(unsigned int index, unsigned int mx, unsigned int my,
                                     unsigned int src_x, unsigned int src_y,
                                     std::map<double, std::vector<CellData> >& queue_map)
 {
@@ -415,7 +414,7 @@ inline void VoronoiInflationLayer::enqueue(unsigned int index, unsigned int mx, 
   queue_map[distance].push_back(CellData(index, mx, my, src_x, src_y));
 }
 
-void VoronoiInflationLayer::computeCaches()
+void AisleBiasInflationLayer::computeCaches()
 {
 
   ROS_DEBUG_STREAM("VOR Cache compute with ir: " << inflation_radius_ << ", cir: "
@@ -424,6 +423,8 @@ void VoronoiInflationLayer::computeCaches()
     << ", frame: " << layered_costmap_->getGlobalFrameID());
   if (cell_inflation_radius_ == 0)
     return;
+
+  max_effect_distance_ = (lane_width_ + inscribed_radius_) * 2.0;
 
   // based on the inflation radius... compute distance and cost caches
   if (cell_inflation_radius_ != cached_cell_inflation_radius_)
@@ -463,7 +464,7 @@ void VoronoiInflationLayer::computeCaches()
   }
 }
 
-void VoronoiInflationLayer::deleteKernels()
+void AisleBiasInflationLayer::deleteKernels()
 {
   if (cached_distances_ != NULL)
   {
@@ -480,7 +481,7 @@ void VoronoiInflationLayer::deleteKernels()
   cached_costs_.clear();
 }
 
-void VoronoiInflationLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor, double lane_width)
+void AisleBiasInflationLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor, double lane_width)
 {
   ROS_DEBUG_STREAM("VOR Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor);
   if (weight_ != cost_scaling_factor || inflation_radius_ != inflation_radius 
@@ -494,7 +495,6 @@ void VoronoiInflationLayer::setInflationParameters(double inflation_radius, doub
     cell_inflation_radius_ = cellDistance(inflation_radius_);
     weight_ = cost_scaling_factor;
     lane_width_ = lane_width;
-    max_effect_distance_ = (lane_width_ + inscribed_radius_) * 2.0;
     need_reinflation_ = true;
     ROS_DEBUG_STREAM("About to cache with " << inflation_radius_ << ", "
       << cell_inflation_radius_ << ", " << weight_);
