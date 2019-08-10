@@ -88,32 +88,83 @@ public:
     unsigned char cost = 0;
     if (obs_distance == 0)
     {
-      cost = LETHAL_OBSTACLE;
+      return LETHAL_OBSTACLE;
     }
-    else if (obs_distance * resolution_ <= inscribed_radius_)
+  
+    double euclidean_distance = obs_distance * resolution_;
+    if (obs_distance * resolution_ <= inscribed_radius_)
     {
-      cost = INSCRIBED_INFLATED_OBSTACLE;
+      return INSCRIBED_INFLATED_OBSTACLE;
     }
-    else if (vor_distance <= 0.001)
-    {
-      cost = 0;
-    }
-    else
-    {
-      // make sure cost falls off by Euclidean distance
-      double dO = obs_distance * resolution_ - inscribed_radius_;
-      double dV = vor_distance * resolution_;
 
-      // cost = (unsigned char) INSCRIBED_INFLATED_OBSTACLE
-      //   * (weight_ / (weight_ + dO))
-      //   * (dV / (dO + dV))
-      //   * pow((dO - inflation_radius_)/inflation_radius_, 2);
+    if (lane_width_ > 0) {
+      if (vor_distance <= 0.001 && euclidean_distance < (lane_width_ + inscribed_radius_))
+      {
+        return 0;
+      }
 
-      double euclidean_distance = obs_distance * resolution_;
+      // // make sure cost falls off by Euclidean distance
+      // double dO = obs_distance * resolution_ - inscribed_radius_;
+      // double dV = vor_distance * resolution_;
+
+      // // cost = (unsigned char) INSCRIBED_INFLATED_OBSTACLE
+      // //   * (weight_ / (weight_ + dO))
+      // //   * (dV / (dO + dV))
+      // //   * pow((dO - inflation_radius_)/inflation_radius_, 2);
+
+
+      if (euclidean_distance > max_effect_distance_)
+      {
+        euclidean_distance = max_effect_distance_;
+      }
+
+
       double factor = exp(-1.0 * weight_ * (euclidean_distance - inscribed_radius_));
-      cost = (unsigned char)((INSCRIBED_INFLATED_OBSTACLE - 1) * factor);
+
+      double cell_dist = euclidean_distance - inscribed_radius_;
+      double cell_from_lane_dist = cell_dist - lane_width_;
+      // double sigma = 1 / (2 * M_PI) * exp(weight_ * lane_dist);
+      // double sub_factor = 1 / (2 * M_PI * sigma) 
+      //                     * exp(-1 * (cell_from_lane_dist * cell_from_lane_dist) / (2 * sigma * sigma));
+      double sigma = 0.5 * lane_width_;
+      double sub_factor = exp(-1 * (cell_from_lane_dist * cell_from_lane_dist) / (2 * sigma * sigma));
+
+        double full_factor = factor * (1 - sub_factor);
+      cost = (unsigned char)((INSCRIBED_INFLATED_OBSTACLE - 1) * full_factor);
+      if (std::fabs(cell_from_lane_dist) < resolution_ / 2) {
+        cost = 0;
+      }
+      // ROS_INFO("inflation: %f, lane_width: %f, sigma: %f, cell_dist: %f, factor %f, sub_factor %f", 
+      // inscribed_radius_, lane_width_, sigma, cell_dist, factor, sub_factor);
+
+
+        // cost = (unsigned char)((INSCRIBED_INFLATED_OBSTACLE - 1) * factor);
+      return cost;
+
+    } else {
+      // Old method
+
+      if (vor_distance <= 0.001)
+      {
+        cost = 0;
+      }
+      else
+      {
+        // make sure cost falls off by Euclidean distance
+        double dO = obs_distance * resolution_ - inscribed_radius_;
+        double dV = vor_distance * resolution_;
+
+        // cost = (unsigned char) INSCRIBED_INFLATED_OBSTACLE
+        //   * (weight_ / (weight_ + dO))
+        //   * (dV / (dO + dV))
+        //   * pow((dO - inflation_radius_)/inflation_radius_, 2);
+
+        double euclidean_distance = obs_distance * resolution_;
+        double factor = exp(-1.0 * weight_ * (euclidean_distance - inscribed_radius_));
+        cost = (unsigned char)((INSCRIBED_INFLATED_OBSTACLE - 1) * factor);
+      }
+      return cost;
     }
-    return cost;
   }
 
   /**
@@ -121,7 +172,7 @@ public:
    * @param inflation_radius The new inflation radius
    * @param cost_scaling_factor The new weight
    */
-  void setInflationParameters(double inflation_radius, double cost_scaling_factor);
+  void setInflationParameters(double inflation_radius, double cost_scaling_factor, double lane_width);
 
   virtual bool needsUpdate() {return need_reinflation_;};
 
@@ -146,6 +197,7 @@ private:
   {
     unsigned int dx = abs(mx - src_x);
     unsigned int dy = abs(my - src_y);
+    // return std::max(dx, dy);
     return cached_distances_[dx][dy];
   }
 
@@ -193,6 +245,9 @@ private:
   void reconfigureCB(costmap_2d::InflationPluginConfig &config, uint32_t level);
 
   bool need_reinflation_;  ///< Indicates that the entire costmap should be reinflated next time around.
+
+  double max_effect_distance_ = 1.0;
+  double lane_width_ = 0.5;
 };
 
 }  // namespace costmap_2d
