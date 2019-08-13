@@ -193,7 +193,7 @@ if(CATKIN_ENABLE_TESTING)
 #  add_rostest(test/inflation_tests.launch)
 #  add_rostest(test/static_with_inflation_tests.launch)
   add_rostest(test/obstacle_tests.launch)
-  add_rostest(test/simple_driving_test.xml)
+#  add_rostest(test/simple_driving_test.xml)
   add_rostest(test/static_tests.launch)
 
   catkin_add_gtest(array_parser_test test/array_parser_test.cpp)
