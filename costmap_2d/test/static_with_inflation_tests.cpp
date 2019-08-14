@@ -78,53 +78,53 @@ const float OBSTRUCTION_SPREAD = 32.0;
 /**
  * Time map updates.
  */
-// TEST(costmap, testTimeMapUpdatesNominal) {
-//   // Create a normal layered costmap.
-//   tf::TransformListener tf;
-//   LayeredCostmap layers("frame", false, false);
-//   addStaticLayer(layers, tf);
+TEST(costmap, testTimeMapUpdatesNominal) {
+  // Create a normal layered costmap.
+  tf::TransformListener tf;
+  LayeredCostmap layers("frame", false, false);
+  addStaticLayer(layers, tf);
 
-//   ObstacleLayer* olayer = addObstacleLayer(layers, tf);
-//   InflationLayer* ilayer = addInflationLayer(layers, tf);
+  ObstacleLayer* olayer = addObstacleLayer(layers, tf);
+  InflationLayer* ilayer = addInflationLayer(layers, tf);
 
-//   std::vector<geometry_msgs::Point> polygon = setRadii(layers, 1, 1.75, 3);
-//   layers.setFootprint(polygon);
+  std::vector<geometry_msgs::Point> polygon = setRadii(layers, 1, 1.75, 3);
+  layers.setFootprint(polygon);
 
-//   // Robot location
-//   float rx = 32.2;
-//   float ry = 47.0;
-//   float rth = 0.0;
+  // Robot location
+  float rx = 32.2;
+  float ry = 47.0;
+  float rth = 0.0;
 
-//   std::cerr << "Starting old typefirst update." << std::endl;
-//   srs::StopWatch sw = srs::StopWatch();
-//   layers.updateMap(rx, ry, rth);
-//   std::cerr << "Time for first update " << sw.elapsedMicroseconds() << std::endl;
+  std::cerr << "Starting old typefirst update." << std::endl;
+  srs::StopWatch sw = srs::StopWatch();
+  layers.updateMap(rx, ry, rth);
+  std::cerr << "Time for first update " << sw.elapsedMicroseconds() << std::endl;
 
-//   sw.reset();
-//   layers.updateMap(rx, ry, rth);
-//   std::cerr << "Time for second update " << sw.elapsedMicroseconds() << std::endl;
-//   layers.updateMap(rx, ry, rth);
+  sw.reset();
+  layers.updateMap(rx, ry, rth);
+  std::cerr << "Time for second update " << sw.elapsedMicroseconds() << std::endl;
+  layers.updateMap(rx, ry, rth);
 
-//   // Time 100 map updates
-//   std::default_random_engine generator;
-//   std::uniform_real_distribution<double> distribution(-OBSTRUCTION_SPREAD, OBSTRUCTION_SPREAD);
-//   sw.reset();
-//   for (unsigned int k = 0; k < NUM_UPDATES; ++k) {
-//     // Add 5 obstacles
-//     for (unsigned int jj = 0; jj < NUM_OBSTACLES; ++jj)
-//     {
-//       addObservation(olayer, rx + distribution(generator), ry + distribution(generator),
-//         0.1, rx, ry);
-//     }
-//     layers.updateMap(rx, ry, rth);
-//     olayer->clearStaticObservations(true, true);
-//   }
-//   std::cerr << "Time for next updates: " << (double)sw.elapsedMicroseconds() / NUM_UPDATES << " ms per update" << std::endl;
+  // Time 100 map updates
+  std::default_random_engine generator;
+  std::uniform_real_distribution<double> distribution(-OBSTRUCTION_SPREAD, OBSTRUCTION_SPREAD);
+  sw.reset();
+  for (unsigned int k = 0; k < NUM_UPDATES; ++k) {
+    // Add 5 obstacles
+    for (unsigned int jj = 0; jj < NUM_OBSTACLES; ++jj)
+    {
+      addObservation(olayer, rx + distribution(generator), ry + distribution(generator),
+        0.1, rx, ry);
+    }
+    layers.updateMap(rx, ry, rth);
+    olayer->clearStaticObservations(true, true);
+  }
+  std::cerr << "Time for next updates: " << (double)sw.elapsedMicroseconds() / NUM_UPDATES << " ms per update" << std::endl;
 
-//   // Print result and verify the correct number of obstacles
-//   Costmap2D* costmap = layers.getCostmap();
-//   ASSERT_EQ(countValues(*costmap, costmap_2d::LETHAL_OBSTACLE), BIGMAP_OBSTACLES + NUM_OBSTACLES);
-// }
+  // Print result and verify the correct number of obstacles
+  Costmap2D* costmap = layers.getCostmap();
+  ASSERT_EQ(countValues(*costmap, costmap_2d::LETHAL_OBSTACLE), BIGMAP_OBSTACLES + NUM_OBSTACLES);
+}
 
 /**
  * Time map updates.
