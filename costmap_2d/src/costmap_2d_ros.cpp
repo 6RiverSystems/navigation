@@ -264,13 +264,13 @@ void Costmap2DROS::resetOldParameters(ros::NodeHandle& nh)
   }
   move_parameter(nh, obstacles, "observation_sources");
 
-  ros::NodeHandle inflation(nh, "inflation_layer");
-  move_parameter(nh, inflation, "cost_scaling_factor");
-  move_parameter(nh, inflation, "inflation_radius");
-  map["name"] = XmlRpc::XmlRpcValue("inflation_layer");
-  map["type"] = XmlRpc::XmlRpcValue("costmap_2d::InflationLayer");
-  super_map.setStruct(&map);
-  plugins.push_back(super_map);
+  // ros::NodeHandle inflation(nh, "inflation_layer");
+  // move_parameter(nh, inflation, "cost_scaling_factor");
+  // move_parameter(nh, inflation, "inflation_radius");
+  // map["name"] = XmlRpc::XmlRpcValue("inflation_layer");
+  // map["type"] = XmlRpc::XmlRpcValue("costmap_2d::InflationLayer");
+  // super_map.setStruct(&map);
+  // plugins.push_back(super_map);
 
   super_array.setArray(&plugins);
   nh.setParam("plugins", super_array);
