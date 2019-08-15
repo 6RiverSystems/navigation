@@ -130,6 +130,8 @@ private:
   pluginlib::ClassLoader<Layer> plugin_loader_;
   boost::shared_ptr<Layer> inflation_layer_;
   std::string inflation_layer_type_;
+  boost::shared_ptr<Layer> secondary_inflation_layer_;
+  std::string secondary_inflation_layer_type_;
   bool needs_reinflation_;
 
   bool impassible_;
