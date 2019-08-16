@@ -90,6 +90,7 @@ public:
   }
 
   virtual double getDistanceFromStaticMap(double px, double py) override;
+  virtual int getAngleFromStaticMap(double px, double py) override;
 
 private:
   /**

@@ -185,6 +185,14 @@ void AisleBiasInflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, in
   obstacle_distance_map_->clear();
   obstacle_distance_map_->resize(size_x * size_y, -1.0);
 
+  // Arrays to hold the angle calculations
+  if (!obstacle_angle_map_)
+  {
+    obstacle_angle_map_ = std::make_shared<std::vector<int>>();
+  }
+  obstacle_angle_map_->clear();
+  obstacle_angle_map_->resize(size_x * size_y, -10);
+
   double* vor_dist = new double[size_x * size_y];
   std::fill_n(vor_dist, size_x * size_y, -1.0);
 
@@ -248,6 +256,28 @@ void AisleBiasInflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, in
       unsigned int sx = current_cell.src_x_;
       unsigned int sy = current_cell.src_y_;
 
+      // Calculate angle and map to one of 8 headings
+      double angle = atan2((double) my - (double) sy, (double) mx - (double)sx);
+
+      if (angle < -0.875 * M_PI || angle > 0.875 * M_PI) {
+        intAngle = 4;
+      } else if (angle < -0.625 * M_PI) {
+        intAngle = 5;
+      } else if (angle < -0.375 * M_PI) {
+        intAngle = 6;       
+      } else if (angle < -0.125 * M_PI) {
+        intAngle = 7;       
+      } else if (angle < 0.125 * M_PI) {
+        intAngle = 0;       
+      } else if (angle < 0.375 * M_PI) {
+        intAngle = 1;       
+      } else if (angle < 0.625 * M_PI) {
+        intAngle = 2;       
+      } else if (angle < -0.875 * M_PI) {
+        intAngle = 3;       
+      }
+
+      (*obstacle_angle_map_)[index] = intAngle * 45;  // now in degrees
       // If the distance is greater than allowed, mark in voronoi and continue
       // Also, add to the list of voronoi inflation
       if (dist_bin.first > cell_inflation_radius_ + 1)
@@ -287,12 +317,16 @@ void AisleBiasInflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, in
       //   unsigned char cost = costLookup((*obstacle_distance_map_)[index], vor_dist[index]);
 
       // } else {
-         unsigned char cost = costLookup(h_inf, 1);
+      unsigned char cost = costLookup(h_inf, 1);
+      // unsigned char cost = (unsigned char)(intAngle) * 35;
+      
+
       unsigned char old_cost = master_array[index];
       if (old_cost == NO_INFORMATION && cost >= INSCRIBED_INFLATED_OBSTACLE)
         master_array[index] = cost;
       else
         master_array[index] = std::max(old_cost, cost);
+
       // }
 
       // attempt to put the neighbors of the current cell onto the inflation list

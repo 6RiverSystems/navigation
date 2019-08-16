@@ -144,6 +144,10 @@ public:
     return obstacle_distance_map_;
   }
 
+  virtual std::shared_ptr<std::vector<int>> getAnglesFromStaticMap() {
+    return obstacle_angle_map_;
+  }
+
 protected:
   virtual void onFootprintChanged();
   boost::recursive_mutex* inflation_access_;
@@ -201,6 +205,7 @@ private:
   double resolution_;
 
   std::shared_ptr<std::vector<double>> obstacle_distance_map_;
+  std::shared_ptr<std::vector<int>> obstacle_angle_map_;
 
   double** cached_distances_;
   double last_min_x_, last_min_y_, last_max_x_, last_max_y_;
