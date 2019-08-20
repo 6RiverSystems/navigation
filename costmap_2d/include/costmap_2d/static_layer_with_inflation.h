@@ -89,6 +89,11 @@ public:
     return inflation_layer_->getDistancesFromStaticMap();
   }
 
+  virtual std::shared_ptr<std::vector<int>> getAnglesFromStaticMap() override {
+    return inflation_layer_->getAnglesFromStaticMap();
+  }
+
+
   virtual double getDistanceFromStaticMap(double px, double py) override;
   virtual int getAngleFromStaticMap(double px, double py) override;
 
