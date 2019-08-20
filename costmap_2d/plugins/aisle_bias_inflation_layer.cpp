@@ -258,7 +258,7 @@ void AisleBiasInflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, in
 
       // Calculate angle and map to one of 8 headings
       double angle = atan2((double) my - (double) sy, (double) mx - (double)sx);
-
+      int intAngle = 0;
       if (angle < -0.875 * M_PI || angle > 0.875 * M_PI) {
         intAngle = 4;
       } else if (angle < -0.625 * M_PI) {

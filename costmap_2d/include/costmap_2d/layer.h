@@ -153,7 +153,6 @@ public:
     return std::shared_ptr<std::vector<int>>();
   }
 
-
   virtual double getDistanceFromStaticMap(double px, double py) {
     return -1.0;
   }

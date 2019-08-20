@@ -115,6 +115,15 @@ std::shared_ptr<std::vector<double>> LayeredCostmap::getDistancesFromStaticMap()
   }
 }
 
+std::shared_ptr<std::vector<int>> LayeredCostmap::getAnglesFromStaticMap()
+{
+  if (static_layer_) {
+    return static_layer_->getAnglesFromStaticMap();
+  } else {
+    return std::shared_ptr<std::vector<int>>();
+  }
+}
+
 double LayeredCostmap::getDistanceFromStaticMap(double px, double py)
 {
   if (static_layer_)
@@ -124,6 +133,18 @@ double LayeredCostmap::getDistanceFromStaticMap(double px, double py)
   else
   {
     return -1.0;
+  }
+}
+
+int LayeredCostmap::getAngleFromStaticMap(double px, double py)
+{
+  if (static_layer_)
+  {
+    return static_layer_->getAngleFromStaticMap(px, py);
+  }
+  else
+  {
+    return -10;
   }
 }
 

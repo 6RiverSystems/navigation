@@ -157,7 +157,11 @@ public:
 
   virtual std::shared_ptr<std::vector<double>> getDistancesFromStaticMap();
 
+  virtual std::shared_ptr<std::vector<int>> getAnglesFromStaticMap();
+
   double getDistanceFromStaticMap(double px, double py);
+
+  int getAngleFromStaticMap(double px, double py);
 
   std::shared_ptr<std::vector<ObstructionMsg>> getObstructions();
 
