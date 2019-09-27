@@ -77,6 +77,7 @@ public:
    * @param max_y Maximum y value of the bounding box
    */
    void clearWindow(double min_x, double min_y, double max_x, double max_y);
+void updateWithTrueOverwrite(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
 
 protected:
   /*
@@ -86,8 +87,7 @@ protected:
    * TrueOverwrite means every value from this layer
    * is written into the master grid.
    */
-  void updateWithTrueOverwrite(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
-
+  
   /*
    * Updates the master_grid within the specified
    * bounding box using this layer's values.
