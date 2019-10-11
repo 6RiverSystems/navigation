@@ -68,7 +68,7 @@ bool PlannerWithCostmap::makePlanService(navfn::MakeNavPlan::Request& req, navfn
 
     req.start.header.frame_id = "/map";
     req.goal.header.frame_id = "/map";
-    bool success = makePlan(req.start, req.goal, path);
+    bool success = makePlan(req.start, req.goal, 0.0, path);
     resp.plan_found = success;
     if (success) {
         resp.path = path;
@@ -91,7 +91,7 @@ void PlannerWithCostmap::poseCallback(const rm::PoseStamped::ConstPtr& goal) {
     start.pose.orientation.y = global_pose.getRotation().y();
     start.pose.orientation.z = global_pose.getRotation().z();
     start.pose.orientation.w = global_pose.getRotation().w();
-    makePlan(start, *goal, path);
+    makePlan(start, *goal, 0.0, path);
 }
 
 PlannerWithCostmap::PlannerWithCostmap(string name, Costmap2DROS* cmap) :

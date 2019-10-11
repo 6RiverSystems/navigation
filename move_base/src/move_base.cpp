@@ -464,7 +464,7 @@ namespace move_base {
 
     //first try to make a plan to the exact desired goal
     std::vector<geometry_msgs::PoseStamped> global_plan;
-    if(!planner_->makePlan(start, req.goal, global_plan) || global_plan.empty()){
+    if(!planner_->makePlan(start, req.goal, 0.0, global_plan) || global_plan.empty()){
       ROS_DEBUG_NAMED("move_base","Failed to find a plan to exact goal of (%.2f, %.2f), searching for a feasible goal within tolerance",
           req.goal.pose.position.x, req.goal.pose.position.y);
 
@@ -494,7 +494,7 @@ namespace move_base {
                 p.pose.position.y = req.goal.pose.position.y + y_offset * y_mult;
                 p.pose.position.x = req.goal.pose.position.x + x_offset * x_mult;
 
-                if(planner_->makePlan(start, p, global_plan)){
+                if(planner_->makePlan(start, p, 0.0, global_plan)){
                   if(!global_plan.empty()){
 
                     //adding the (unreachable) original goal to the end of the global plan, in case the local planner can get you there
@@ -576,7 +576,7 @@ namespace move_base {
     tf::poseStampedTFToMsg(global_pose, start);
 
     //if the planner fails or returns a zero length plan, planning failed
-    if(!planner_->makePlan(start, goal, plan) || plan.empty()){
+    if(!planner_->makePlan(start, goal, 0.0, plan) || plan.empty()){
       ROS_DEBUG_NAMED("move_base","Failed to find a  plan to point (%.2f, %.2f)", goal.pose.position.x, goal.pose.position.y);
       return false;
     }
@@ -931,7 +931,7 @@ namespace move_base {
       stsr_controller_total_loop.stopSample();
     }
 
-    //wake up the planner thread so that it can exit cleanly
+    //wake up the planner thremaad so that it can exit cleanly
     lock.lock();
     runPlanner_ = true;
     planner_cond_.notify_one();

@@ -185,7 +185,7 @@ void GlobalPlanner::clearRobotCell(const tf::Stamped<tf::Pose>& global_pose, uns
 }
 
 bool GlobalPlanner::makePlanService(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response& resp) {
-    makePlan(req.start, req.goal, resp.plan.poses);
+    makePlan(req.start, req.goal, req.tolerance, resp.plan.poses);
 
     resp.plan.header.stamp = ros::Time::now();
     resp.plan.header.frame_id = frame_id_;

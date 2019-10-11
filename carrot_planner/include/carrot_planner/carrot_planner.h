@@ -83,7 +83,7 @@ namespace carrot_planner{
        * @return True if a valid plan was found, false otherwise
        */
       bool makePlan(const geometry_msgs::PoseStamped& start, 
-          const geometry_msgs::PoseStamped& goal, std::vector<geometry_msgs::PoseStamped>& plan);
+          const geometry_msgs::PoseStamped& goal, double tolerance, std::vector<geometry_msgs::PoseStamped>& plan);
 
     private:
       costmap_2d::Costmap2DROS* costmap_ros_;

@@ -55,7 +55,7 @@ namespace nav_core {
        * @return True if a valid plan was found, false otherwise
        */
       virtual bool makePlan(const geometry_msgs::PoseStamped& start, 
-          const geometry_msgs::PoseStamped& goal, std::vector<geometry_msgs::PoseStamped>& plan) = 0;
+          const geometry_msgs::PoseStamped& goal, double tolerance, std::vector<geometry_msgs::PoseStamped>& plan) = 0;
 
       /**
        * @brief  Initialization function for the BaseGlobalPlanner
