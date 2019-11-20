@@ -931,7 +931,7 @@ namespace move_base {
       stsr_controller_total_loop.stopSample();
     }
 
-    //wake up the planner thremaad so that it can exit cleanly
+    //wake up the planner thread so that it can exit cleanly
     lock.lock();
     runPlanner_ = true;
     planner_cond_.notify_one();
