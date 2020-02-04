@@ -59,6 +59,8 @@ void ObstructionLayer::onInitialize()
   ros::NodeHandle nh("~/" + name_), g_nh;
   rolling_window_ = layered_costmap_->isRolling();
 
+  // initialize action server for configuration
+  
   bool track_unknown_space;
   nh.param("track_unknown_space", track_unknown_space, layered_costmap_->isTrackingUnknown());
   if (track_unknown_space)
@@ -240,46 +242,38 @@ void ObstructionLayer::onInitialize()
 
   obstruction_publisher_ = nh.advertise<costmap_2d::ObstructionListMsg>("obstructions", 1);
 
-  dsrv_ = NULL;
-  setupDynamicReconfigure(nh);
-}
-
-void ObstructionLayer::setupDynamicReconfigure(ros::NodeHandle& nh)
-{
-  dsrv_ = new dynamic_reconfigure::Server<costmap_2d::ObstructionPluginConfig>(nh);
-  dynamic_reconfigure::Server<costmap_2d::ObstructionPluginConfig>::CallbackType cb = boost::bind(
-      &ObstructionLayer::reconfigureCB, this, _1, _2);
-  dsrv_->setCallback(cb);
+  //dsrv_ = NULL;
+  //setupDynamicReconfigure(nh);
+  config_server_.start();
 }
 
 ObstructionLayer::~ObstructionLayer()
 {
-    if (dsrv_)
-    {
-      delete dsrv_;
-    }
 }
-void ObstructionLayer::reconfigureCB(costmap_2d::ObstructionPluginConfig &config, uint32_t level)
+
+void ObstructionLayer::obstructionPluginConfigCB(const costmap_2d::ObstructionPluginConfigGoalConstPtr &goal) 
 {
-  enabled_ = config.enabled;
-  max_obstacle_height_ = config.max_obstacle_height;
-  obstruction_half_life_ = ros::Duration(config.obstruction_half_life);
-  num_obstruction_levels_ = config.num_obstruction_levels;
-  enable_decay_ = config.enable_decay;
+  enabled_ = goal->enabled;
+  max_obstacle_height_ = goal->max_obstacle_height;
+  obstruction_half_life_ = ros::Duration(goal->obstruction_half_life);
+  num_obstruction_levels_ = goal->num_obstruction_levels;
+  enable_decay_ = goal->enable_decay;
 
-  distance_threshold_ = config.distance_threshold;
+  distance_threshold_ = goal->distance_threshold;
 
-  dynamic_inflation_type_ = config.dynamic_inflation_type;
-  dynamic_inflation_radius_ = config.dynamic_inflation_radius;
-  dynamic_cost_scaling_factor_ = config.dynamic_cost_scaling_factor;
+  dynamic_inflation_type_ = goal->dynamic_inflation_type;
+  dynamic_inflation_radius_ = goal->dynamic_inflation_radius;
+  dynamic_cost_scaling_factor_ = goal->dynamic_cost_scaling_factor;
 
-  pseudostatic_inflation_type_ = config.pseudostatic_inflation_type;
-  pseudostatic_inflation_radius_ = config.pseudostatic_inflation_radius;
-  pseudostatic_cost_scaling_factor_ = config.pseudostatic_cost_scaling_factor;
+  pseudostatic_inflation_type_ = goal->pseudostatic_inflation_type;
+  pseudostatic_inflation_radius_ = goal->pseudostatic_inflation_radius;
+  pseudostatic_cost_scaling_factor_ = goal->pseudostatic_cost_scaling_factor;
 
-  dynamic_kernel_inflation_ = config.dynamic_kernel_inflation;
+  dynamic_kernel_inflation_ = goal->dynamic_kernel_inflation;
 
   generateKernels();
+  config_result_.success = true;
+  config_server_.setSucceeded(config_result_);
 }
 
 void ObstructionLayer::laserScanCallback(const sensor_msgs::LaserScanConstPtr& message,

@@ -38,6 +38,12 @@ include_directories(
 
 add_definitions(${EIGEN_DEFINITIONS})
 
+# actions
+add_action_files(
+  DIRECTORY action
+  FILES ObstructionPluginConfig.action
+)
+
 # messages
 add_message_files(
     DIRECTORY msg

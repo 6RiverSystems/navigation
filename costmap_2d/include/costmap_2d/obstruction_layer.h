@@ -60,7 +60,8 @@
 #include <tf/message_filter.h>
 #include <message_filters/subscriber.h>
 #include <dynamic_reconfigure/server.h>
-#include <costmap_2d/ObstructionPluginConfig.h>
+#include <actionlib/server/simple_action_server.h>
+#include <costmap_2d/ObstructionPluginConfigAction.h>
 #include <costmap_2d/footprint.h>
 #include <costmap_2d/ObstructionMsg.h>
 #include <costmap_2d/ObstructionListMsg.h>
@@ -117,7 +118,8 @@ private:
 class ObstructionLayer : public CostmapLayer
 {
 public:
-  ObstructionLayer() : timingDataRecorder_("ob")
+  ObstructionLayer() : timingDataRecorder_("ob"),
+    config_server_(nh_, "ObstructionLayerConfigServer", boost::bind(&ObstructionLayer::obstructionPluginConfigCB, this, _1), false)
   {
     costmap_ = NULL;  // this is the unsigned char* member of parent class Costmap2D.
     obstruction_map_ = NULL;
@@ -173,7 +175,7 @@ public:
   virtual void resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn);
 
   virtual void updateOrigin(double new_origin_x, double new_origin_y);
-
+  
   virtual LayerType getLayerType() {
     return LayerType::OBSTRUCTION;
   }
@@ -185,6 +187,7 @@ public:
   }
 
 protected:
+  ros::NodeHandle nh_;
   virtual void setupDynamicReconfigure(ros::NodeHandle& nh);
 
   /**
@@ -308,7 +311,9 @@ protected:
   std::vector<costmap_2d::Observation> static_clearing_observations_, static_marking_observations_;
 
   bool rolling_window_;
-  dynamic_reconfigure::Server<costmap_2d::ObstructionPluginConfig> *dsrv_;
+  //dynamic_reconfigure::Server<costmap_2d::ObstructionPluginConfig> *dsrv_;
+  actionlib::SimpleActionServer<costmap_2d::ObstructionPluginConfigAction> config_server_;
+  costmap_2d::ObstructionPluginConfigResult config_result_;
 
   // Map for keeping track of obstructions
   std::weak_ptr<Obstruction>* obstruction_map_;
@@ -344,8 +349,8 @@ protected:
   ros::Publisher obstruction_publisher_;  // Publisher of obstruction data
 
 private:
-  void reconfigureCB(costmap_2d::ObstructionPluginConfig &config, uint32_t level);
-
+  //void reconfigureCB(costmap_2d::ObstructionPluginConfig &config, uint32_t level);
+  void obstructionPluginConfigCB(const costmap_2d::ObstructionPluginConfigGoalConstPtr &goal);
   // Add timing data recorder
   srs::MasterTimingDataRecorder timingDataRecorder_;
 

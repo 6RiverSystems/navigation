@@ -14,7 +14,7 @@ float64 pseudostatic_cost_scaling_factor
 float64 pseudostatic_inflation_radius
 
 # A scaling factor to apply to cost values during inflation.
-float64 dyanmic_cost_scaling_factor
+float64 dynamic_cost_scaling_factor
 
 # The radius in meters to which the map inflates obstacle cost values.
 float64 dynamic_inflation_radius
@@ -24,9 +24,6 @@ bool enable_decay
 
 # How long until the obstruction decays to half of its value
 float64 obstruction_half_life
-
-# How long until the obstruction decays to half of its value in the queue
-float64 obstruction_half_life_queue
 
 # The number of times an obstruction will decay before it is removed completely.
 int32 num_obstruction_levels
@@ -43,6 +40,5 @@ int32 dynamic_inflation_type
 # The inflation to add to the inscribed radius for all dynamic obstacle kernels.
 int32 dynamic_kernel_inflation
 ---
-
----
 bool success
+---
