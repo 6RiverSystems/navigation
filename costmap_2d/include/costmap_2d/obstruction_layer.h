@@ -59,7 +59,6 @@
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <tf/message_filter.h>
 #include <message_filters/subscriber.h>
-#include <dynamic_reconfigure/server.h>
 #include <actionlib/server/simple_action_server.h>
 #include <costmap_2d/ObstructionPluginConfigAction.h>
 #include <costmap_2d/footprint.h>
@@ -118,11 +117,11 @@ private:
 class ObstructionLayer : public CostmapLayer
 {
 public:
-  ObstructionLayer() : timingDataRecorder_("ob"),
-    config_server_(nh_, "ObstructionLayerConfigServer", boost::bind(&ObstructionLayer::obstructionPluginConfigCB, this, _1), false)
+  ObstructionLayer() : timingDataRecorder_("ob")
   {
     costmap_ = NULL;  // this is the unsigned char* member of parent class Costmap2D.
     obstruction_map_ = NULL;
+    config_server_ = NULL;
   }
 
   virtual ~ObstructionLayer();
@@ -188,7 +187,7 @@ public:
 
 protected:
   ros::NodeHandle nh_;
-  virtual void setupDynamicReconfigure(ros::NodeHandle& nh);
+  //virtual void setupDynamicReconfigure(ros::NodeHandle& nh);
 
   /**
    * @brief  Get the observations used to mark space
@@ -311,8 +310,8 @@ protected:
   std::vector<costmap_2d::Observation> static_clearing_observations_, static_marking_observations_;
 
   bool rolling_window_;
-  //dynamic_reconfigure::Server<costmap_2d::ObstructionPluginConfig> *dsrv_;
-  actionlib::SimpleActionServer<costmap_2d::ObstructionPluginConfigAction> config_server_;
+
+  actionlib::SimpleActionServer<costmap_2d::ObstructionPluginConfigAction> * config_server_;
   costmap_2d::ObstructionPluginConfigResult config_result_;
 
   // Map for keeping track of obstructions

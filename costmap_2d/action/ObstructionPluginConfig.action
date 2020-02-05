@@ -1,44 +1,58 @@
 # Whether to apply this plugin or not
 bool enabled
+bool set_enabled
 
 # The maximum height of any obstacle to be inserted into the costmap in meters.
 float64 max_obstacle_height
+bool set_max_obstacle_height
 
 # How close a reading needs to be to the static layer to count as semi-static.
 float64 distance_threshold
+bool set_distance_threshold
 
 # A scaling factor to apply to pseudostatic cost values during inflation.
 float64 pseudostatic_cost_scaling_factor
+bool set_pseudostatic_cost_scaling_factor
 
 # The radius in meters to which the map inflates pseudostatic obstacle cost values.
 float64 pseudostatic_inflation_radius
+bool set_pseudostatic_inflation_radius
 
 # A scaling factor to apply to cost values during inflation.
 float64 dynamic_cost_scaling_factor
+bool set_dynamic_cost_scaling_factor
 
 # The radius in meters to which the map inflates obstacle cost values.
 float64 dynamic_inflation_radius
+bool set_dynamic_inflation_radius
 
 # Whether to decay obstructions or not
 bool enable_decay
+bool set_enable_decay
 
 # How long until the obstruction decays to half of its value
 float64 obstruction_half_life
+bool set_obstruction_half_life
 
 # The number of times an obstruction will decay before it is removed completely.
 int32 num_obstruction_levels
+bool set_num_obstruction_levels
 
 int32 EXPONENTIAL_INFLATION=0
 int32 TRINOMIAL_INFLATION=1
 
 # The inflation function to use for pseudostatic obstructions (either exponential or trinomoal)
 int32 pseudostatic_inflation_type
+bool set_pseudostatic_inflation_type
 
 # The inflation function to use for dynamic obstructions.
 int32 dynamic_inflation_type
+bool set_dynamic_inflation_type
 
 # The inflation to add to the inscribed radius for all dynamic obstacle kernels.
 int32 dynamic_kernel_inflation
+bool set_dynamic_kernel_inflation
+
 ---
 bool success
 ---
