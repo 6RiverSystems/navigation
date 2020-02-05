@@ -243,8 +243,6 @@ void ObstructionLayer::onInitialize()
 
   obstruction_publisher_ = nh.advertise<costmap_2d::ObstructionListMsg>("obstructions", 1);
 
-  //dsrv_ = NULL;
-  //setupDynamicReconfigure(nh);
   ROS_INFO("Starting config server for layer %s", name_.c_str());
   config_server_->start();
 }

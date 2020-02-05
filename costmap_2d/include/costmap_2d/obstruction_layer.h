@@ -187,7 +187,6 @@ public:
 
 protected:
   ros::NodeHandle nh_;
-  //virtual void setupDynamicReconfigure(ros::NodeHandle& nh);
 
   /**
    * @brief  Get the observations used to mark space
@@ -348,7 +347,6 @@ protected:
   ros::Publisher obstruction_publisher_;  // Publisher of obstruction data
 
 private:
-  //void reconfigureCB(costmap_2d::ObstructionPluginConfig &config, uint32_t level);
   void obstructionPluginConfigCB(const costmap_2d::ObstructionPluginConfigGoalConstPtr &goal);
   // Add timing data recorder
   srs::MasterTimingDataRecorder timingDataRecorder_;
