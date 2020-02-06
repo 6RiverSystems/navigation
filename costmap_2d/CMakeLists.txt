@@ -64,7 +64,6 @@ generate_messages(
 generate_dynamic_reconfigure_options(
   cfg/Costmap2D.cfg
   cfg/ObstaclePlugin.cfg
-  cfg/ObstructionPlugin.cfg
   cfg/GenericPlugin.cfg
   cfg/InflationPlugin.cfg
   cfg/VoxelPlugin.cfg
