@@ -243,6 +243,10 @@ void ObstructionLayer::onInitialize()
 
   obstruction_publisher_ = nh.advertise<costmap_2d::ObstructionListMsg>("obstructions", 1);
 
+  if (!initializeObstructionPluginConfig(nh)) {
+    ROS_WARN("Some costmap parameters were not initialized properly!");
+  }
+
   ROS_INFO("Starting config server for layer %s", name_.c_str());
   config_server_->start();
 }
@@ -250,6 +254,47 @@ void ObstructionLayer::onInitialize()
 ObstructionLayer::~ObstructionLayer()
 {
   delete config_server_;
+}
+
+bool ObstructionLayer::initializeObstructionPluginConfig(ros::NodeHandle nh) {
+  bool enabled_set = nh.param("enabled", enabled_);
+  bool max_obstacle_height_set = nh.param("max_obstacle_height", max_obstacle_height_);
+
+  float obstruction_half_life_param;
+  bool obstruction_half_life_set = nh.param("obstruction_half_life", obstruction_half_life_param);
+  obstruction_half_life_ = ros::Duration(obstruction_half_life_param);
+
+  int num_obstruction_levels_param;
+  bool num_obstruction_levels_set = nh.param("num_obstruction_levels", num_obstruction_levels_param);
+  num_obstruction_levels_ = (unsigned int) num_obstruction_levels_param;
+  
+  bool enable_decay_set = nh.param("enable_decay", enable_decay_);
+
+  bool distance_threshold_set = nh.param("distance_threshold", distance_threshold_);
+
+  bool dynamic_inflation_type_set = nh.param("dynamic_inflation_type", dynamic_inflation_type_);
+  bool dynamic_inflation_radius_set = nh.param("dynamic_inflation_radius", dynamic_inflation_radius_);
+  bool dynamic_cost_scaling_factor_set = nh.param("dynamic_cost_scaling_factor", dynamic_cost_scaling_factor_);
+
+  bool pseudostatic_inflation_type_set = nh.param("pseudostatic_inflation_type", pseudostatic_inflation_type_);
+  bool pseudostatic_inflation_radius_set = nh.param("pseudostatic_inflation_radius", pseudostatic_inflation_radius_);
+  bool pseudostatic_cost_scaling_factor_set = nh.param("pseudostatic_cost_scaling_factor", pseudostatic_cost_scaling_factor_);
+
+  bool dynamic_kernel_inflation_set = nh.param("dynamic_kernel_inflation", dynamic_kernel_inflation_);
+
+  return enabled_set 
+        && max_obstacle_height_set
+        && obstruction_half_life_set
+        && num_obstruction_levels_set
+        && enable_decay_set
+        && distance_threshold_set
+        && dynamic_inflation_type_set
+        && dynamic_inflation_radius_set
+        && dynamic_cost_scaling_factor_set
+        && pseudostatic_inflation_type_set
+        && pseudostatic_inflation_radius_set
+        && pseudostatic_cost_scaling_factor_set
+        && dynamic_kernel_inflation_set;
 }
 
 void ObstructionLayer::obstructionPluginConfigCB(const costmap_2d::ObstructionPluginConfigGoalConstPtr &goal) 

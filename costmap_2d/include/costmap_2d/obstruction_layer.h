@@ -348,6 +348,7 @@ protected:
 
 private:
   void obstructionPluginConfigCB(const costmap_2d::ObstructionPluginConfigGoalConstPtr &goal);
+  bool initializeObstructionPluginConfig(ros::NodeHandle nh);
   // Add timing data recorder
   srs::MasterTimingDataRecorder timingDataRecorder_;
 
@@ -356,4 +357,4 @@ private:
 
 }  // namespace costmap_2d
 
-#endif  // COSTMAP_2D_OBSTRUCTION_LAYER_H_
+#endif  // COSTMAP_2Do_OBSTRUCTION_LAYER_H_
