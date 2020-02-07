@@ -357,4 +357,4 @@ private:
 
 }  // namespace costmap_2d
 
-#endif  // COSTMAP_2Do_OBSTRUCTION_LAYER_H_
+#endif  // COSTMAP_2D_OBSTRUCTION_LAYER_H_
