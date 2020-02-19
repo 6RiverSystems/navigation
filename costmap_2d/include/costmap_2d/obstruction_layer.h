@@ -59,8 +59,8 @@
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <tf/message_filter.h>
 #include <message_filters/subscriber.h>
-#include <dynamic_reconfigure/server.h>
-#include <costmap_2d/ObstructionPluginConfig.h>
+#include <actionlib/server/simple_action_server.h>
+#include <costmap_2d/ObstructionPluginConfigAction.h>
 #include <costmap_2d/footprint.h>
 #include <costmap_2d/ObstructionMsg.h>
 #include <costmap_2d/ObstructionListMsg.h>
@@ -121,6 +121,7 @@ public:
   {
     costmap_ = NULL;  // this is the unsigned char* member of parent class Costmap2D.
     obstruction_map_ = NULL;
+    config_server_ = NULL;
   }
 
   virtual ~ObstructionLayer();
@@ -173,7 +174,7 @@ public:
   virtual void resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn);
 
   virtual void updateOrigin(double new_origin_x, double new_origin_y);
-
+  
   virtual LayerType getLayerType() {
     return LayerType::OBSTRUCTION;
   }
@@ -185,7 +186,7 @@ public:
   }
 
 protected:
-  virtual void setupDynamicReconfigure(ros::NodeHandle& nh);
+  ros::NodeHandle nh_;
 
   /**
    * @brief  Get the observations used to mark space
@@ -308,7 +309,9 @@ protected:
   std::vector<costmap_2d::Observation> static_clearing_observations_, static_marking_observations_;
 
   bool rolling_window_;
-  dynamic_reconfigure::Server<costmap_2d::ObstructionPluginConfig> *dsrv_;
+
+  actionlib::SimpleActionServer<costmap_2d::ObstructionPluginConfigAction> * config_server_;
+  costmap_2d::ObstructionPluginConfigResult config_result_;
 
   // Map for keeping track of obstructions
   std::weak_ptr<Obstruction>* obstruction_map_;
@@ -344,8 +347,8 @@ protected:
   ros::Publisher obstruction_publisher_;  // Publisher of obstruction data
 
 private:
-  void reconfigureCB(costmap_2d::ObstructionPluginConfig &config, uint32_t level);
-
+  void obstructionPluginConfigCB(const costmap_2d::ObstructionPluginConfigGoalConstPtr &goal);
+  bool initializeObstructionPluginConfig(ros::NodeHandle nh);
   // Add timing data recorder
   srs::MasterTimingDataRecorder timingDataRecorder_;
 

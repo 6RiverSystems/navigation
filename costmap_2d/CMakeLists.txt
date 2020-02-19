@@ -38,6 +38,12 @@ include_directories(
 
 add_definitions(${EIGEN_DEFINITIONS})
 
+# actions
+add_action_files(
+  DIRECTORY action
+  FILES ObstructionPluginConfig.action
+)
+
 # messages
 add_message_files(
     DIRECTORY msg
@@ -58,7 +64,6 @@ generate_messages(
 generate_dynamic_reconfigure_options(
   cfg/Costmap2D.cfg
   cfg/ObstaclePlugin.cfg
-  cfg/ObstructionPlugin.cfg
   cfg/GenericPlugin.cfg
   cfg/InflationPlugin.cfg
   cfg/VoxelPlugin.cfg
