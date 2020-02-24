@@ -192,7 +192,8 @@ namespace dead_reckoning_controller {
   bool DeadReckoningController::isGoalReached(const tf::Stamped<tf::Pose> current_pose){
 
     //this does a check to see if the robot is past the goal vector's y axis.
-    tf::Pose current_pose_transform = path_.inverseTimes(current_pose);
+    tf::StampedTransform transform;
+    tf::Pose current_pose_transform = end_pose_.inverseTimes(current_pose);
     if(current_pose_transform.getOrigin().getX() > 0){
       return true;
     }
