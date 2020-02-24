@@ -101,28 +101,15 @@ namespace dead_reckoning_controller {
 
 
     double ang_vel_out;
-    //I dont like these lines, but I can't figure a non buggy way tf to get the angle diff with correct signs
+    
+
     double current_yaw;
     double end_pose_yaw;
     double current_vel_ang;
 
-    //yaw of current pose orientation
-    tf::Matrix3x3 current_pose_matrix(current_pose.getRotation());
-    double roll, pitch, yaw;
-    current_pose_matrix.getRPY(roll, pitch, yaw);
-    current_yaw = yaw;
-    
-
-    //yaw of path orientation
-    tf::Matrix3x3 end_pose_matrix(end_pose_.getRotation());
-    end_pose_matrix.getRPY(roll, pitch, yaw);
-    end_pose_yaw = yaw;
-
-
-    //angular velocity of current velocity orientation
-    tf::Matrix3x3 current_velocity_matrix(current_velocity.getRotation());
-    current_velocity_matrix.getRPY(roll, pitch, yaw);
-    current_vel_ang = yaw;
+    current_yaw = tf::getYaw(current_pose.getRotation());
+    end_pose_yaw = tf::getYaw(end_pose_.getRotation());
+    current_vel_ang = tf::getYaw(current_velocity.getRotation());
     
     //just get it in {-pi to pi} format
     double angleDiff;
