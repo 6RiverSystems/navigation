@@ -93,6 +93,7 @@ bool PathSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, double& m
   double distance_from_robot = 0;
   double minimum_distance = params_.max_distance_from_path; // it needs to be at least this close
   double max_heading_diff = 0;
+  bool path_came_within_min_dist = false;
 
   Eigen::Vector3f plan_vec = poseToVector3f(plan_[0].pose);
 
@@ -114,8 +115,9 @@ bool PathSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, double& m
       minimum_distance = dist_from_path;
       // Reset distance
       distance_from_robot = std::max(0.0, segment_length - distanceAlongLineSegment(pos2, p0, p1));
+      path_came_within_min_dist = true;
     }
-    else
+    else if (path_came_within_min_dist)
     {
       if (distance_from_robot >= params_.min_lookahead_distance 
         && distance_from_robot < params_.max_lookahead_distance)
