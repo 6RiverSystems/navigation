@@ -35,10 +35,10 @@
 * Author: Eitan Marder-Eppstein
 *********************************************************************/
 #include <rotate_recovery/rotate_recovery.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 
 //register this planner as a RecoveryBehavior plugin
-PLUGINLIB_DECLARE_CLASS(rotate_recovery, RotateRecovery, rotate_recovery::RotateRecovery, nav_core::RecoveryBehavior)
+PLUGINLIB_EXPORT_CLASS(rotate_recovery::RotateRecovery, nav_core::RecoveryBehavior)
 
 namespace rotate_recovery {
 RotateRecovery::RotateRecovery(): global_costmap_(NULL), local_costmap_(NULL), 

@@ -39,7 +39,7 @@
  *********************************************************************/
 #include <costmap_2d/obstruction_layer.h>
 #include <costmap_2d/costmap_math.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <srslib_timing/ScopedTimingSampleRecorder.hpp>
 
 PLUGINLIB_EXPORT_CLASS(costmap_2d::ObstructionLayer, costmap_2d::CostmapLayer)

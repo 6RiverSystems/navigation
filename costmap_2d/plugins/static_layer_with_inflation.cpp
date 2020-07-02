@@ -40,7 +40,7 @@
  *********************************************************************/
 #include <costmap_2d/static_layer_with_inflation.h>
 #include <costmap_2d/costmap_math.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <srslib_timing/ScopedTimingSampleRecorder.hpp>
 
 PLUGINLIB_EXPORT_CLASS(costmap_2d::StaticLayerWithInflation, costmap_2d::CostmapLayer)

@@ -36,7 +36,7 @@
  *         David V. Lu!!
  *********************************************************************/
 #include <costmap_2d/voxel_layer.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 
 #define VOXEL_BITS 16

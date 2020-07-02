@@ -50,7 +50,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <map_msgs/OccupancyGridUpdate.h>
 #include <message_filters/subscriber.h>
-#include <pluginlib/class_loader.h>
+#include <pluginlib/class_loader.hpp>
 
 #include <srslib_timing/MasterTimingDataRecorder.hpp>
 

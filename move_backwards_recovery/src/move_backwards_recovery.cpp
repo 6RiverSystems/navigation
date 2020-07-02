@@ -1,10 +1,10 @@
 #include <move_backwards_recovery/move_backwards_recovery.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <math.h>
 #include <angles/angles.h>
 
 //register this planner as a RecoveryBehavior plugin
-PLUGINLIB_DECLARE_CLASS(move_backwards_recovery, MoveBackRecovery, move_backwards_recovery::MoveBackRecovery, nav_core::RecoveryBehavior)
+PLUGINLIB_EXPORT_CLASS(move_backwards_recovery::MoveBackRecovery, nav_core::RecoveryBehavior)
 
 namespace move_backwards_recovery {
 MoveBackRecovery::MoveBackRecovery(): global_costmap_(NULL), local_costmap_(NULL),

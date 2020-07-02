@@ -56,7 +56,7 @@
 #include <base_local_planner/geometry_math_helpers.h>
 #include <geometry_msgs/PoseStamped.h>
 
-#include <pluginlib/class_loader.h>
+#include <pluginlib/class_loader.hpp>
 #include <move_base_msgs/ClearCostmap.h>
 
 #include <dynamic_reconfigure/server.h>

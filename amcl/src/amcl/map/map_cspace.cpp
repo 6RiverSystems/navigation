@@ -98,8 +98,8 @@ void enqueue(map_t* map, unsigned int i, unsigned int j,
   // this most likely prevents using very large indexes due to unsigned int overflow (when a value is negative)  
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wabsolute-value"
-  unsigned int di = abs(i - src_i);
-  unsigned int dj = abs(j - src_j);
+  unsigned int di = std::abs(static_cast<int>(i) - static_cast<int>(src_i));
+  unsigned int dj = std::abs(static_cast<int>(j) - static_cast<int>(src_j));
   #pragma clang diagnostic pop
   
   double distance = cdm->distances_[di][dj];

@@ -38,7 +38,7 @@
  *********************************************************************/
 #include <costmap_2d/static_layer.h>
 #include <costmap_2d/costmap_math.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 
 PLUGINLIB_EXPORT_CLASS(costmap_2d::StaticLayer, costmap_2d::CostmapLayer)
 

@@ -35,11 +35,11 @@
 * Author: Eitan Marder-Eppstein
 *********************************************************************/
 #include <clear_costmap_recovery/clear_costmap_recovery.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <vector>
 
 //register this planner as a RecoveryBehavior plugin
-PLUGINLIB_DECLARE_CLASS(clear_costmap_recovery, ClearCostmapRecovery, clear_costmap_recovery::ClearCostmapRecovery, nav_core::RecoveryBehavior)
+PLUGINLIB_EXPORT_CLASS(clear_costmap_recovery::ClearCostmapRecovery, nav_core::RecoveryBehavior)
 
 using costmap_2d::NO_INFORMATION;
 
