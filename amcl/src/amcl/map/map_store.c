@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "map.h"
+#include "amcl/map/map.h"
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -54,12 +54,18 @@ int map_load_occ(map_t *map, const char *filename, double scale, int negate)
   }
 
   // Read ppm header
+<<<<<<< HEAD
   // ignore the array-bounds warning. it will never be hit
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Warray-bounds"
   if ((fscanf(file, "%10s \n", magic) != 1) || (strcmp(magic, "P5") != 0))
+=======
+  
+  if ((fscanf(file, "%2s \n", magic) != 1) || (strcmp(magic, "P5") != 0))
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   {
     fprintf(stderr, "incorrect image format; must be PGM/binary");
+    fclose(file);
     return -1;
   }
   #pragma clang diagnostic pop

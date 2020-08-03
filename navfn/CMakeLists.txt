@@ -2,31 +2,35 @@ cmake_minimum_required(VERSION 2.8.3)
 project(navfn)
 add_definitions("-std=c++11")
 
+include(CheckIncludeFile)
+
 find_package(catkin REQUIRED
     COMPONENTS
         cmake_modules
         costmap_2d
         geometry_msgs
+        message_generation
         nav_core
         nav_msgs
-        pcl_conversions
-        pcl_ros
         pluginlib
+        rosconsole
         roscpp
-        tf
+        tf2_ros
+        sensor_msgs
         visualization_msgs
         )
 
 find_package(Eigen3 REQUIRED)
+<<<<<<< HEAD
 find_package(PCL 1.8 REQUIRED QUIET COMPONENTS io)
+=======
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
-    SYSTEM
-    ${EIGEN_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
 )
-add_definitions(${EIGEN_DEFINITIONS})
+add_definitions(${EIGEN3_DEFINITIONS})
 
 
 # services
@@ -39,9 +43,7 @@ add_service_files(
 
 generate_messages(
     DEPENDENCIES
-        std_msgs
         geometry_msgs
-        nav_msgs
 )
 
 catkin_package(
@@ -50,10 +52,20 @@ catkin_package(
     LIBRARIES
         navfn
     CATKIN_DEPENDS
+        geometry_msgs
+        message_runtime
         nav_core
-        roscpp
+        nav_msgs
         pluginlib
+        roscpp
+        sensor_msgs
+        visualization_msgs
 )
+
+check_include_file(sys/time.h HAVE_SYS_TIME_H)
+if (HAVE_SYS_TIME_H)
+  add_definitions(-DHAVE_SYS_TIME_H)
+endif (HAVE_SYS_TIME_H)
 
 add_library (navfn src/navfn.cpp src/navfn_ros.cpp)
 target_link_libraries(navfn
@@ -66,10 +78,14 @@ target_link_libraries(navfn_node
     navfn
     )
 
-install(TARGETS navfn navfn_node
+install(TARGETS navfn_node
+       RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+       )
+
+install(TARGETS navfn
        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-       RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+       RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
        )
 
 install(DIRECTORY include/navfn/

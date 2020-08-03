@@ -42,8 +42,14 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+<<<<<<< HEAD
 #include <costmap_2d/ThreadAffinity.hpp>
 #include <srslib_timing/ScopedTimingSampleRecorder.hpp>
+=======
+#include <tf2/convert.h>
+#include <tf2/utils.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 using namespace std;
 
@@ -61,15 +67,38 @@ void move_parameter(ros::NodeHandle& old_h, ros::NodeHandle& new_h, std::string 
   if (should_delete) old_h.deleteParam(name);
 }
 
+<<<<<<< HEAD
 Costmap2DROS::Costmap2DROS(std::string name, tf::TransformListener& tf) :
     layered_costmap_(NULL), name_(name), tf_(tf), stop_updates_(false), initialized_(true), stopped_(false),
     robot_stopped_(false), map_update_thread_(NULL), last_publish_(0),
     plugin_loader_("costmap_2d", "costmap_2d::CostmapLayer"), publisher_(NULL), map_update_thread_affinity_(-1),
     map_update_thread_nice_(0), timingDataRecorder_("CM2dROS-"+name)
+=======
+Costmap2DROS::Costmap2DROS(const std::string& name, tf2_ros::Buffer& tf) :
+    layered_costmap_(NULL),
+    name_(name),
+    tf_(tf),
+    transform_tolerance_(0.3),
+    map_update_thread_shutdown_(false),
+    stop_updates_(false),
+    initialized_(true),
+    stopped_(false),
+    robot_stopped_(false),
+    map_update_thread_(NULL),
+    last_publish_(0),
+    plugin_loader_("costmap_2d", "costmap_2d::Layer"),
+    publisher_(NULL),
+    dsrv_(NULL),
+    footprint_padding_(0.0)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 {
+  // Initialize old pose with something
+  tf2::toMsg(tf2::Transform::getIdentity(), old_pose_.pose);
+
   ros::NodeHandle private_nh("~/" + name);
   ros::NodeHandle g_nh;
 
+<<<<<<< HEAD
   // get the thread affinity and nice
   private_nh.param("map_update_thread_affinity", map_update_thread_affinity_, map_update_thread_affinity_);
   private_nh.param("map_update_thread_nice", map_update_thread_nice_, map_update_thread_nice_);
@@ -80,18 +109,17 @@ Costmap2DROS::Costmap2DROS(std::string name, tf::TransformListener& tf) :
 
   // get two frames
   private_nh.param("global_frame", global_frame_, std::string("/map"));
+=======
+  // get global and robot base frame names
+  private_nh.param("global_frame", global_frame_, std::string("map"));
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   private_nh.param("robot_base_frame", robot_base_frame_, std::string("base_link"));
-
-  // make sure that we set the frames appropriately based on the tf_prefix
-  global_frame_ = tf::resolve(tf_prefix, global_frame_);
-  robot_base_frame_ = tf::resolve(tf_prefix, robot_base_frame_);
 
   ros::Time last_error = ros::Time::now();
   std::string tf_error;
   // we need to make sure that the transform between the robot base frame and the global frame is available
   while (ros::ok()
-      && !tf_.waitForTransform(global_frame_, robot_base_frame_, ros::Time(), ros::Duration(0.1), ros::Duration(0.01),
-                               &tf_error))
+      && !tf_.canTransform(global_frame_, robot_base_frame_, ros::Time(), ros::Duration(0.1), &tf_error))
   {
     ros::spinOnce();
     if (last_error + ros::Duration(5.0) < ros::Time::now())
@@ -115,7 +143,9 @@ Costmap2DROS::Costmap2DROS(std::string name, tf::TransformListener& tf) :
 
   if (!private_nh.hasParam("plugins"))
   {
-    resetOldParameters(private_nh);
+    loadOldParameters(private_nh);
+  } else {
+    warnForOldParameters(private_nh);
   }
 
   if (private_nh.hasParam("plugins"))
@@ -126,8 +156,14 @@ Costmap2DROS::Costmap2DROS(std::string name, tf::TransformListener& tf) :
     {
       std::string pname = static_cast<std::string>(my_list[i]["name"]);
       std::string type = static_cast<std::string>(my_list[i]["type"]);
+<<<<<<< HEAD
       std::string shortname;
       ROS_INFO("Using plugin \"%s\" of type \"%s\"", pname.c_str(), type.c_str());
+=======
+      ROS_INFO("%s: Using plugin \"%s\"", name_.c_str(), pname.c_str());
+
+      copyParentParameters(pname, type, private_nh);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
       boost::shared_ptr<CostmapLayer> plugin = plugin_loader_.createInstance(type);
       layered_costmap_->addPlugin(plugin);
@@ -157,11 +193,19 @@ Costmap2DROS::Costmap2DROS(std::string name, tf::TransformListener& tf) :
     topic_param = "published_footprint";
   }
 
+<<<<<<< HEAD
   private_nh.param(topic_param, topic, std::string("oriented_footprint"));
   footprint_pub_ = private_nh.advertise<geometry_msgs::PolygonStamped>("footprint", 1);
 
   setUnpaddedRobotFootprint(makeFootprintFromParams(private_nh));
 
+=======
+  private_nh.param(topic_param, topic, std::string("footprint"));  // TODO: revert to oriented_footprint in N-turtle
+  footprint_pub_ = private_nh.advertise<geometry_msgs::PolygonStamped>(topic, 1);
+
+  setUnpaddedRobotFootprint(makeFootprintFromParams(private_nh));
+
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   publisher_ = new Costmap2DPublisher(&private_nh, layered_costmap_->getCostmap(), global_frame_, "costmap",
                                       always_send_full_costmap);
 
@@ -190,6 +234,8 @@ void Costmap2DROS::setUnpaddedRobotFootprintPolygon(const geometry_msgs::Polygon
 
 Costmap2DROS::~Costmap2DROS()
 {
+  timer_.stop();
+
   map_update_thread_shutdown_ = true;
   if (map_update_thread_ != NULL)
   {
@@ -203,9 +249,9 @@ Costmap2DROS::~Costmap2DROS()
   delete dsrv_;
 }
 
-void Costmap2DROS::resetOldParameters(ros::NodeHandle& nh)
+void Costmap2DROS::loadOldParameters(ros::NodeHandle& nh)
 {
-  ROS_INFO("Loading from pre-hydro parameter style");
+  ROS_WARN("%s: Parameter \"plugins\" not provided, loading pre-Hydro parameters", name_.c_str());
   bool flag;
   std::string s;
   std::vector < XmlRpc::XmlRpcValue > plugins;
@@ -274,6 +320,55 @@ void Costmap2DROS::resetOldParameters(ros::NodeHandle& nh)
 
   super_array.setArray(&plugins);
   nh.setParam("plugins", super_array);
+<<<<<<< HEAD
+=======
+}
+
+void Costmap2DROS::copyParentParameters(const std::string& plugin_name, const std::string& plugin_type, ros::NodeHandle& nh)
+{
+  ros::NodeHandle target_layer(nh, plugin_name);
+
+  if(plugin_type == "costmap_2d::StaticLayer")
+  {
+    move_parameter(nh, target_layer, "map_topic", false);
+    move_parameter(nh, target_layer, "unknown_cost_value", false);
+    move_parameter(nh, target_layer, "lethal_cost_threshold", false);
+    move_parameter(nh, target_layer, "track_unknown_space", false);
+  }
+  else if(plugin_type == "costmap_2d::VoxelLayer")
+  {
+    move_parameter(nh, target_layer, "origin_z", false);
+    move_parameter(nh, target_layer, "z_resolution", false);
+    move_parameter(nh, target_layer, "z_voxels", false);
+    move_parameter(nh, target_layer, "mark_threshold", false);
+    move_parameter(nh, target_layer, "unknown_threshold", false);
+    move_parameter(nh, target_layer, "publish_voxel_map", false);
+  }
+  else if(plugin_type == "costmap_2d::ObstacleLayer")
+  {
+    move_parameter(nh, target_layer, "max_obstacle_height", false);
+    move_parameter(nh, target_layer, "raytrace_range", false);
+    move_parameter(nh, target_layer, "obstacle_range", false);
+    move_parameter(nh, target_layer, "track_unknown_space", false);
+  }
+  else if(plugin_type == "costmap_2d::InflationLayer")
+  {
+    move_parameter(nh, target_layer, "cost_scaling_factor", false);
+    move_parameter(nh, target_layer, "inflation_radius", false);
+  }
+}
+
+void Costmap2DROS::warnForOldParameters(ros::NodeHandle& nh)
+{
+  checkOldParam(nh, "static_map");
+  checkOldParam(nh, "map_type");
+}
+
+void Costmap2DROS::checkOldParam(ros::NodeHandle& nh, const std::string &param_name){
+  if(nh.hasParam(param_name)){
+    ROS_WARN("%s: Pre-Hydro parameter \"%s\" unused since \"plugins\" is provided", name_.c_str(), param_name.c_str());
+  }
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 }
 
 void Costmap2DROS::reconfigureCB(costmap_2d::Costmap2DConfig &config, uint32_t level)
@@ -366,7 +461,7 @@ void Costmap2DROS::movementCB(const ros::TimerEvent &event)
   // don't allow configuration to happen while this check occurs
   // boost::recursive_mutex::scoped_lock mcl(configuration_mutex_);
 
-  tf::Stamped < tf::Pose > new_pose;
+  geometry_msgs::PoseStamped new_pose;
 
   if (!getRobotPose(new_pose))
   {
@@ -374,16 +469,29 @@ void Costmap2DROS::movementCB(const ros::TimerEvent &event)
     robot_stopped_ = false;
   }
   // make sure that the robot is not moving
+<<<<<<< HEAD
   else if (fabs((old_pose_.getOrigin() - new_pose.getOrigin()).length()) < 1e-3
       && fabs(old_pose_.getRotation().angle(new_pose.getRotation())) < 1e-3)
   {
     old_pose_ = new_pose;
     robot_stopped_ = true;
   }
+=======
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   else
   {
     old_pose_ = new_pose;
-    robot_stopped_ = false;
+
+    robot_stopped_ = (tf2::Vector3(old_pose_.pose.position.x, old_pose_.pose.position.y,
+                                   old_pose_.pose.position.z).distance(tf2::Vector3(new_pose.pose.position.x,
+                                       new_pose.pose.position.y, new_pose.pose.position.z)) < 1e-3) &&
+                     (tf2::Quaternion(old_pose_.pose.orientation.x,
+                                      old_pose_.pose.orientation.y,
+                                      old_pose_.pose.orientation.z,
+                                      old_pose_.pose.orientation.w).angle(tf2::Quaternion(new_pose.pose.orientation.x,
+                                          new_pose.pose.orientation.y,
+                                          new_pose.pose.orientation.z,
+                                          new_pose.pose.orientation.w)) < 1e-3);
   }
 }
 
@@ -413,6 +521,7 @@ void Costmap2DROS::mapUpdateLoop(double frequency)
   ros::Rate r(frequency);
   while (nh.ok() && !map_update_thread_shutdown_)
   {
+<<<<<<< HEAD
     srs::ScopedTimingSampleRecorder stsr_update_loop(timingDataRecorder_.getRecorder("-UpdateLoop", 1));
 
     struct timeval start, end;
@@ -423,12 +532,27 @@ void Costmap2DROS::mapUpdateLoop(double frequency)
       srs::ScopedTimingSampleRecorder stsr_update(timingDataRecorder_.getRecorder("-Update", 1));
       updateMap();
     }
+=======
+    #ifdef HAVE_SYS_TIME_H
+    struct timeval start, end;
+    double start_t, end_t, t_diff;
+    gettimeofday(&start, NULL);
+    #endif
+    
+    updateMap();
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
+    #ifdef HAVE_SYS_TIME_H
     gettimeofday(&end, NULL);
     start_t = start.tv_sec + double(start.tv_usec) / 1e6;
     end_t = end.tv_sec + double(end.tv_usec) / 1e6;
     t_diff = end_t - start_t;
     ROS_DEBUG("Map update time: %.9f", t_diff);
+<<<<<<< HEAD
+=======
+    #endif
+    
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
     if (publish_cycle.toSec() > 0 && layered_costmap_->isInitialized())
     {
       unsigned int x0, y0, xn, yn;
@@ -455,12 +579,21 @@ void Costmap2DROS::updateMap()
   if (!stop_updates_)
   {
     // get global pose
+<<<<<<< HEAD
     tf::Stamped < tf::Pose > pose;
     if (getRobotPose (pose))
     {
       double x = pose.getOrigin().x(),
              y = pose.getOrigin().y(),
              yaw = tf::getYaw(pose.getRotation());
+=======
+    geometry_msgs::PoseStamped pose;
+    if (getRobotPose (pose))
+    {
+      double x = pose.pose.position.x,
+             y = pose.pose.position.y,
+             yaw = tf2::getYaw(pose.pose.orientation);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
       layered_costmap_->updateMap(x, y, yaw);
 
@@ -539,41 +672,49 @@ void Costmap2DROS::resetLayers()
   }
 }
 
-bool Costmap2DROS::getRobotPose(tf::Stamped<tf::Pose>& global_pose) const
+bool Costmap2DROS::getRobotPose(geometry_msgs::PoseStamped& global_pose) const
 {
+<<<<<<< HEAD
   global_pose.setIdentity();
   tf::Stamped < tf::Pose > robot_pose;
   robot_pose.setIdentity();
   robot_pose.frame_id_ = robot_base_frame_;
   robot_pose.stamp_ = ros::Time();
+=======
+  tf2::toMsg(tf2::Transform::getIdentity(), global_pose.pose);
+  geometry_msgs::PoseStamped robot_pose;
+  tf2::toMsg(tf2::Transform::getIdentity(), robot_pose.pose);
+  robot_pose.header.frame_id = robot_base_frame_;
+  robot_pose.header.stamp = ros::Time();
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   ros::Time current_time = ros::Time::now();  // save time for checking tf delay later
 
   // get the global pose of the robot
   try
   {
-    tf_.transformPose(global_frame_, robot_pose, global_pose);
+    tf_.transform(robot_pose, global_pose, global_frame_);
   }
-  catch (tf::LookupException& ex)
+  catch (tf2::LookupException& ex)
   {
     ROS_ERROR_THROTTLE(1.0, "No Transform available Error looking up robot pose: %s\n", ex.what());
     return false;
   }
-  catch (tf::ConnectivityException& ex)
+  catch (tf2::ConnectivityException& ex)
   {
     ROS_ERROR_THROTTLE(1.0, "Connectivity Error looking up robot pose: %s\n", ex.what());
     return false;
   }
-  catch (tf::ExtrapolationException& ex)
+  catch (tf2::ExtrapolationException& ex)
   {
     ROS_ERROR_THROTTLE(1.0, "Extrapolation Error looking up robot pose: %s\n", ex.what());
     return false;
   }
   // check global_pose timeout
-  if (current_time.toSec() - global_pose.stamp_.toSec() > transform_tolerance_)
+  if (current_time.toSec() - global_pose.header.stamp.toSec() > transform_tolerance_)
   {
     ROS_WARN_THROTTLE(1.0,
                       "Costmap2DROS transform timeout. Current time: %.4f, global_pose stamp: %.4f, tolerance: %.4f",
-                      current_time.toSec(), global_pose.stamp_.toSec(), transform_tolerance_);
+                      current_time.toSec(), global_pose.header.stamp.toSec(), transform_tolerance_);
     return false;
   }
 
@@ -582,12 +723,21 @@ bool Costmap2DROS::getRobotPose(tf::Stamped<tf::Pose>& global_pose) const
 
 void Costmap2DROS::getOrientedFootprint(std::vector<geometry_msgs::Point>& oriented_footprint) const
 {
+<<<<<<< HEAD
   tf::Stamped<tf::Pose> global_pose;
   if (!getRobotPose(global_pose))
     return;
 
   double yaw = tf::getYaw(global_pose.getRotation());
   transformFootprint(global_pose.getOrigin().x(), global_pose.getOrigin().y(), yaw,
+=======
+  geometry_msgs::PoseStamped global_pose;
+  if (!getRobotPose(global_pose))
+    return;
+
+  double yaw = tf2::getYaw(global_pose.pose.orientation);
+  transformFootprint(global_pose.pose.position.x, global_pose.pose.position.y, yaw,
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
                      padded_footprint_, oriented_footprint);
 }
 

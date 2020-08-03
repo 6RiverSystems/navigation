@@ -86,6 +86,8 @@ public:
     deleteKernels();
     if (dsrv_)
         delete dsrv_;
+    if (seen_)
+        delete[] seen_;
   }
 
   virtual void onInitialize();
@@ -103,7 +105,7 @@ public:
   /** @brief  Given a distance, compute a cost.
    * @param  distance The distance from an obstacle in cells
    * @return A cost value for the distance */
-  inline unsigned char computeCost(double distance) const
+  virtual inline unsigned char computeCost(double distance) const
   {
     unsigned char cost = 0;
     if (distance == 0)
@@ -125,13 +127,26 @@ public:
    * @param inflation_radius The new inflation radius
    * @param cost_scaling_factor The new weight
    */
+<<<<<<< HEAD
   void setInflationParameters(double inflation_radius, double cost_scaling_factor, double lane_width);
 
   virtual bool needsUpdate() {return need_reinflation_;};
+=======
+  void setInflationParameters(double inflation_radius, double cost_scaling_factor);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 protected:
   virtual void onFootprintChanged();
   boost::recursive_mutex* inflation_access_;
+<<<<<<< HEAD
+=======
+
+  double resolution_;
+  double inflation_radius_;
+  double inscribed_radius_;
+  double weight_;
+  bool inflate_unknown_;
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 private:
   /**
@@ -176,12 +191,14 @@ private:
   inline void enqueue(unsigned int index, unsigned int mx, unsigned int my,
                       unsigned int src_x, unsigned int src_y);
 
-  double inflation_radius_, inscribed_radius_, weight_;
   unsigned int cell_inflation_radius_;
   unsigned int cached_cell_inflation_radius_;
   std::map<double, std::vector<CellData> > inflation_cells_;
+<<<<<<< HEAD
 
   double resolution_;
+=======
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
   double lane_width_;
 

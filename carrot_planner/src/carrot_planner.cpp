@@ -35,7 +35,14 @@
 * Authors: Eitan Marder-Eppstein, Sachin Chitta
 *********************************************************************/
 #include <carrot_planner/carrot_planner.h>
+<<<<<<< HEAD
 #include <pluginlib/class_list_macros.hpp>
+=======
+#include <pluginlib/class_list_macros.h>
+#include <tf2/convert.h>
+#include <tf2/utils.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 //register this planner as a BaseGlobalPlanner plugin
 PLUGINLIB_EXPORT_CLASS(carrot_planner::CarrotPlanner, nav_core::BaseGlobalPlanner)
@@ -103,15 +110,8 @@ namespace carrot_planner {
       return false;
     }
 
-    tf::Stamped<tf::Pose> goal_tf;
-    tf::Stamped<tf::Pose> start_tf;
-
-    poseStampedMsgToTF(goal,goal_tf);
-    poseStampedMsgToTF(start,start_tf);
-
-    double useless_pitch, useless_roll, goal_yaw, start_yaw;
-    start_tf.getBasis().getEulerYPR(start_yaw, useless_pitch, useless_roll);
-    goal_tf.getBasis().getEulerYPR(goal_yaw, useless_pitch, useless_roll);
+    const double start_yaw = tf2::getYaw(start.pose.orientation);
+    const double goal_yaw = tf2::getYaw(goal.pose.orientation);
 
     //we want to step back along the vector created by the robot's position and the goal pose until we find a legal cell
     double goal_x = goal.pose.position.x;
@@ -155,7 +155,8 @@ namespace carrot_planner {
 
     plan.push_back(start);
     geometry_msgs::PoseStamped new_goal = goal;
-    tf::Quaternion goal_quat = tf::createQuaternionFromYaw(target_yaw);
+    tf2::Quaternion goal_quat;
+    goal_quat.setRPY(0, 0, target_yaw);
 
     new_goal.pose.position.x = target_x;
     new_goal.pose.position.y = target_y;

@@ -32,7 +32,7 @@
 #include "ros/ros.h"
 #include "ros/console.h"
 #include "nav_msgs/GetMap.h"
-#include "tf/LinearMath/Matrix3x3.h"
+#include "tf2/LinearMath/Matrix3x3.h"
 #include "geometry_msgs/Quaternion.h"
 
 using namespace std;
@@ -44,7 +44,8 @@ class MapGenerator
 {
 
   public:
-    MapGenerator(const std::string& mapname) : mapname_(mapname), saved_map_(false)
+    MapGenerator(const std::string& mapname, int threshold_occupied, int threshold_free)
+      : mapname_(mapname), saved_map_(false), threshold_occupied_(threshold_occupied), threshold_free_(threshold_free)
     {
       ros::NodeHandle p_nh("~");
       p_nh.param("free_threshold", free_threshold_, 1);
@@ -86,6 +87,7 @@ class MapGenerator
         return;
       }
 
+<<<<<<< HEAD
       std::string probabilityMapdatafile = mapname_ + "-probability.pgm";
       ROS_INFO("Writing probability map occupancy data to %s", probabilityMapdatafile.c_str());
       FILE* outProbability = fopen(probabilityMapdatafile.c_str(), "w");
@@ -102,11 +104,15 @@ class MapGenerator
               map->info.resolution, map->info.width, map->info.height);
 
       fprintf(outProbability, "P5\n# CREATOR: Map_generator.cpp %.3f m/pix\n%d %d\n255\n",
+=======
+      fprintf(out, "P5\n# CREATOR: map_saver.cpp %.3f m/pix\n%d %d\n255\n",
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
               map->info.resolution, map->info.width, map->info.height);
 
       for(unsigned int y = 0; y < map->info.height; y++) {
         for(unsigned int x = 0; x < map->info.width; x++) {
           unsigned int i = x + (map->info.height - y - 1) * map->info.width;
+<<<<<<< HEAD
 
           // Write trinary
           if (map->data[i] >= 0 && map->data[i] <= free_threshold_) { //occ [0,0.1)
@@ -115,6 +121,14 @@ class MapGenerator
             fputc(000, outTrinary);
           } else { //occ [0.1,0.65]
             fputc(205, outTrinary);
+=======
+          if (map->data[i] >= 0 && map->data[i] <= threshold_free_) { // [0,free)
+            fputc(254, out);
+          } else if (map->data[i] >= threshold_occupied_) { // (occ,255]
+            fputc(000, out);
+          } else { //occ [0.25,0.65]
+            fputc(205, out);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
           }
 
           // Write binary
@@ -157,7 +171,12 @@ free_thresh: 0.196
        */
 
       geometry_msgs::Quaternion orientation = map->info.origin.orientation;
-      tf::Matrix3x3 mat(tf::Quaternion(orientation.x, orientation.y, orientation.z, orientation.w));
+      tf2::Matrix3x3 mat(tf2::Quaternion(
+        orientation.x,
+        orientation.y,
+        orientation.z,
+        orientation.w
+      ));
       double yaw, pitch, roll;
       mat.getEulerYPR(yaw, pitch, roll);
 
@@ -174,6 +193,8 @@ free_thresh: 0.196
     std::string mapname_;
     ros::Subscriber map_sub_;
     bool saved_map_;
+    int threshold_occupied_;
+    int threshold_free_;
 
     int free_threshold_;
     int occupied_threshold_;
@@ -182,12 +203,14 @@ free_thresh: 0.196
 
 #define USAGE "Usage: \n" \
               "  map_saver -h\n"\
-              "  map_saver [-f <mapname>] [ROS remapping args]"
+              "  map_saver [--occ <threshold_occupied>] [--free <threshold_free>] [-f <mapname>] [ROS remapping args]"
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "map_saver");
   std::string mapname = "map";
+  int threshold_occupied = 65;
+  int threshold_free = 25;
 
   for(int i=1; i<argc; i++)
   {
@@ -206,6 +229,42 @@ int main(int argc, char** argv)
         return 1;
       }
     }
+    else if (!strcmp(argv[i], "--occ"))
+    {
+      if (++i < argc)
+      {
+        threshold_occupied = std::atoi(argv[i]);
+        if (threshold_occupied < 1 || threshold_occupied > 100)
+        {
+          ROS_ERROR("threshold_occupied must be between 1 and 100");
+          return 1;
+        }
+
+      }
+      else
+      {
+        puts(USAGE);
+        return 1;
+      }
+    }
+    else if (!strcmp(argv[i], "--free"))
+    {
+      if (++i < argc)
+      {
+        threshold_free = std::atoi(argv[i]);
+        if (threshold_free < 0 || threshold_free > 100)
+        {
+          ROS_ERROR("threshold_free must be between 0 and 100");
+          return 1;
+        }
+
+      }
+      else
+      {
+        puts(USAGE);
+        return 1;
+      }
+    }
     else
     {
       puts(USAGE);
@@ -213,7 +272,17 @@ int main(int argc, char** argv)
     }
   }
 
+<<<<<<< HEAD
   MapGenerator mg(mapname);
+=======
+  if (threshold_occupied <= threshold_free)
+  {
+    ROS_ERROR("threshold_free must be smaller than threshold_occupied");
+    return 1;
+  }
+
+  MapGenerator mg(mapname, threshold_occupied, threshold_free);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
   while(!mg.saved_map_ && ros::ok())
     ros::spinOnce();

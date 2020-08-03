@@ -1,4 +1,8 @@
 *~
 *.project
 *.cproject
+<<<<<<< HEAD
 *.vscode/*
+=======
+
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691

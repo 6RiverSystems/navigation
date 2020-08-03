@@ -42,12 +42,18 @@
 namespace base_local_planner {
 
 void LocalPlannerUtil::initialize(
+<<<<<<< HEAD
     tf::TransformListener* tf,
     costmap_2d::Costmap2DROS* costmap,
     std::string global_frame, std::string controller_name) {
 
 
       
+=======
+    tf2_ros::Buffer* tf,
+    costmap_2d::Costmap2D* costmap,
+    std::string global_frame) {
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   if(!initialized_) {
     tf_ = tf;
     costmap_ = costmap;
@@ -88,7 +94,7 @@ LocalPlannerLimits LocalPlannerUtil::getCurrentLimits() {
 }
 
 
-bool LocalPlannerUtil::getGoal(tf::Stamped<tf::Pose>& goal_pose) {
+bool LocalPlannerUtil::getGoal(geometry_msgs::PoseStamped& goal_pose) {
   //we assume the global goal is the last point in the global plan
   return base_local_planner::getGoalPose(*tf_,
         global_plan_,
@@ -110,6 +116,7 @@ bool LocalPlannerUtil::setPlan(const std::vector<geometry_msgs::PoseStamped>& or
   return true;
 }
 
+<<<<<<< HEAD
 double LocalPlannerUtil::distanceToPlanDivergence(const std::vector<geometry_msgs::PoseStamped>& new_plan)
 {
   double EPSILON = 0.01;
@@ -144,6 +151,9 @@ double LocalPlannerUtil::distanceToPlanDivergence(const std::vector<geometry_msg
 }
 
 bool LocalPlannerUtil::getLocalPlan(tf::Stamped<tf::Pose>& global_pose, std::vector<geometry_msgs::PoseStamped>& transformed_plan) {
+=======
+bool LocalPlannerUtil::getLocalPlan(const geometry_msgs::PoseStamped& global_pose, std::vector<geometry_msgs::PoseStamped>& transformed_plan) {
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   //get the global plan in our frame
   if(!base_local_planner::transformGlobalPlan(
       *tf_,

@@ -1,6 +1,14 @@
+<<<<<<< HEAD
 <package format="2">
     <name>costmap_2d</name>
     <version>1.12.13</version>
+=======
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="2">
+    <name>costmap_2d</name>
+    <version>1.16.6</version>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
     <description>
         This package provides an implementation of a 2D costmap that takes in sensor
         data from the world, builds a 2D or 3D occupancy grid of the data (depending
@@ -15,19 +23,16 @@
     <author>Dave Hershberger</author>
     <author>contradict@gmail.com</author>
     <maintainer email="davidvlu@gmail.com">David V. Lu!!</maintainer>
-    <maintainer email="mferguson@fetchrobotics.com">Michael Ferguson</maintainer>
+    <maintainer email="mfergs7@gmail.com">Michael Ferguson</maintainer>
+    <maintainer email="ahoy@fetchrobotics.com">Aaron Hoy</maintainer>
     <license>BSD</license>
     <url>http://wiki.ros.org/costmap_2d</url>
 
     <buildtool_depend>catkin</buildtool_depend>
 
     <build_depend>cmake_modules</build_depend>
-    <build_depend>dynamic_reconfigure</build_depend>
-    <build_depend>geometry_msgs</build_depend>
-    <build_depend>laser_geometry</build_depend>
-    <build_depend>map_msgs</build_depend>
-    <build_depend>message_filters</build_depend>
     <build_depend>message_generation</build_depend>
+<<<<<<< HEAD
     <build_depend>nav_msgs</build_depend>
     <build_depend>pcl_conversions</build_depend>
     <build_depend>pcl_ros</build_depend>
@@ -60,9 +65,33 @@
     <exec_depend>visualization_msgs</exec_depend>
     <exec_depend>voxel_grid</exec_depend>
     <exec_depend>srslib_timing</exec_depend>
+=======
+    <build_depend>tf2_geometry_msgs</build_depend>
+    <build_depend>tf2_sensor_msgs</build_depend>
 
+    <depend>dynamic_reconfigure</depend>
+    <depend>geometry_msgs</depend>
+    <depend>laser_geometry</depend>
+    <depend>map_msgs</depend>
+    <depend>message_filters</depend>
+    <depend>nav_msgs</depend>
+    <depend>pluginlib</depend>
+    <depend>roscpp</depend>
+    <depend>rostest</depend>
+    <depend>sensor_msgs</depend>
+    <depend>std_msgs</depend>
+    <depend>tf2</depend>
+    <depend>tf2_ros</depend>
+    <depend>visualization_msgs</depend>
+    <depend>voxel_grid</depend>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
+
+    <exec_depend>message_runtime</exec_depend>
+    <exec_depend>rosconsole</exec_depend>
     <test_depend>map_server</test_depend>
     <test_depend>rosbag</test_depend>
+    <test_depend>rostest</test_depend>
+    <test_depend>rosunit</test_depend>
 
     <export>
       <costmap_2d plugin="${prefix}/costmap_plugins.xml"/>

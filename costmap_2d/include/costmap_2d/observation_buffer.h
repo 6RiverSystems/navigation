@@ -42,11 +42,13 @@
 #include <string>
 #include <ros/time.h>
 #include <costmap_2d/observation.h>
-#include <tf/transform_listener.h>
-#include <tf/transform_datatypes.h>
+#include <tf2_ros/buffer.h>
 
+<<<<<<< HEAD
 // PCL Stuff
 #include <pcl/point_cloud.h>
+=======
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 #include <sensor_msgs/PointCloud2.h>
 
 // Thread support
@@ -70,15 +72,23 @@ public:
    * @param  max_obstacle_height The minimum height of a hitpoint to be considered legal
    * @param  obstacle_range The range to which the sensor should be trusted for inserting obstacles
    * @param  raytrace_range The range to which the sensor should be trusted for raytracing to clear out space
+<<<<<<< HEAD
    * @param  min_raytrace_range The minimum range to which the sensor should be trusted for raytracing to clear out space
    * @param  tf A reference to a TransformListener
+=======
+   * @param  tf2_buffer A reference to a tf2 Buffer
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
    * @param  global_frame The frame to transform PointClouds into
    * @param  sensor_frame The frame of the origin of the sensor, can be left blank to be read from the messages
    * @param  tf_tolerance The amount of time to wait for a transform to be available when setting a new global frame
    */
   ObservationBuffer(std::string topic_name, double observation_keep_time, double expected_update_rate,
                     double min_obstacle_height, double max_obstacle_height, double obstacle_range,
+<<<<<<< HEAD
                     double raytrace_range, double min_raytrace_range, tf::TransformListener& tf, std::string global_frame,
+=======
+                    double raytrace_range, tf2_ros::Buffer& tf2_buffer, std::string global_frame,
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
                     std::string sensor_frame, double tf_tolerance);
 
   /**
@@ -101,13 +111,6 @@ public:
    * @param  cloud The cloud to be buffered
    */
   void bufferCloud(const sensor_msgs::PointCloud2& cloud);
-
-  /**
-   * @brief  Transforms a PointCloud to the global frame and buffers it
-   * <b>Note: The burden is on the user to make sure the transform is available... ie they should use a MessageNotifier</b>
-   * @param  cloud The cloud to be buffered
-   */
-  void bufferCloud(const pcl::PointCloud<pcl::PointXYZ>& cloud);
 
   /**
    * @brief  Pushes copies of all current observations onto the end of the vector passed in
@@ -148,7 +151,7 @@ private:
    */
   void purgeStaleObservations();
 
-  tf::TransformListener& tf_;
+  tf2_ros::Buffer& tf2_buffer_;
   const ros::Duration observation_keep_time_;
   const ros::Duration expected_update_rate_;
   ros::Time last_updated_;
@@ -158,7 +161,11 @@ private:
   std::string topic_name_;
   double min_obstacle_height_, max_obstacle_height_;
   boost::recursive_mutex lock_;  ///< @brief A lock for accessing data in callbacks safely
+<<<<<<< HEAD
   double obstacle_range_, raytrace_range_, min_raytrace_range_;
+=======
+  double obstacle_range_, raytrace_range_;
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   double tf_tolerance_;
 };
 }  // namespace costmap_2d

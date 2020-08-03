@@ -1,8 +1,16 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.1)
 project(amcl)
 set(CMAKE_CXX_FLAGS "-std=c++11 -pthread ${CMAKE_CXX_FLAGS}")
 
+include(CheckIncludeFile)
+include(CheckSymbolExists)
+
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 11)
+endif()
+
 find_package(catkin REQUIRED
+<<<<<<< HEAD
         COMPONENTS
             rosbag
             roscpp
@@ -13,6 +21,23 @@ find_package(catkin REQUIRED
             geometry_msgs
             move_base_msgs
         )
+=======
+  COMPONENTS
+    diagnostic_updater
+    dynamic_reconfigure
+    geometry_msgs
+    message_filters
+    nav_msgs
+    rosbag
+    roscpp
+    sensor_msgs
+    std_srvs
+    tf2
+    tf2_geometry_msgs
+    tf2_msgs
+    tf2_ros
+)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 find_package(Boost REQUIRED)
 
@@ -22,17 +47,43 @@ generate_dynamic_reconfigure_options(
 )
 
 catkin_package(
+<<<<<<< HEAD
     CATKIN_DEPENDS
         rosbag
         roscpp
         dynamic_reconfigure
         tf
+=======
+  CATKIN_DEPENDS
+    diagnostic_updater
+    dynamic_reconfigure
+    geometry_msgs
+    nav_msgs
+    rosbag
+    roscpp
+    sensor_msgs
+    std_srvs
+    tf2
+    tf2_msgs
+    tf2_ros
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   INCLUDE_DIRS include
   LIBRARIES amcl_sensors amcl_map amcl_pf
 )
 
-include_directories(include/amcl include/amcl/map include/amcl/sensors include/amcl/pf)
+include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+include_directories(src/include)
+
+check_include_file(unistd.h HAVE_UNISTD_H)
+if (HAVE_UNISTD_H)
+  add_definitions(-DHAVE_UNISTD_H)
+endif (HAVE_UNISTD_H)
+
+check_symbol_exists(drand48 stdlib.h HAVE_DRAND48)
+if (HAVE_DRAND48)
+  add_definitions(-DHAVE_DRAND48)
+endif (HAVE_DRAND48)
 
 add_library(amcl_pf
                     src/amcl/pf/pf.c
@@ -58,7 +109,11 @@ target_link_libraries(amcl_sensors amcl_map amcl_pf)
 
 add_executable(amcl
                        src/amcl_node.cpp)
+<<<<<<< HEAD
 add_dependencies(amcl ${catkin_EXPORTED_TARGETS})
+=======
+add_dependencies(amcl ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 target_link_libraries(amcl
     amcl_sensors amcl_map amcl_pf
@@ -66,11 +121,16 @@ target_link_libraries(amcl
     ${catkin_LIBRARIES}
 )
 
-install( TARGETS
-    amcl amcl_sensors amcl_map amcl_pf
+install(TARGETS
+    amcl
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(TARGETS
+    amcl_sensors amcl_map amcl_pf
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
 install(DIRECTORY include/amcl/

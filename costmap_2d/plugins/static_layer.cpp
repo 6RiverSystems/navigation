@@ -38,7 +38,13 @@
  *********************************************************************/
 #include <costmap_2d/static_layer.h>
 #include <costmap_2d/costmap_math.h>
+<<<<<<< HEAD
 #include <pluginlib/class_list_macros.hpp>
+=======
+#include <pluginlib/class_list_macros.h>
+#include <tf2/convert.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 PLUGINLIB_EXPORT_CLASS(costmap_2d::StaticLayer, costmap_2d::CostmapLayer)
 
@@ -169,17 +175,31 @@ void StaticLayer::incomingMap(const nav_msgs::OccupancyGridConstPtr& new_map)
 
   // resize costmap if size, resolution or origin do not match
   Costmap2D* master = layered_costmap_->getCostmap();
+<<<<<<< HEAD
   if (!layered_costmap_->isRolling() && (master->getSizeInCellsX() != size_x ||
       master->getSizeInCellsY() != size_y ||
       master->getResolution() != new_map->info.resolution ||
       master->getOriginX() != new_map->info.origin.position.x ||
       master->getOriginY() != new_map->info.origin.position.y ||
       !layered_costmap_->isSizeLocked()))
+=======
+  if (!layered_costmap_->isRolling() &&
+      (master->getSizeInCellsX() != size_x ||
+       master->getSizeInCellsY() != size_y ||
+       master->getResolution() != new_map->info.resolution ||
+       master->getOriginX() != new_map->info.origin.position.x ||
+       master->getOriginY() != new_map->info.origin.position.y))
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   {
     // Update the size of the layered costmap (and all layers, including this one)
     ROS_INFO("Resizing costmap to %d X %d at %f m/pix", size_x, size_y, new_map->info.resolution);
     layered_costmap_->resizeMap(size_x, size_y, new_map->info.resolution, new_map->info.origin.position.x,
+<<<<<<< HEAD
                                 new_map->info.origin.position.y, true);
+=======
+                                new_map->info.origin.position.y,
+                                true /* set size_locked to true, prevents reconfigureCb from overriding map size*/);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   }
   else if (size_x_ != size_x || size_y_ != size_y ||
            resolution_ != new_map->info.resolution ||
@@ -293,6 +313,12 @@ void StaticLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int
   if (!map_received_)
     return;
 
+<<<<<<< HEAD
+=======
+  if (!enabled_)
+    return;
+
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   if (!layered_costmap_->isRolling())
   {
     // if not rolling, the layered costmap (master_grid) has same coordinates as this layer
@@ -307,17 +333,31 @@ void StaticLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int
     unsigned int mx, my;
     double wx, wy;
     // Might even be in a different frame
+<<<<<<< HEAD
     tf::StampedTransform transform;
     try
     {
       tf_->lookupTransform(map_frame_, global_frame_, ros::Time(0), transform);
     }
     catch (tf::TransformException ex)
+=======
+    geometry_msgs::TransformStamped transform;
+    try
+    {
+      transform = tf_->lookupTransform(map_frame_, global_frame_, ros::Time(0));
+    }
+    catch (tf2::TransformException ex)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
     {
       ROS_ERROR("%s", ex.what());
       return;
     }
     // Copy map data given proper transformations
+<<<<<<< HEAD
+=======
+    tf2::Transform tf2_transform;
+    tf2::convert(transform.transform, tf2_transform);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
     for (unsigned int i = min_i; i < max_i; ++i)
     {
       for (unsigned int j = min_j; j < max_j; ++j)
@@ -325,8 +365,13 @@ void StaticLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int
         // Convert master_grid coordinates (i,j) into global_frame_(wx,wy) coordinates
         layered_costmap_->getCostmap()->mapToWorld(i, j, wx, wy);
         // Transform from global_frame_ to map_frame_
+<<<<<<< HEAD
         tf::Point p(wx, wy, 0);
         p = transform(p);
+=======
+        tf2::Vector3 p(wx, wy, 0);
+        p = tf2_transform*p;
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
         // Set master_grid with cell from map
         if (worldToMap(p.x(), p.y(), mx, my))
         {

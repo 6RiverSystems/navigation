@@ -33,8 +33,7 @@
 #define COSTMAP_2D_OBSERVATION_H_
 
 #include <geometry_msgs/Point.h>
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
+#include <sensor_msgs/PointCloud2.h>
 
 namespace costmap_2d
 {
@@ -51,7 +50,11 @@ public:
    * @brief  Creates an empty observation
    */
   Observation() :
+<<<<<<< HEAD
     cloud_(new pcl::PointCloud<pcl::PointXYZ>()), obstacle_range_(0.0), raytrace_range_(0.0), min_raytrace_range_(0.0)
+=======
+    cloud_(new sensor_msgs::PointCloud2()), obstacle_range_(0.0), raytrace_range_(0.0)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   {
   }
 
@@ -67,10 +70,17 @@ public:
    * @param obstacle_range The range out to which an observation should be able to insert obstacles
    * @param raytrace_range The range out to which an observation should be able to clear via raytracing
    */
+<<<<<<< HEAD
   Observation(geometry_msgs::Point& origin, pcl::PointCloud<pcl::PointXYZ> cloud,
               double obstacle_range, double raytrace_range, double min_raytrace_range = 0.0) :
       origin_(origin), cloud_(new pcl::PointCloud<pcl::PointXYZ>(cloud)),
       obstacle_range_(obstacle_range), raytrace_range_(raytrace_range), min_raytrace_range_(min_raytrace_range)
+=======
+  Observation(geometry_msgs::Point& origin, const sensor_msgs::PointCloud2 &cloud,
+              double obstacle_range, double raytrace_range) :
+      origin_(origin), cloud_(new sensor_msgs::PointCloud2(cloud)),
+      obstacle_range_(obstacle_range), raytrace_range_(raytrace_range)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   {
   }
 
@@ -79,8 +89,13 @@ public:
    * @param obs The observation to copy
    */
   Observation(const Observation& obs) :
+<<<<<<< HEAD
       origin_(obs.origin_), cloud_(new pcl::PointCloud<pcl::PointXYZ>(*(obs.cloud_))),
       obstacle_range_(obs.obstacle_range_), raytrace_range_(obs.raytrace_range_), min_raytrace_range_(obs.min_raytrace_range_)
+=======
+      origin_(obs.origin_), cloud_(new sensor_msgs::PointCloud2(*(obs.cloud_))),
+      obstacle_range_(obs.obstacle_range_), raytrace_range_(obs.raytrace_range_)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   {
   }
 
@@ -89,14 +104,19 @@ public:
    * @param cloud The point cloud of the observation
    * @param obstacle_range The range out to which an observation should be able to insert obstacles
    */
-  Observation(pcl::PointCloud<pcl::PointXYZ> cloud, double obstacle_range) :
-      cloud_(new pcl::PointCloud<pcl::PointXYZ>(cloud)), obstacle_range_(obstacle_range), raytrace_range_(0.0)
+  Observation(const sensor_msgs::PointCloud2 &cloud, double obstacle_range) :
+      cloud_(new sensor_msgs::PointCloud2(cloud)), obstacle_range_(obstacle_range), raytrace_range_(0.0)
   {
   }
 
   geometry_msgs::Point origin_;
+<<<<<<< HEAD
   pcl::PointCloud<pcl::PointXYZ>* cloud_;
   double obstacle_range_, raytrace_range_, min_raytrace_range_;
+=======
+  sensor_msgs::PointCloud2* cloud_;
+  double obstacle_range_, raytrace_range_;
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 };
 
 }  // namespace costmap_2d

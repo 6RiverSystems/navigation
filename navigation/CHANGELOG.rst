@@ -2,6 +2,7 @@
 Changelog for package navigation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+<<<<<<< HEAD
 1.12.13 (2016-08-15)
 --------------------
 
@@ -39,6 +40,54 @@ Changelog for package navigation
 -------------------
 
 1.12.1 (2015-03-14)
+=======
+1.16.6 (2020-03-18)
+-------------------
+
+1.16.5 (2020-03-15)
+-------------------
+
+1.16.4 (2020-03-04)
+-------------------
+
+1.16.3 (2019-11-15)
+-------------------
+
+1.16.2 (2018-07-31)
+-------------------
+
+1.16.1 (2018-07-28)
+-------------------
+
+1.16.0 (2018-07-25)
+-------------------
+* remove robot_pose_ekf, see `#701 <https://github.com/ros-planning/navigation/issues/701>`_
+* Contributors: Michael Ferguson
+
+1.15.2 (2018-03-22)
+-------------------
+* Merge pull request `#673 <https://github.com/ros-planning/navigation/issues/673>`_ from ros-planning/email_update_lunar
+  update maintainer email (lunar)
+* Merge pull request `#649 <https://github.com/ros-planning/navigation/issues/649>`_ from aaronhoy/lunar_add_ahoy
+  Add myself as a maintainer.
+* Contributors: Aaron Hoy, Michael Ferguson
+
+1.15.1 (2017-08-14)
+-------------------
+
+1.15.0 (2017-08-07)
+-------------------
+* convert packages to format2
+* Contributors: Mikael Arguedas
+
+1.14.0 (2016-05-20)
+-------------------
+
+1.13.1 (2015-10-29)
+-------------------
+
+1.13.0 (2015-03-17)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 -------------------
 
 1.12.0 (2015-02-04)

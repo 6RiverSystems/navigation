@@ -49,7 +49,26 @@ namespace costmap_2d
 {
 
 LayeredCostmap::LayeredCostmap(std::string global_frame, bool rolling_window, bool track_unknown) :
+<<<<<<< HEAD
     costmap_(), global_frame_(global_frame), rolling_window_(rolling_window), initialized_(false), size_locked_(false), timingDataRecorder_("layered"+global_frame)
+=======
+    costmap_(),
+    global_frame_(global_frame),
+    rolling_window_(rolling_window),
+    current_(false),
+    minx_(0.0),
+    miny_(0.0),
+    maxx_(0.0),
+    maxy_(0.0),
+    bx0_(0),
+    bxn_(0),
+    by0_(0),
+    byn_(0),
+    initialized_(false),
+    size_locked_(false),
+    circumscribed_radius_(1.0),
+    inscribed_radius_(0.1)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 {
   if (track_unknown)
     costmap_.setDefaultValue(255);
@@ -151,6 +170,7 @@ int LayeredCostmap::getAngleFromStaticMap(double px, double py)
 void LayeredCostmap::resizeMap(unsigned int size_x, unsigned int size_y, double resolution, double origin_x,
                                double origin_y, bool size_locked)
 {
+  boost::unique_lock<Costmap2D::mutex_t> lock(*(costmap_.getMutex()));
   size_locked_ = size_locked;
   costmap_.resizeMap(size_x, size_y, resolution, origin_x, origin_y);
   for (vector<boost::shared_ptr<CostmapLayer> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
@@ -164,12 +184,16 @@ void LayeredCostmap::updateMap(double robot_x, double robot_y, double robot_yaw)
 {
   // Lock for the remainder of this function, some plugins (e.g. VoxelLayer)
   // implement thread unsafe updateBounds() functions.
+<<<<<<< HEAD
 
   srs::TimingDataRecorder* rec = nullptr;
   if (rolling_window_) {rec = timingDataRecorder_.getRecorder("-getLock", 1);  rec->startSample();}
 
   boost::unique_lock<Costmap2D::mutex_t> lock(*(costmap_.getMutex()));
   if (rec) {rec->stopSample();}
+=======
+  boost::unique_lock<Costmap2D::mutex_t> lock(*(costmap_.getMutex()));
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
   // if we're using a rolling buffer costmap... we need to update the origin using the robot's position
   if (rolling_window_)
@@ -185,10 +209,14 @@ void LayeredCostmap::updateMap(double robot_x, double robot_y, double robot_yaw)
   minx_ = miny_ = 1e30;
   maxx_ = maxy_ = -1e30;
 
+<<<<<<< HEAD
   rec = nullptr;
   if (rolling_window_) {rec = timingDataRecorder_.getRecorder("-updateBounds", 1);  rec->startSample();}
 
   for (vector<boost::shared_ptr<CostmapLayer> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
+=======
+  for (vector<boost::shared_ptr<Layer> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
        ++plugin)
   {
     double prev_minx = minx_;
@@ -225,6 +253,7 @@ void LayeredCostmap::updateMap(double robot_x, double robot_y, double robot_yaw)
   if (rolling_window_) {rec = timingDataRecorder_.getRecorder("-resetMaps", 1);  rec->startSample();}
 
   costmap_.resetMap(x0, y0, xn, yn);
+<<<<<<< HEAD
   if (rec) {rec->stopSample();}
 
   rec = nullptr;
@@ -238,6 +267,12 @@ void LayeredCostmap::updateMap(double robot_x, double robot_y, double robot_yaw)
 
     (*plugin)->updateCosts(costmap_, x0, y0, xn, yn);
     if (rec2) {rec2->stopSample();}
+=======
+  for (vector<boost::shared_ptr<Layer> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
+       ++plugin)
+  {
+    (*plugin)->updateCosts(costmap_, x0, y0, xn, yn);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   }
   if (rec) {rec->stopSample();}
 

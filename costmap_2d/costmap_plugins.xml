@@ -21,12 +21,15 @@
     <class type="costmap_2d::VoxelLayer"     base_class_type="costmap_2d::CostmapLayer">
       <description>Similar to obstacle costmap, but uses 3D voxel grid to store data.</description>
     </class>
+<<<<<<< HEAD
     <class type="costmap_2d::AisleBiasInflationLayer"     base_class_type="costmap_2d::Layer">
       <description>Inflates using a aisle bias map.</description>
     </class>
     <class type="costmap_2d::ShadowLayer"     base_class_type="costmap_2d::CostmapLayer">
       <description>Calculate shadows.</description>
     </class>    
+=======
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   </library>
 </class_libraries>
 

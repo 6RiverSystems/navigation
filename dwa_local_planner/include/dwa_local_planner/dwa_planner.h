@@ -46,7 +46,6 @@
 
 //for creating a local cost grid
 #include <base_local_planner/map_grid_visualizer.h>
-#include <pcl_ros/publisher.h>
 
 //for obstacle data access
 #include <costmap_2d/costmap_2d.h>
@@ -71,6 +70,14 @@
 #include <base_local_planner/critics/obstacle_cost_function.h>
 
 
+<<<<<<< HEAD
+=======
+#include <base_local_planner/oscillation_cost_function.h>
+#include <base_local_planner/map_grid_cost_function.h>
+#include <base_local_planner/obstacle_cost_function.h>
+#include <base_local_planner/twirling_cost_function.h>
+#include <base_local_planner/simple_scored_sampling_planner.h>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 #include <nav_msgs/Path.h>
 
@@ -88,11 +95,6 @@ namespace dwa_local_planner {
        * @param global_frame the frame id of the tf frame to use
        */
       DWAPlanner(std::string name, base_local_planner::LocalPlannerUtil *planner_util);
-
-      /**
-       * @brief  Destructor for the planner
-       */
-      ~DWAPlanner() {if(traj_cloud_) delete traj_cloud_;}
 
       /**
        * @brief Reconfigures the trajectory planner
@@ -119,17 +121,36 @@ namespace dwa_local_planner {
        * @return The highest scoring trajectory. A cost >= 0 means the trajectory is legal to execute.
        */
       base_local_planner::Trajectory findBestPath(
+<<<<<<< HEAD
           tf::Stamped<tf::Pose> global_pose,
           tf::Stamped<tf::Pose> global_vel,
           tf::Stamped<tf::Pose>& drive_velocities);
+=======
+          const geometry_msgs::PoseStamped& global_pose,
+          const geometry_msgs::PoseStamped& global_vel,
+          geometry_msgs::PoseStamped& drive_velocities);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
       /**
-       * @brief  Take in a new global plan for the local planner to follow, and adjust local costmaps
+       * @brief  Update the cost functions before planning
+       * @param  global_pose The robot's current pose
        * @param  new_plan The new global plan
+       * @param  footprint_spec The robot's footprint
+       *
+       * The obstacle cost function gets the footprint.
+       * The path and goal cost functions get the global_plan
+       * The alignment cost functions get a version of the global plan
+       *   that is modified based on the global_pose 
        */
+<<<<<<< HEAD
       void updatePlanAndLocalCosts(tf::Stamped<tf::Pose> global_pose,
           tf::Stamped<tf::Pose> global_vel,
           const std::vector<geometry_msgs::PoseStamped>& new_plan);
+=======
+      void updatePlanAndLocalCosts(const geometry_msgs::PoseStamped& global_pose,
+          const std::vector<geometry_msgs::PoseStamped>& new_plan,
+          const std::vector<geometry_msgs::Point>& footprint_spec);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
       /**
        * @brief Get the period at which the local planner is expected to run
@@ -161,7 +182,7 @@ namespace dwa_local_planner {
       base_local_planner::LocalPlannerUtil *planner_util_;
 
       double stop_time_buffer_; ///< @brief How long before hitting something we're going to enforce that the robot stop
-      double pdist_scale_, gdist_scale_, occdist_scale_;
+      double path_distance_bias_, goal_distance_bias_, occdist_scale_;
       Eigen::Vector3f vsamples_;
 
       double sim_period_;///< @brief The number of seconds to use to compute max/min vels for dwa
@@ -174,8 +195,8 @@ namespace dwa_local_planner {
       std::vector<geometry_msgs::Point> robot_footprint_;
 
       boost::mutex configuration_mutex_;
-      pcl::PointCloud<base_local_planner::MapGridCostPoint>* traj_cloud_;
-      pcl_ros::Publisher<base_local_planner::MapGridCostPoint> traj_cloud_pub_;
+      std::string frame_id_;
+      ros::Publisher traj_cloud_pub_;
       bool publish_cost_grid_pc_; ///< @brief Whether or not to build and publish a PointCloud
       bool publish_traj_pc_;
 
@@ -206,6 +227,7 @@ namespace dwa_local_planner {
       base_local_planner::MapGridCostFunction goal_costs_;
       base_local_planner::MapGridCostFunction goal_front_costs_;
       base_local_planner::MapGridCostFunction alignment_costs_;
+      base_local_planner::TwirlingCostFunction twirling_costs_;
 
       base_local_planner::SimpleScoredSamplingPlanner scored_sampling_planner_;
 

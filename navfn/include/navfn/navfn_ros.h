@@ -43,12 +43,10 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Point.h>
 #include <nav_msgs/Path.h>
-#include <tf/transform_datatypes.h>
 #include <vector>
 #include <nav_core/base_global_planner.h>
 #include <nav_msgs/GetPlan.h>
 #include <navfn/potarr_point.h>
-#include <pcl_ros/publisher.h>
 
 namespace navfn {
   /**
@@ -70,11 +68,27 @@ namespace navfn {
       NavfnROS(std::string name, costmap_2d::Costmap2DROS* costmap_ros);
 
       /**
+       * @brief  Constructor for the NavFnROS object
+       * @param  name The name of this planner
+       * @param  costmap A pointer to the costmap to use
+       * @param  global_frame The global frame of the costmap
+       */
+      NavfnROS(std::string name, costmap_2d::Costmap2D* costmap, std::string global_frame);
+
+      /**
        * @brief  Initialization function for the NavFnROS object
        * @param  name The name of this planner
        * @param  costmap A pointer to the ROS wrapper of the costmap to use for planning
        */
       void initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros);
+
+      /**
+       * @brief  Initialization function for the NavFnROS object
+       * @param  name The name of this planner
+       * @param  costmap A pointer to the costmap to use for planning
+       * @param  global_frame The global frame of the costmap
+       */
+      void initialize(std::string name, costmap_2d::Costmap2D* costmap, std::string global_frame);
 
       /**
        * @brief Given a goal pose in the world, compute a plan
@@ -148,10 +162,10 @@ namespace navfn {
       /**
        * @brief Store a copy of the current costmap in \a costmap.  Called by makePlan.
        */
-      costmap_2d::Costmap2DROS* costmap_ros_;
+      costmap_2d::Costmap2D* costmap_;
       boost::shared_ptr<NavFn> planner_;
       ros::Publisher plan_pub_;
-      pcl_ros::Publisher<PotarrPoint> potarr_pub_;
+      ros::Publisher potarr_pub_;
       bool initialized_, allow_unknown_, visualize_potential_;
 
 
@@ -163,11 +177,11 @@ namespace navfn {
       }
 
       void mapToWorld(double mx, double my, double& wx, double& wy);
-      void clearRobotCell(const tf::Stamped<tf::Pose>& global_pose, unsigned int mx, unsigned int my);
+      void clearRobotCell(const geometry_msgs::PoseStamped& global_pose, unsigned int mx, unsigned int my);
       double planner_window_x_, planner_window_y_, default_tolerance_;
-      std::string tf_prefix_;
       boost::mutex mutex_;
       ros::ServiceServer make_plan_srv_;
+      std::string global_frame_;
   };
 };
 

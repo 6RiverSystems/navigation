@@ -1,6 +1,14 @@
+<<<<<<< HEAD
 <package format="2">
     <name>nav_core</name>
     <version>1.12.13</version>
+=======
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="2">
+    <name>nav_core</name>
+    <version>1.16.6</version>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
     <description>
 
         This package provides common interfaces for navigation specific robot actions. Currently, this package provides the BaseGlobalPlanner, BaseLocalPlanner, and RecoveryBehavior interfaces, which can be used to build actions that can easily swap their planner, local controller, or recovery behavior for new versions adhering to the same interface.
@@ -9,21 +17,23 @@
     <author>Eitan Marder-Eppstein</author>
     <author>contradict@gmail.com</author>
     <maintainer email="davidvlu@gmail.com">David V. Lu!!</maintainer>
-    <maintainer email="mferguson@fetchrobotics.com">Michael Ferguson</maintainer>
+    <maintainer email="mfergs7@gmail.com">Michael Ferguson</maintainer>
+    <maintainer email="ahoy@fetchrobotics.com">Aaron Hoy</maintainer>
     <license>BSD</license>
     <url>http://wiki.ros.org/nav_core</url>
 
     <buildtool_depend>catkin</buildtool_depend>
 
-    <build_depend>std_msgs</build_depend>
-    <build_depend>geometry_msgs</build_depend>
-    <build_depend>costmap_2d</build_depend>
-    <build_depend>tf</build_depend>
+    <depend>costmap_2d</depend>
+    <depend>geometry_msgs</depend>
+    <depend>std_msgs</depend>
+    <depend>tf2_ros</depend>
 
+<<<<<<< HEAD
     <exec_depend>std_msgs</exec_depend>
     <exec_depend>geometry_msgs</exec_depend>
     <exec_depend>costmap_2d</exec_depend>
     <exec_depend>tf</exec_depend>
+=======
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 </package>
-
-

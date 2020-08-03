@@ -43,9 +43,13 @@
 #include <boost/thread.hpp>
 
 #include <costmap_2d/costmap_2d.h>
+<<<<<<< HEAD
 #include <costmap_2d/costmap_2d_ros.h>
 #include <tf/transform_datatypes.h>
 #include <tf/transform_listener.h>
+=======
+#include <tf2_ros/buffer.h>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 #include <base_local_planner/local_planner_limits.h>
 #include <base_local_planner/speed_limiters/speed_limit_manager.h>
@@ -64,7 +68,12 @@ private:
   std::string name_;
   std::string global_frame_;
 
+<<<<<<< HEAD
   costmap_2d::Costmap2DROS* costmap_;
+=======
+  costmap_2d::Costmap2D* costmap_;
+  tf2_ros::Buffer* tf_;
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
   tf::TransformListener* tf_;
 
@@ -91,15 +100,21 @@ public:
   ~LocalPlannerUtil() {
   }
 
+<<<<<<< HEAD
   void initialize(tf::TransformListener* tf,
       costmap_2d::Costmap2DROS* costmap,
       std::string global_frame, std::string controller_name);
+=======
+  void initialize(tf2_ros::Buffer* tf,
+      costmap_2d::Costmap2D* costmap,
+      std::string global_frame);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
-  bool getGoal(tf::Stamped<tf::Pose>& goal_pose);
+  bool getGoal(geometry_msgs::PoseStamped& goal_pose);
 
   bool setPlan(const std::vector<geometry_msgs::PoseStamped>& orig_global_plan);
 
-  bool getLocalPlan(tf::Stamped<tf::Pose>& global_pose, std::vector<geometry_msgs::PoseStamped>& transformed_plan);
+  bool getLocalPlan(const geometry_msgs::PoseStamped& global_pose, std::vector<geometry_msgs::PoseStamped>& transformed_plan);
 
   costmap_2d::Costmap2D* getCostmap();
 

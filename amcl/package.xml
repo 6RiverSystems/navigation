@@ -1,6 +1,14 @@
+<<<<<<< HEAD
 <package format="2">
     <name>amcl</name>
     <version>1.12.13</version>
+=======
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="2">
+    <name>amcl</name>
+    <version>1.16.6</version>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
     <description>
         <p>
             amcl is a probabilistic localization system for a robot moving in
@@ -17,11 +25,13 @@
     <author>Brian P. Gerkey</author>
     <author>contradict@gmail.com</author>
     <maintainer email="davidvlu@gmail.com">David V. Lu!!</maintainer>
-    <maintainer email="mferguson@fetchrobotics.com">Michael Ferguson</maintainer>
+    <maintainer email="mfergs7@gmail.com">Michael Ferguson</maintainer>
+    <maintainer email="ahoy@fetchrobotics.com">Aaron Hoy</maintainer>
     <license>LGPL</license>
 
     <buildtool_depend>catkin</buildtool_depend>
 
+<<<<<<< HEAD
     <build_depend>rosbag</build_depend>
     <build_depend>dynamic_reconfigure</build_depend>
     <build_depend>message_filters</build_depend>
@@ -43,4 +53,24 @@
     <exec_depend>srslib_timing</exec_depend>
 
     <test_depend>map_server</test_depend>
+=======
+    <build_depend>message_filters</build_depend>
+    <build_depend>tf2_geometry_msgs</build_depend>
+
+    <depend>diagnostic_updater</depend>
+    <depend>dynamic_reconfigure</depend>
+    <depend>geometry_msgs</depend>
+    <depend>nav_msgs</depend>
+    <depend>rosbag</depend>
+    <depend>roscpp</depend>
+    <depend>sensor_msgs</depend>
+    <depend>std_srvs</depend>
+    <depend>tf2</depend>
+    <depend>tf2_msgs</depend>
+    <depend>tf2_ros</depend>
+
+    <test_depend>map_server</test_depend>
+    <test_depend>rostest</test_depend>
+    <test_depend>python_orocos_kdl</test_depend>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 </package>

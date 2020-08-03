@@ -1,6 +1,14 @@
+<<<<<<< HEAD
 <package format="2">
     <name>move_slow_and_clear</name>
     <version>1.12.13</version>
+=======
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="2">
+    <name>move_slow_and_clear</name>
+    <version>1.16.6</version>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
     <description>
 
         move_slow_and_clear
@@ -9,13 +17,15 @@
     <author>Eitan Marder-Eppstein</author>
     <author>contradict@gmail.com</author>
     <maintainer email="davidvlu@gmail.com">David V. Lu!!</maintainer>
-    <maintainer email="mferguson@fetchrobotics.com">Michael Ferguson</maintainer>
+    <maintainer email="mfergs7@gmail.com">Michael Ferguson</maintainer>
+    <maintainer email="ahoy@fetchrobotics.com">Aaron Hoy</maintainer>
     <license>BSD</license>
     <url>http://wiki.ros.org/move_slow_and_clear</url>
 
     <buildtool_depend>catkin</buildtool_depend>
 
     <build_depend>cmake_modules</build_depend>
+<<<<<<< HEAD
     <build_depend>roscpp</build_depend>
     <build_depend>nav_core</build_depend>
     <build_depend>costmap_2d</build_depend>
@@ -29,6 +39,14 @@
     <exec_depend>geometry_msgs</exec_depend>
     <exec_depend>pluginlib</exec_depend>
     <exec_depend>pluginlib</exec_depend>
+=======
+
+    <depend>costmap_2d</depend>
+    <depend>geometry_msgs</depend>
+    <depend>nav_core</depend>
+    <depend>pluginlib</depend>
+    <depend>roscpp</depend>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
     <export>
         <nav_core plugin="${prefix}/recovery_plugin.xml" />

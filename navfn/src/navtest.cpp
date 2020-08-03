@@ -5,7 +5,9 @@
 
 #include <navfn/navfn.h>
 #include <navfn/navwin.h>
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -121,12 +123,7 @@ int main(int argc, char **argv)
   // try reading in a file
   int sx,sy;
   COSTTYPE *cmap = NULL;
-  //  cmap = readPGM("maps/willow-full-0.05.pgm",&sx,&sy);
-  //  cmap = readPGM("maps/navfn_test1.pgm",&sx,&sy,true);
-  //  cmap = readPGM("initial_costmap_1165_945.pgm",&sx,&sy,true);
-  //  cmap = readPGM("initial_costmap_2332_1825.pgm",&sx,&sy,true);
   cmap = readPGM( pgm_file_name.c_str(),&sx,&sy,true);
-  //  cmap = readPGM("navfn_pathlong.pgm",&sx,&sy,true);
   if (cmap)
     {
       nav = new NavFn(sx,sy);
@@ -164,30 +161,6 @@ int main(int argc, char **argv)
   nav->priInc = inc;
   printf("[NavTest] priority increment: %d\n", inc);
 
-#if 0
-  // calculate the nav fn and path
-  double t0 = get_ms();
-  // set up cost map from file, if it exists
-  if (cmap)
-    {
-      nav->setCostmap(cmap);
-      nav->setupNavFn(true);
-    }
-  else
-    {
-      nav->setupNavFn(false);
-      nav->setObs();		// simple obstacles
-    }
-  //nav->propNavFnDijkstra(sx*sy/20);
-  nav->propNavFnAstar(sx*sy/20);
-  double t1 = get_ms();
-
-  printf("Time for plan calculation: %d ms\n", (int)(t1-t0));
-  
-  // path
-  nav->calcPath(4000);
-
-#else
   double t0 = get_ms();
   // set up cost map from file, if it exists
   if (cmap)
@@ -199,7 +172,6 @@ int main(int argc, char **argv)
   else
     {
       nav->setupNavFn(false);
-      nav->setObs();		// simple obstacles
     }
   double t1 = get_ms();
   //  nav->calcNavFnAstar();
@@ -207,7 +179,6 @@ int main(int argc, char **argv)
   double t2 = get_ms();
   printf("Setup: %d ms  Plan: %d ms  Total: %d ms\n", 
 	 (int)(t1-t0), (int)(t2-t1), (int)(t2-t0));
-#endif
 
   // draw potential field
   float mmax = 0.0;
@@ -229,19 +200,6 @@ int main(int argc, char **argv)
       break;
     }
   }
-
-#if 0
-  goal[1] = size-2;
-  int k = nav->getCellIndex(gg);
-  int st_nx = nav->st_nx;
-  for (int i=0; i<900; i++, k--)
-    {
-      float npot = nav->potgrid[k];
-      printf("Pot: %0.1f\n", npot);
-      printf("L: %0.1f R: %0.1f U: %0.1f D: %0.1f\n",
-	     nav->potgrid[k-1], nav->potgrid[k+1], nav->potgrid[k-st_nx], nav->potgrid[k+st_nx]);
-    }
-#endif
 
   return 0;
 }
@@ -333,14 +291,12 @@ readPGM(const char *fname, int *width, int *height, bool raw)
 		otot++;
 		ftot--;
 	      }
-#if 1
 	    else if (row[jj] <= unknown_gray)
 	      {
 		setcostunk(cmap,ii*ncols+jj,ncols);
 		utot++;
 		ftot--;
 	      }
-#endif
 	  }
       }
   }

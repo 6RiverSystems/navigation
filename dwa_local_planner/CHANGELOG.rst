@@ -2,6 +2,7 @@
 Changelog for package dwa_local_planner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+<<<<<<< HEAD
 1.12.13 (2016-08-15)
 --------------------
 
@@ -39,6 +40,84 @@ Changelog for package dwa_local_planner
 -------------------
 
 1.12.1 (2015-03-14)
+=======
+1.16.6 (2020-03-18)
+-------------------
+
+1.16.5 (2020-03-15)
+-------------------
+* [melodic] updated install for better portability. (`#973 <https://github.com/ros-planning/navigation/issues/973>`_)
+* Contributors: Sean Yen
+
+1.16.4 (2020-03-04)
+-------------------
+* Fixes gdist- and pdist_scale node paramter names (`#936 <https://github.com/cobalt-robotics/navigation/issues/936>`_)
+  Renames goal and path distance dynamic reconfigure parameter
+  names in the cfg file in order to actually make the parameters
+  used by the trajectory planner changeable.
+  Fixes `#935 <https://github.com/cobalt-robotics/navigation/issues/935>`_
+* Contributors: David Leins
+
+1.16.3 (2019-11-15)
+-------------------
+* Set footprint before in place rotation continuation (`#829 <https://github.com/ros-planning/navigation/issues/829>`_) (`#861 <https://github.com/ros-planning/navigation/issues/861>`_)
+  * Make sure to call setFootprint() before an in-place rotation
+  * Change to const reference
+  * Remove footprint from findBestPath
+* Contributors: David V. Lu!!
+
+1.16.2 (2018-07-31)
+-------------------
+* Merge pull request `#773 <https://github.com/ros-planning/navigation/issues/773>`_ from ros-planning/packaging_fixes
+  packaging fixes
+* fix depends for dwa_local_planner
+  * add tf2_geometry_msgs (due to https://github.com/ros/geometry2/issues/275)
+  * add missing depends on angles, sensor_msgs, tf2
+* Contributors: Michael Ferguson
+
+1.16.1 (2018-07-28)
+-------------------
+
+1.16.0 (2018-07-25)
+-------------------
+* Merge pull request `#765 <https://github.com/ros-planning/navigation/issues/765>`_ from ros-planning/remove_pcl
+  remove left over PCL depends in dwa_local_planner
+* Remove PCL from local planners
+* Switch to TF2 `#755 <https://github.com/ros-planning/navigation/issues/755>`_
+* Make trajectory scoring scales consistent.
+* unify parameter names between base_local_planner and dwa_local_planner
+  addresses parts of `#90 <https://github.com/ros-planning/navigation/issues/90>`_
+* Contributors: David V. Lu, Michael Ferguson, Pavlo Kolomiiets, Vincent Rabaud, moriarty
+
+1.15.2 (2018-03-22)
+-------------------
+* Merge pull request `#673 <https://github.com/ros-planning/navigation/issues/673>`_ from ros-planning/email_update_lunar
+  update maintainer email (lunar)
+* Merge pull request `#649 <https://github.com/ros-planning/navigation/issues/649>`_ from aaronhoy/lunar_add_ahoy
+  Add myself as a maintainer.
+* Contributors: Aaron Hoy, Michael Ferguson
+
+1.15.1 (2017-08-14)
+-------------------
+
+1.15.0 (2017-08-07)
+-------------------
+* convert packages to format2
+* Add cost function to prevent unnecessary spinning
+* Fix CMakeLists + package.xmls (`#548 <https://github.com/ros-planning/navigation/issues/548>`_)
+* import only PCL common
+* remove GCC warnings
+* Fix CMake warnings
+* Contributors: Martin Günther, Mikael Arguedas, Morgan Quigley, Vincent Rabaud
+
+1.14.0 (2016-05-20)
+-------------------
+
+1.13.1 (2015-10-29)
+-------------------
+
+1.13.0 (2015-03-17)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 -------------------
 * link only libraries found with find_package
 * Contributors: Lukas Bulwahn

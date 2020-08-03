@@ -4,20 +4,37 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -pthread ${CMAKE_CXX_FLAGS}")
 
 find_package(catkin REQUIRED
     COMPONENTS
-        cmake_modules
-        roscpp
-        pluginlib
         actionlib
+        base_local_planner
+        clear_costmap_recovery
+        cmake_modules
+        costmap_2d
         dynamic_reconfigure
+        geometry_msgs
         message_generation
         move_base_msgs
         nav_core
+<<<<<<< HEAD
         tf
         srslib_timing
         base_local_planner
 )
 find_package(Eigen3 REQUIRED)
 add_definitions(${EIGEN_DEFINITIONS})
+=======
+        nav_msgs
+        navfn
+        pluginlib
+        roscpp
+        rospy
+        rotate_recovery
+        std_srvs
+        tf2_geometry_msgs
+        tf2_ros
+)
+find_package(Eigen3 REQUIRED)
+add_definitions(${EIGEN3_DEFINITIONS})
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 # dynamic reconfigure
 generate_dynamic_reconfigure_options(
@@ -26,14 +43,17 @@ generate_dynamic_reconfigure_options(
 
 catkin_package(
     CATKIN_DEPENDS
-        roscpp
         dynamic_reconfigure
+        geometry_msgs
+        move_base_msgs
+        nav_msgs
+        roscpp
 )
 
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
-    ${EIGEN_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIRS}
 )
 
 # move_base
@@ -44,12 +64,17 @@ target_link_libraries(move_base
     ${Boost_LIBRARIES}
     ${catkin_LIBRARIES}
     )
+<<<<<<< HEAD
 add_dependencies(move_base move_base_gencfg)
 add_dependencies(move_base ${catkin_EXPORTED_TARGETS})
+=======
+add_dependencies(move_base ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 add_executable(move_base_node
   src/move_base_node.cpp
 )
+<<<<<<< HEAD
 target_link_libraries(move_base_node move_base )
 set_target_properties(move_base_node PROPERTIES OUTPUT_NAME move_base)
 
@@ -73,21 +98,22 @@ install(DIRECTORY launch
     USE_SOURCE_PERMISSIONS
     )
 
+=======
+add_dependencies(move_base_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(move_base_node move_base)
+set_target_properties(move_base_node PROPERTIES OUTPUT_NAME move_base)
+
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 install(
-    PROGRAMS
-       scripts/subtopic_forwarder.py
-       scripts/subtopic_forwarder_node.py
-       scripts/warner.py
+    TARGETS
+        move_base_node
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(
     TARGETS
         move_base
-        move_base_node
-    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+    DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
 ## Mark cpp header files for installation

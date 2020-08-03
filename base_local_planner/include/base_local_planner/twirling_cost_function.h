@@ -1,7 +1,8 @@
 /*********************************************************************
+ *
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2010, Eric Perko
+ *  Copyright (c) 2017, Open Source Robotics Foundation, Inc.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -14,7 +15,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of Eric Perko nor the names of its
+ *   * Neither the name of Willow Garage, Inc. nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -30,31 +31,34 @@
  *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Morgan Quigley
  *********************************************************************/
-#ifndef MAP_GRID_COST_POINT_H_
-#define MAP_GRID_COST_POINT_H_
 
-#include <pcl/register_point_struct.h>
+#ifndef TWIRLING_COST_FUNCTION_H
+#define TWIRLING_COST_FUNCTION_H
+
+#include <base_local_planner/trajectory_cost_function.h>
 
 namespace base_local_planner {
-    struct MapGridCostPoint {
-        float x;
-        float y;
-        float z;
-        float path_cost;
-        float goal_cost;
-        float occ_cost;
-        float total_cost;
-    };
-}
 
-POINT_CLOUD_REGISTER_POINT_STRUCT(
-        base_local_planner::MapGridCostPoint,
-        (float, x, x)
-        (float, y, y)
-        (float, z, z)
-        (float, path_cost, path_cost)
-        (float, goal_cost, goal_cost)
-        (float, occ_cost, occ_cost)
-        (float, total_cost, total_cost));
-#endif
+/**
+ * This class provides a cost based on how much a robot "twirls" on its
+ * way to the goal. With differential-drive robots, there isn't a choice,
+ * but with holonomic or near-holonomic robots, sometimes a robot spins
+ * more than you'd like on its way to a goal. This class provides a way
+ * to assign a penalty purely to rotational velocities.
+ */
+class TwirlingCostFunction: public base_local_planner::TrajectoryCostFunction {
+public:
+
+  TwirlingCostFunction() {}
+  ~TwirlingCostFunction() {}
+
+  double scoreTrajectory(Trajectory &traj);
+
+  bool prepare() {return true;};
+};
+
+} /* namespace base_local_planner */
+#endif /* TWIRLING_COST_FUNCTION_H_ */

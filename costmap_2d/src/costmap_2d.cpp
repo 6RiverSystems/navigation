@@ -236,7 +236,11 @@ void Costmap2D::worldToMapEnforceBounds(double wx, double wy, int& mx, int& my) 
   {
     mx = 0;
   }
+<<<<<<< HEAD
   else if (wx > resolution_ * size_x_ + origin_x_)
+=======
+  else if (wx >= resolution_ * size_x_ + origin_x_)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   {
     mx = size_x_ - 1;
   }
@@ -249,7 +253,11 @@ void Costmap2D::worldToMapEnforceBounds(double wx, double wy, int& mx, int& my) 
   {
     my = 0;
   }
+<<<<<<< HEAD
   else if (wy > resolution_ * size_y_ + origin_y_)
+=======
+  else if (wy >= resolution_ * size_y_ + origin_y_)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   {
     my = size_y_ - 1;
   }
@@ -266,6 +274,13 @@ void Costmap2D::updateOrigin(double new_origin_x, double new_origin_y)
   cell_ox = int((new_origin_x - origin_x_) / resolution_);
   cell_oy = int((new_origin_y - origin_y_) / resolution_);
 
+<<<<<<< HEAD
+=======
+  // Nothing to update
+  if (cell_ox == 0 && cell_oy == 0)
+    return;
+
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   // compute the associated world coordinates for the origin cell
   // because we want to keep things grid-aligned
   double new_grid_ox, new_grid_oy;
@@ -483,6 +498,7 @@ bool Costmap2D::saveMap(std::string file_name)
   return true;
 }
 
+<<<<<<< HEAD
 void Costmap2D::checkRaytracePoint(const double& origin_x, const double& origin_y, const double& map_end_x, const double& map_end_y,
                                    const double& ox, const double& oy, double& rx, double& ry)
 {
@@ -518,4 +534,6 @@ void Costmap2D::checkRaytracePoint(const double& origin_x, const double& origin_
     }
 }
 
+=======
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 }  // namespace costmap_2d

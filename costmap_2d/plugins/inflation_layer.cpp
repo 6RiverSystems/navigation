@@ -40,7 +40,11 @@
 #include <costmap_2d/costmap_math.h>
 #include <costmap_2d/footprint.h>
 #include <boost/thread.hpp>
+<<<<<<< HEAD
 #include <pluginlib/class_list_macros.hpp>
+=======
+#include <pluginlib/class_list_macros.h>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 PLUGINLIB_EXPORT_CLASS(costmap_2d::InflationLayer, costmap_2d::Layer)
 
@@ -52,8 +56,16 @@ namespace costmap_2d
 {
 
 InflationLayer::InflationLayer()
+<<<<<<< HEAD
   : inflation_radius_(0)
   , weight_(0)
+=======
+  : resolution_(0)
+  , inflation_radius_(0)
+  , inscribed_radius_(0)
+  , weight_(0)
+  , inflate_unknown_(false)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   , cell_inflation_radius_(0)
   , lane_width_(0.5)
   , cached_cell_inflation_radius_(0)
@@ -100,10 +112,15 @@ void InflationLayer::onInitialize()
 
 void InflationLayer::reconfigureCB(costmap_2d::InflationPluginConfig &config, uint32_t level)
 {
+<<<<<<< HEAD
   setInflationParameters(config.inflation_radius, config.cost_scaling_factor, config.lane_width);
+=======
+  setInflationParameters(config.inflation_radius, config.cost_scaling_factor);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
-  if (enabled_ != config.enabled) {
+  if (enabled_ != config.enabled || inflate_unknown_ != config.inflate_unknown) {
     enabled_ = config.enabled;
+    inflate_unknown_ = config.inflate_unknown;
     need_reinflation_ = true;
   }
 }
@@ -164,6 +181,10 @@ void InflationLayer::onFootprintChanged()
   cell_inflation_radius_ = cellDistance(inflation_radius_);
   computeCaches();
   need_reinflation_ = true;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   ROS_DEBUG("InflationLayer::onFootprintChanged(): num footprint points: %lu,"
             " inscribed_radius_ = %.3f, inflation_radius_ = %.3f",
             layered_costmap_->getFootprint().size(), inscribed_radius_, inflation_radius_);
@@ -172,7 +193,11 @@ void InflationLayer::onFootprintChanged()
 void InflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j)
 {
   boost::unique_lock < boost::recursive_mutex > lock(*inflation_access_);
+<<<<<<< HEAD
   if (!enabled_)
+=======
+  if (!enabled_ || (cell_inflation_radius_ == 0))
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
     return;
 
   // make sure the inflation list is empty at the beginning of the cycle (should always be true)
@@ -204,6 +229,7 @@ void InflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, 
   max_i += cell_inflation_radius_;
   max_j += cell_inflation_radius_;
 
+<<<<<<< HEAD
   min_i = std::max(1, min_i);
   min_j = std::max(1, min_j);
   max_i = std::min(int(size_x) - 1, max_i);
@@ -214,6 +240,18 @@ void InflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, 
 
   // Start with lethal obstacles: by definition distance is 0.0
   auto& obs_bin = inflation_cells_[0.0];
+=======
+  min_i = std::max(0, min_i);
+  min_j = std::max(0, min_j);
+  max_i = std::min(int(size_x), max_i);
+  max_j = std::min(int(size_y), max_j);
+
+  // Inflation list; we append cells to visit in a list associated with its distance to the nearest obstacle
+  // We use a map<distance, list> to emulate the priority queue used before, with a notable performance boost
+
+  // Start with lethal obstacles: by definition distance is 0.0
+  std::vector<CellData>& obs_bin = inflation_cells_[0.0];
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   for (int j = min_j; j < max_j; j++)
   {
     for (int i = min_i; i < max_i; i++)
@@ -224,6 +262,7 @@ void InflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, 
 
       if (cost == LETHAL_OBSTACLE) 
       {
+<<<<<<< HEAD
         bool cost_n_lethal = master_array[master_grid.getIndex(i + 1, j)] == LETHAL_OBSTACLE;
         bool cost_s_lethal = master_array[master_grid.getIndex(i - 1, j)] == LETHAL_OBSTACLE;
         bool cost_e_lethal = master_array[master_grid.getIndex(i, j + 1)] == LETHAL_OBSTACLE;
@@ -233,6 +272,9 @@ void InflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, 
         {
           obs_bin.push_back(CellData(index, i, j, i, j));
         }
+=======
+        obs_bin.push_back(CellData(index, i, j, i, j));
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
       }
     }
   }
@@ -240,12 +282,24 @@ void InflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, 
 
   // Process cells by increasing distance; new cells are appended to the corresponding distance bin, so they
   // can overtake previously inserted but farther away cells
+<<<<<<< HEAD
   for (auto& dist_bin: inflation_cells_)
   {
     for (auto& current_cell: dist_bin.second)
     {
       // process all cells at distance dist_bin.first
       unsigned int index = current_cell.index_;
+=======
+  std::map<double, std::vector<CellData> >::iterator bin;
+  for (bin = inflation_cells_.begin(); bin != inflation_cells_.end(); ++bin)
+  {
+    for (int i = 0; i < bin->second.size(); ++i)
+    {
+      // process all cells at distance dist_bin.first
+      const CellData& cell = bin->second[i];
+
+      unsigned int index = cell.index_;
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
       // ignore if already visited
       if (seen_[index])
@@ -255,15 +309,26 @@ void InflationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, 
 
       seen_[index] = true;
 
+<<<<<<< HEAD
       unsigned int mx = current_cell.x_;
       unsigned int my = current_cell.y_;
       unsigned int sx = current_cell.src_x_;
       unsigned int sy = current_cell.src_y_;
+=======
+      unsigned int mx = cell.x_;
+      unsigned int my = cell.y_;
+      unsigned int sx = cell.src_x_;
+      unsigned int sy = cell.src_y_;
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
       // assign the cost associated with the distance from an obstacle to the cell
       unsigned char cost = costLookup(mx, my, sx, sy);
       unsigned char old_cost = master_array[index];
+<<<<<<< HEAD
       if (old_cost == NO_INFORMATION && cost >= INSCRIBED_INFLATED_OBSTACLE)
+=======
+      if (old_cost == NO_INFORMATION && (inflate_unknown_ ? (cost > FREE_SPACE) : (cost >= INSCRIBED_INFLATED_OBSTACLE)))
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
         master_array[index] = cost;
       else
         master_array[index] = std::max(old_cost, cost);
@@ -311,10 +376,13 @@ inline void InflationLayer::enqueue(unsigned int index, unsigned int mx, unsigne
 
 void InflationLayer::computeCaches()
 {
+<<<<<<< HEAD
 
   ROS_DEBUG_STREAM("Cache compute with ir: " << inflation_radius_ << ", cir: "
     << cell_inflation_radius_ << ", w: " << weight_
     << ", insc: " << inscribed_radius_ << ", res: " << resolution_);
+=======
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   if (cell_inflation_radius_ == 0)
     return;
 
@@ -374,10 +442,16 @@ void InflationLayer::deleteKernels()
   }
 }
 
+<<<<<<< HEAD
 void InflationLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor, double lane_width)
 {
   ROS_DEBUG_STREAM("Calling set inflation params with " << inflation_radius << " and " << cost_scaling_factor);
   if (weight_ != cost_scaling_factor || inflation_radius_ != inflation_radius || lane_width_ != lane_width)
+=======
+void InflationLayer::setInflationParameters(double inflation_radius, double cost_scaling_factor)
+{
+  if (weight_ != cost_scaling_factor || inflation_radius_ != inflation_radius)
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   {
     // Lock here so that reconfiguring the inflation radius doesn't cause segfaults
     // when accessing the cached arrays
@@ -386,10 +460,14 @@ void InflationLayer::setInflationParameters(double inflation_radius, double cost
     inflation_radius_ = inflation_radius;
     cell_inflation_radius_ = cellDistance(inflation_radius_);
     weight_ = cost_scaling_factor;
+<<<<<<< HEAD
     lane_width_ = lane_width;
     need_reinflation_ = true;
     ROS_DEBUG_STREAM("About to cache with " << inflation_radius_ << ", "
       << cell_inflation_radius_ << ", " << weight_);
+=======
+    need_reinflation_ = true;
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
     computeCaches();
   }
 }

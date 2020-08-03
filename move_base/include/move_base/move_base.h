@@ -57,7 +57,11 @@
 #include <geometry_msgs/PoseStamped.h>
 
 #include <pluginlib/class_loader.hpp>
+<<<<<<< HEAD
 #include <move_base_msgs/ClearCostmap.h>
+=======
+#include <std_srvs/Empty.h>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 #include <dynamic_reconfigure/server.h>
 #include "move_base/MoveBaseConfig.h"
@@ -102,7 +106,7 @@ namespace move_base {
        * @param name The name of the action
        * @param tf A reference to a TransformListener
        */
-      MoveBase(tf::TransformListener& tf);
+      MoveBase(tf2_ros::Buffer& tf);
 
       /**
        * @brief  Destructor - Cleans up
@@ -181,6 +185,8 @@ namespace move_base {
 
       bool isQuaternionValid(const geometry_msgs::Quaternion& q);
 
+      bool getRobotPose(geometry_msgs::PoseStamped& global_pose, costmap_2d::Costmap2DROS* costmap);
+
       double distance(const geometry_msgs::PoseStamped& p1, const geometry_msgs::PoseStamped& p2);
 
       bool getDistanceAndTimeEstimates(const tf::Stamped<tf::Pose>& poseTf,  std::vector<geometry_msgs::PoseStamped>& global_plan, double& distance, double& time);
@@ -192,11 +198,15 @@ namespace move_base {
        */
       void wakePlanner(const ros::TimerEvent& event);
 
+<<<<<<< HEAD
       move_base_msgs::MoveBaseResult buildResult(unsigned int failure_code);
 
       void notifyRecoveriesOfNewGoal();
 
       tf::TransformListener& tf_;
+=======
+      tf2_ros::Buffer& tf_;
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
       MoveBaseActionServer* as_;
 
@@ -209,7 +219,7 @@ namespace move_base {
       std::vector<boost::shared_ptr<nav_core::RecoveryBehavior> > recovery_behaviors_;
       unsigned int recovery_index_;
 
-      tf::Stamped<tf::Pose> global_pose_;
+      geometry_msgs::PoseStamped global_pose_;
       double planner_frequency_, controller_frequency_, inscribed_radius_, circumscribed_radius_;
       double planner_patience_, controller_patience_;
       int32_t max_planning_retries_;
@@ -219,6 +229,7 @@ namespace move_base {
       ros::Subscriber goal_sub_;
       ros::ServiceServer make_plan_srv_, clear_costmaps_srv_;
       bool shutdown_costmaps_, clearing_rotation_allowed_, recovery_behavior_enabled_;
+      bool make_plan_clear_costmap_, make_plan_add_unreachable_goal_;
       double oscillation_timeout_, oscillation_distance_;
 
       // for move_backwards recovery
@@ -242,8 +253,8 @@ namespace move_base {
 
       //set up the planner's thread
       bool runPlanner_;
-      boost::mutex planner_mutex_;
-      boost::condition_variable planner_cond_;
+      boost::recursive_mutex planner_mutex_;
+      boost::condition_variable_any planner_cond_;
       geometry_msgs::PoseStamped planner_goal_;
       boost::thread* planner_thread_;
 

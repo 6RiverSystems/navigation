@@ -38,11 +38,11 @@
 #ifndef ODOMETRY_HELPER_ROS2_H_
 #define ODOMETRY_HELPER_ROS2_H_
 
-#include <tf/transform_datatypes.h>
 #include <nav_msgs/Odometry.h>
 #include <Eigen/Core>
 #include <ros/ros.h>
 #include <boost/thread.hpp>
+#include <geometry_msgs/PoseStamped.h>
 
 namespace base_local_planner {
 
@@ -64,9 +64,13 @@ public:
 
   void getOdom(nav_msgs::Odometry& base_odom);
 
+<<<<<<< HEAD
   void getEstimatedOdom(nav_msgs::Odometry& base_odom);
 
   void getRobotVel(tf::Stamped<tf::Pose>& robot_vel);
+=======
+  void getRobotVel(geometry_msgs::PoseStamped& robot_vel);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
   void getEstimatedRobotVel(tf::Stamped<tf::Pose>& robot_vel);
 

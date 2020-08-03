@@ -23,7 +23,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "map.h"
+#include "amcl/map/map.h"
 
 class CellData
 {
@@ -86,14 +86,15 @@ get_distance_map(double scale, double max_dist)
   return cdm;
 }
 
-void enqueue(map_t* map, unsigned int i, unsigned int j, 
-	     unsigned int src_i, unsigned int src_j,
+void enqueue(map_t* map, int i, int j,
+	     int src_i, int src_j,
 	     std::priority_queue<CellData>& Q,
 	     CachedDistanceMap* cdm,
 	     unsigned char* marked)
 {
   if(marked[MAP_INDEX(map, i, j)])
     return;
+<<<<<<< HEAD
   // the following code most likely works by depending on unsigned ints being promoted to signed values and fed through abs as such
   // this most likely prevents using very large indexes due to unsigned int overflow (when a value is negative)  
   #pragma clang diagnostic push
@@ -102,6 +103,11 @@ void enqueue(map_t* map, unsigned int i, unsigned int j,
   unsigned int dj = std::abs(static_cast<int>(j) - static_cast<int>(src_j));
   #pragma clang diagnostic pop
   
+=======
+
+  int di = abs(i - src_i);
+  int dj = abs(j - src_j);
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   double distance = cdm->distances_[di][dj];
 
   if(distance > cdm->cell_radius_)
@@ -179,60 +185,3 @@ void map_update_cspace(map_t *map, double max_occ_dist)
 
   delete[] marked;
 }
-
-#if 0
-// TODO: replace this with a more efficient implementation.  Not crucial,
-// because we only do it once, at startup.
-void map_update_cspace(map_t *map, double max_occ_dist)
-{
-  int i, j;
-  int ni, nj;
-  int s;
-  double d;
-  map_cell_t *cell, *ncell;
-
-  map->max_occ_dist = max_occ_dist;
-  s = (int) ceil(map->max_occ_dist / map->scale);
-
-  // Reset the distance values
-  for (j = 0; j < map->size_y; j++)
-  {
-    for (i = 0; i < map->size_x; i++)
-    {
-      cell = map->cells + MAP_INDEX(map, i, j);
-      cell->occ_dist = map->max_occ_dist;
-    }
-  }
-
-  // Find all the occupied cells and update their neighbours
-  for (j = 0; j < map->size_y; j++)
-  {
-    for (i = 0; i < map->size_x; i++)
-    {
-      cell = map->cells + MAP_INDEX(map, i, j);
-      if (cell->occ_state != +1)
-        continue;
-          
-      cell->occ_dist = 0;
-
-      // Update adjacent cells
-      for (nj = -s; nj <= +s; nj++)
-      {
-        for (ni = -s; ni <= +s; ni++)
-        {
-          if (!MAP_VALID(map, i + ni, j + nj))
-            continue;
-
-          ncell = map->cells + MAP_INDEX(map, i + ni, j + nj);
-          d = map->scale * sqrt(ni * ni + nj * nj);
-
-          if (d < ncell->occ_dist)
-            ncell->occ_dist = d;
-        }
-      }
-    }
-  }
-  
-  return;
-}
-#endif

@@ -3,33 +3,38 @@ project(carrot_planner)
 add_definitions("-std=c++11")
 
 find_package(catkin REQUIRED
-        COMPONENTS
-            roscpp
-            tf
-            nav_core
-            costmap_2d
-            base_local_planner
-            pluginlib
-        )
+  COMPONENTS
+    base_local_planner
+    costmap_2d
+    nav_core
+    pluginlib
+    roscpp
+    tf2
+    tf2_geometry_msgs
+    tf2_ros
+)
 
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
     )
-add_definitions(${EIGEN_DEFINITIONS})
+add_definitions(${EIGEN3_DEFINITIONS})
 
 catkin_package(
-    INCLUDE_DIRS include
-    LIBRARIES carrot_planner
-    CATKIN_DEPENDS
-        roscpp
-        pluginlib
-        costmap_2d
-        base_local_planner
-        nav_core
+  INCLUDE_DIRS include
+  LIBRARIES carrot_planner
+  CATKIN_DEPENDS
+    base_local_planner
+    costmap_2d
+    nav_core
+    pluginlib
+    roscpp
+    tf2
+    tf2_ros
 )
 
 add_library(carrot_planner src/carrot_planner.cpp)
+add_dependencies(carrot_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(carrot_planner
     ${catkin_LIBRARIES}
     )
@@ -37,6 +42,7 @@ target_link_libraries(carrot_planner
 install(TARGETS carrot_planner
        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+       RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
        )
 
 install(DIRECTORY include/${PROJECT_NAME}/

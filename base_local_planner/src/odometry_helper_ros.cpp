@@ -35,7 +35,13 @@
  * Author: TKruse
  *********************************************************************/
 #include <base_local_planner/odometry_helper_ros.h>
+<<<<<<< HEAD
 #include <base_local_planner/geometry_math_helpers.h>
+=======
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/convert.h>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 namespace base_local_planner {
 
@@ -67,7 +73,12 @@ void OdometryHelperRos::getOdom(nav_msgs::Odometry& base_odom) {
   base_odom = base_odom_;
 }
 
+<<<<<<< HEAD
 void OdometryHelperRos::getRobotVel(tf::Stamped<tf::Pose>& robot_vel) {
+=======
+
+void OdometryHelperRos::getRobotVel(geometry_msgs::PoseStamped& robot_vel) {
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   // Set current velocities from odometry
   geometry_msgs::Twist global_vel;
   {
@@ -76,11 +87,21 @@ void OdometryHelperRos::getRobotVel(tf::Stamped<tf::Pose>& robot_vel) {
     global_vel.linear.y = base_odom_.twist.twist.linear.y;
     global_vel.angular.z = base_odom_.twist.twist.angular.z;
 
-    robot_vel.frame_id_ = base_odom_.child_frame_id;
+    robot_vel.header.frame_id = base_odom_.child_frame_id;
   }
+<<<<<<< HEAD
   robot_vel.setData(tf::Transform(tf::createQuaternionFromYaw(global_vel.angular.z),
     tf::Vector3(global_vel.linear.x, global_vel.linear.y, 0)));
   robot_vel.stamp_ = ros::Time();
+=======
+  robot_vel.pose.position.x = global_vel.linear.x;
+  robot_vel.pose.position.y = global_vel.linear.y;
+  robot_vel.pose.position.z = 0;
+  tf2::Quaternion q;
+  q.setRPY(0, 0, global_vel.angular.z);
+  tf2::convert(q, robot_vel.pose.orientation);
+  robot_vel.header.stamp = ros::Time();
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 }
 
 void OdometryHelperRos::setOdomTopic(std::string odom_topic)

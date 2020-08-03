@@ -58,6 +58,11 @@ public:
 
   virtual void matchSize();
 
+<<<<<<< HEAD
+=======
+  virtual void clearArea(int start_x, int start_y, int end_x, int end_y);
+
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   /**
    * If an external source changes values in the costmap,
    * it should call this method with the area that it changed
@@ -69,6 +74,7 @@ public:
    */
   void addExtraBounds(double mx0, double my0, double mx1, double my1);
 
+<<<<<<< HEAD
   /**
    * Clears the window out of the costmap
    * @param min_x Minimum x value of the bounding box
@@ -78,6 +84,8 @@ public:
    */
    void clearWindow(double min_x, double min_y, double max_x, double max_y);
 
+=======
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 protected:
   /*
    * Updates the master_grid within the specified
@@ -135,6 +143,7 @@ protected:
    */
   void touch(double x, double y, double* min_x, double* min_y, double* max_x, double* max_y);
 
+<<<<<<< HEAD
   /**
    * Updates the bounding box specified in the parameters to include
    * the location (x,y) and the radius r around it
@@ -149,6 +158,8 @@ protected:
    */
   void touchWithRadius(double x, double y, double radius, double* min_x, double* min_y, double* max_x, double* max_y);
 
+=======
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
   /*
    * Updates the bounding box specified in the parameters
    * to include the bounding box from the addExtraBounds
@@ -164,6 +175,7 @@ protected:
   void useExtraBounds(double* min_x, double* min_y, double* max_x, double* max_y);
   bool has_extra_bounds_;
 
+<<<<<<< HEAD
   /**
    * Clear the specified grid cell.
    * @param x the x index
@@ -171,6 +183,8 @@ protected:
    */
   virtual void clearGridCell(unsigned int x, unsigned int y);
 
+=======
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 private:
   double extra_min_x_, extra_max_x_, extra_min_y_, extra_max_y_;
 };

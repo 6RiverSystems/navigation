@@ -36,8 +36,12 @@
  *         David V. Lu!!
  *********************************************************************/
 #include <global_planner/planner_core.h>
+<<<<<<< HEAD
 #include <pluginlib/class_list_macros.hpp>
 #include <tf/transform_listener.h>
+=======
+#include <pluginlib/class_list_macros.h>
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 #include <costmap_2d/cost_values.h>
 #include <costmap_2d/costmap_2d.h>
 
@@ -131,7 +135,7 @@ void GlobalPlanner::initialize(std::string name, costmap_2d::Costmap2D* costmap,
             path_maker_ = new GridPath(p_calc_);
         else
             path_maker_ = new GradientPath(p_calc_);
-            
+
         orientation_filter_ = new OrientationFilter();
 
         plan_pub_ = private_nh.advertise<nav_msgs::Path>("plan", 1);
@@ -143,13 +147,7 @@ void GlobalPlanner::initialize(std::string name, costmap_2d::Costmap2D* costmap,
         private_nh.param("planner_window_y", planner_window_y_, 0.0);
         private_nh.param("default_tolerance", default_tolerance_, 0.0);
         private_nh.param("publish_scale", publish_scale_, 100);
-
-        double costmap_pub_freq;
-        private_nh.param("planner_costmap_publish_frequency", costmap_pub_freq, 0.0);
-
-        //get the tf prefix
-        ros::NodeHandle prefix_nh;
-        tf_prefix_ = tf::getPrefixParam(prefix_nh);
+        private_nh.param("outline_map", outline_map_, true);
 
         make_plan_srv_ = private_nh.advertiseService("make_plan", &GlobalPlanner::makePlanService, this);
 
@@ -171,9 +169,10 @@ void GlobalPlanner::reconfigureCB(global_planner::GlobalPlannerConfig& config, u
     planner_->setFactor(config.cost_factor);
     publish_potential_ = config.publish_potential;
     orientation_filter_->setMode(config.orientation_mode);
+    orientation_filter_->setWindowSize(config.orientation_window_size);
 }
 
-void GlobalPlanner::clearRobotCell(const tf::Stamped<tf::Pose>& global_pose, unsigned int mx, unsigned int my) {
+void GlobalPlanner::clearRobotCell(const geometry_msgs::PoseStamped& global_pose, unsigned int mx, unsigned int my) {
     if (!initialized_) {
         ROS_ERROR(
                 "This planner has not been initialized yet, but it is being used, please call initialize() before use");
@@ -235,15 +234,15 @@ bool GlobalPlanner::makePlan(const geometry_msgs::PoseStamped& start, const geom
     std::string global_frame = frame_id_;
 
     //until tf can handle transforming things that are way in the past... we'll require the goal to be in our global frame
-    if (tf::resolve(tf_prefix_, goal.header.frame_id) != tf::resolve(tf_prefix_, global_frame)) {
+    if (goal.header.frame_id != global_frame) {
         ROS_ERROR(
-                "The goal pose passed to this planner must be in the %s frame.  It is instead in the %s frame.", tf::resolve(tf_prefix_, global_frame).c_str(), tf::resolve(tf_prefix_, goal.header.frame_id).c_str());
+                "The goal pose passed to this planner must be in the %s frame.  It is instead in the %s frame.", global_frame.c_str(), goal.header.frame_id.c_str());
         return false;
     }
 
-    if (tf::resolve(tf_prefix_, start.header.frame_id) != tf::resolve(tf_prefix_, global_frame)) {
+    if (start.header.frame_id != global_frame) {
         ROS_ERROR(
-                "The start pose passed to this planner must be in the %s frame.  It is instead in the %s frame.", tf::resolve(tf_prefix_, global_frame).c_str(), tf::resolve(tf_prefix_, start.header.frame_id).c_str());
+                "The start pose passed to this planner must be in the %s frame.  It is instead in the %s frame.", global_frame.c_str(), start.header.frame_id.c_str());
         return false;
     }
 
@@ -281,9 +280,7 @@ bool GlobalPlanner::makePlan(const geometry_msgs::PoseStamped& start, const geom
     }
 
     //clear the starting cell within the costmap because we know it can't be an obstacle
-    tf::Stamped<tf::Pose> start_pose;
-    tf::poseStampedMsgToTF(start, start_pose);
-    clearRobotCell(start_pose, start_x_i, start_y_i);
+    clearRobotCell(start, start_x_i, start_y_i);
 
     int nx = costmap_->getSizeInCellsX(), ny = costmap_->getSizeInCellsY();
 
@@ -293,7 +290,8 @@ bool GlobalPlanner::makePlan(const geometry_msgs::PoseStamped& start, const geom
     path_maker_->setSize(nx, ny);
     potential_array_ = new float[nx * ny];
 
-    outlineMap(costmap_->getCharMap(), nx, ny, costmap_2d::LETHAL_OBSTACLE);
+    if(outline_map_)
+        outlineMap(costmap_->getCharMap(), nx, ny, costmap_2d::LETHAL_OBSTACLE);
 
     bool found_legal = planner_->calculatePotentials(costmap_->getCharMap(), start_x, start_y, goal_x, goal_y,
                                                     nx * ny * 2, potential_array_);
@@ -319,7 +317,7 @@ bool GlobalPlanner::makePlan(const geometry_msgs::PoseStamped& start, const geom
 
     // add orientations if needed
     orientation_filter_->processPath(start, plan);
-    
+
     //publish the plan for visualization purposes
     publishPlan(plan);
     delete potential_array_;
@@ -337,10 +335,8 @@ void GlobalPlanner::publishPlan(const std::vector<geometry_msgs::PoseStamped>& p
     nav_msgs::Path gui_path;
     gui_path.poses.resize(path.size());
 
-    if (!path.empty()) {
-        gui_path.header.frame_id = path[0].header.frame_id;
-        gui_path.header.stamp = path[0].header.stamp;
-    }
+    gui_path.header.frame_id = frame_id_;
+    gui_path.header.stamp = ros::Time::now();
 
     // Extract the plan in world co-ordinates, we assume the path is all in the same frame
     for (unsigned int i = 0; i < path.size(); i++) {
@@ -438,4 +434,3 @@ void GlobalPlanner::publishPotential(float* potential)
 }
 
 } //end namespace global_planner
-

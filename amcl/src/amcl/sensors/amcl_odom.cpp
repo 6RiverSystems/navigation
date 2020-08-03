@@ -32,7 +32,7 @@
 #include <sys/types.h> // required by Darwin
 #include <math.h>
 
-#include "amcl_odom.h"
+#include "amcl/sensors/amcl_odom.h"
 
 using namespace amcl;
 
@@ -225,10 +225,10 @@ bool AMCLOdom::UpdateAction(pf_t *pf, AMCLSensorData *data)
 
     // Precompute a couple of things
     double trans_hat_stddev = sqrt( alpha3 * (delta_trans*delta_trans) +
-                                    alpha1 * (delta_rot*delta_rot) );
-    double rot_hat_stddev = sqrt( alpha4 * (delta_rot*delta_rot) +
+                                    alpha4 * (delta_rot*delta_rot) );
+    double rot_hat_stddev = sqrt( alpha1 * (delta_rot*delta_rot) +
                                   alpha2 * (delta_trans*delta_trans) );
-    double strafe_hat_stddev = sqrt( alpha1 * (delta_rot*delta_rot) +
+    double strafe_hat_stddev = sqrt( alpha4 * (delta_rot*delta_rot) +
                                      alpha5 * (delta_trans*delta_trans) );
 
     for (int i = 0; i < set->sample_count; i++)

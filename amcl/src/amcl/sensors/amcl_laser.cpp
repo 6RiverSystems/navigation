@@ -31,10 +31,16 @@
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
+<<<<<<< HEAD
 #include "amcl_laser.h"
 #include <ros/ros.h>
+=======
+#include "amcl/sensors/amcl_laser.h"
+>>>>>>> 4dca4370b914bf8b13eb766c98a1137063826691
 
 using namespace amcl;
 
