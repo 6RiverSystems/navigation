@@ -33,10 +33,15 @@ public:
 
   void resetLatching() {
     xy_tolerance_latch_ = false;
+    yaw_tolerance_latch_ = false;
   }
 
   void setLatch(bool latch_xy_goal_tolerance) {
     latch_xy_goal_tolerance_ = latch_xy_goal_tolerance;
+  }
+
+  void setYawLatch(bool latch_yaw_goal_tolerance) {
+    latch_yaw_goal_tolerance_ = latch_yaw_goal_tolerance;
   }
 
   /**
@@ -90,8 +95,11 @@ private:
   }
 
 
-  // whether to latch at all, and whether in this turn we have already been in goal area
+  // whether to latch xy at all, and whether in this turn we have already been in goal area
   bool latch_xy_goal_tolerance_, xy_tolerance_latch_;
+  // whether to latch yaw at all, and whether in this turn we have already been in goal area
+  bool latch_yaw_goal_tolerance_, yaw_tolerance_latch_;
+
   bool rotating_to_goal_;
 };
 

@@ -21,6 +21,8 @@ namespace base_local_planner {
 
 LatchedStopRotateController::LatchedStopRotateController(const std::string& name) {
   latch_xy_goal_tolerance_ = true;
+  latch_yaw_goal_tolerance_ = false;
+
   rotating_to_goal_ = false;
 }
 
@@ -94,7 +96,14 @@ bool LatchedStopRotateController::isGoalReached(LocalPlannerUtil* planner_util,
 
     double angle = base_local_planner::getGoalOrientationAngleDifference(global_pose, goal_th);
     //check to see if the goal orientation has been reached
-    if (fabs(angle) <= limits.yaw_goal_tolerance) {
+    if ((fabs(angle) <= limits.yaw_goal_tolerance) || (latch_yaw_goal_tolerance_ && yaw_tolerance_latch_)){
+
+      // Set the latch yaw if need be
+      if (latch_yaw_goal_tolerance_ && ! yaw_tolerance_latch_) {
+        ROS_DEBUG_NAMED("latched_stop_rotate", "Yaw position reached stopping");
+        yaw_tolerance_latch_ = true;
+      }
+
       //make sure that we're actually stopped before returning success
       if (base_local_planner::stopped(base_odom, rot_stopped_vel, trans_stopped_vel)) {
         ROS_DEBUG_NAMED("latched_stop_rotate", "Finally stopped at (%f, %f, %f) for goal (%f, %f, %f) with tolerance %f",
@@ -224,7 +233,13 @@ bool LatchedStopRotateController::computeVelocityCommandsStopRotate(geometry_msg
   //check to see if the goal orientation has been reached
   double goal_th = tf::getYaw(goal_pose.getRotation());
   double angle = base_local_planner::getGoalOrientationAngleDifference(global_pose, goal_th);
-  if (fabs(angle) <= limits.yaw_goal_tolerance) {
+  if ((fabs(angle) <= limits.yaw_goal_tolerance ) || (latch_yaw_goal_tolerance_ && yaw_tolerance_latch_)) {
+    // Set the yaw latch if need be.
+      if (latch_yaw_goal_tolerance_ && ! yaw_tolerance_latch_) {
+        ROS_DEBUG_NAMED("latched_stop_rotate", "Yaw position reached stopping");
+        yaw_tolerance_latch_ = true;
+      }
+
     //set the velocity command to zero
     cmd_vel.linear.x = 0.0;
     cmd_vel.linear.y = 0.0;
