@@ -153,8 +153,10 @@ namespace dwa_local_planner {
       ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner");
       return false;
     }
-    //when we get a new plan, we also want to clear any latch we may have on goal tolerances
-    latchedStopRotateController_.resetLatching();
+    //when we get a new plan, we also want to clear any latch we may have on goal tolerances if the goal is different
+    if (!planner_util_.isGoalTheSame(orig_global_plan)) {
+      latchedStopRotateController_.resetLatching();
+    }
 
     ROS_DEBUG("Got new plan");
     return dp_->setPlan(orig_global_plan);
