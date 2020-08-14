@@ -125,6 +125,9 @@ void MoveBackRecovery::runBehavior(){
     footprint = local_costmap_->getRobotFootprint();
   }
 
+  ros::Duration maxTime = ros::Duration(-distance_backwards_ * backwards_velocity_ * 1.5);
+  ros::Time startTime = ros::Time::now();
+
   while(n.ok()){
 
     if (canceled_) {
@@ -159,6 +162,12 @@ void MoveBackRecovery::runBehavior(){
 
     // if robot has already traveled enough, return
     if(distance_left_sq <= 0){
+      should_stop = true;
+    }
+
+    // if the robot has not made enough progress, reaturn
+    if (ros::Time::now() - startTime > maxTime) {
+      ROS_WARN("Backup recovery timeout. Stopping.");
       should_stop = true;
     }
 
