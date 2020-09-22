@@ -99,6 +99,10 @@ namespace dwa_local_planner {
       ROS_INFO("Updating latching to  %d", config.latch_xy_goal_tolerance);
       latchedStopRotateController_.setLatch(config.latch_xy_goal_tolerance);
 
+      // update latched stop rotate controller configuration
+      ROS_INFO("Updating yaw latching to  %d", config.latch_yaw_goal_tolerance);
+      latchedStopRotateController_.setYawLatch(config.latch_yaw_goal_tolerance);
+
       // update dwa specific configuration
       dp_->reconfigure(config);
       canceled_ = false;
@@ -149,8 +153,10 @@ namespace dwa_local_planner {
       ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner");
       return false;
     }
-    //when we get a new plan, we also want to clear any latch we may have on goal tolerances
-    latchedStopRotateController_.resetLatching();
+    //when we get a new plan, we also want to clear any latch we may have on goal tolerances if the goal is different
+    if (!planner_util_.isGoalTheSame(orig_global_plan)) {
+      latchedStopRotateController_.resetLatching();
+    }
 
     ROS_DEBUG("Got new plan");
     return dp_->setPlan(orig_global_plan);
