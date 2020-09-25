@@ -344,8 +344,10 @@ namespace dwa_local_planner {
   }
 
   bool DWAPlannerROS::cancel() {
-  canceled_ = true;
-  return true;
+    // if we cancel, reset the latching
+    latchedStopRotateController_.resetLatching();
+    canceled_ = true;
+    return true;
   }
 
 };
