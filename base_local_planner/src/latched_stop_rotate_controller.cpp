@@ -37,7 +37,7 @@ LatchedStopRotateController::~LatchedStopRotateController() {}
 bool LatchedStopRotateController::isPositionReached(LocalPlannerUtil* planner_util,
     tf::Stamped<tf::Pose> global_pose) {
   double xy_goal_tolerance = planner_util->getCurrentLimits().xy_goal_tolerance;
-
+  double max_xy_goal_overshoot = planner_util->getCurrentLimits().max_xy_goal_overshoot;
   //we assume the global goal is the last point in the global plan
   tf::Stamped<tf::Pose> goal_pose;
   if ( ! planner_util->getGoal(goal_pose)) {
@@ -83,9 +83,12 @@ bool LatchedStopRotateController::isGoalReached(LocalPlannerUtil* planner_util,
 
   base_local_planner::LocalPlannerLimits limits = planner_util->getCurrentLimits();
 
-  //check to see if we've reached the goal position
-  if ((latch_xy_goal_tolerance_ && xy_tolerance_latch_) ||
-      base_local_planner::getGoalPositionDistance(global_pose, goal_x, goal_y) <= xy_goal_tolerance) {
+  //check to see if we've reached the goal position,
+  //or have moved out of latching outer tolerance
+  const double goal_position_distance = base_local_planner::getGoalPositionDistance(global_pose, goal_x, goal_y);
+  if ( !(goal_position_distance >= xy_max_latch_tolerance_) ||
+    (latch_xy_goal_tolerance_ && xy_tolerance_latch_) ||
+     goal_position_distance <= xy_goal_tolerance) {
     //if the user wants to latch goal tolerance, if we ever reach the goal location, we'll
     //just rotate in place
     if (latch_xy_goal_tolerance_ && ! xy_tolerance_latch_) {
