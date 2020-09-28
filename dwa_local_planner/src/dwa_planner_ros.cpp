@@ -198,10 +198,11 @@ namespace dwa_local_planner {
       cmd_vel.linear.y = 0.0;
       cmd_vel.angular.z = 0.0;
       odom_helper_.setCmdVel(cmd_vel);
-      ROS_INFO("Cancelled called on DWA Planner.");
       ROS_DEBUG_NAMED("dwa_local_planner","Cancelled called on DWA Planner.");
       local_plan.clear();
       publishLocalPlan(local_plan);
+      ROS_DEBUG_NAMED("dwa_local_planner", "Clearing latching in dwa planner");
+      latchedStopRotateController_.resetLatching();
       canceled_ = false;
       return false;
     }
