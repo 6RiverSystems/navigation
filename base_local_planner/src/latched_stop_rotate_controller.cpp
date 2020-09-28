@@ -65,6 +65,7 @@ bool LatchedStopRotateController::isGoalReached(LocalPlannerUtil* planner_util,
     OdometryHelperRos& odom_helper,
     tf::Stamped<tf::Pose> global_pose) {
   double xy_goal_tolerance = planner_util->getCurrentLimits().xy_goal_tolerance;
+  double xy_goal_overshoot_tolerance = planner_util.getCurrentLimits().xy_goal_overshoot_tolerance;
   double rot_stopped_vel = planner_util->getCurrentLimits().rot_stopped_vel;
   double trans_stopped_vel = planner_util->getCurrentLimits().trans_stopped_vel;
 
@@ -86,7 +87,7 @@ bool LatchedStopRotateController::isGoalReached(LocalPlannerUtil* planner_util,
   //check to see if we've reached the goal position,
   //or have moved out of latching outer tolerance
   const double goal_position_distance = base_local_planner::getGoalPositionDistance(global_pose, goal_x, goal_y);
-  if ( !(goal_position_distance >= xy_max_latch_tolerance_) ||
+  if ( !(goal_position_distance >= xy_goal_overshoot_tolerance) ||
     (latch_xy_goal_tolerance_ && xy_tolerance_latch_) ||
      goal_position_distance <= xy_goal_tolerance) {
     //if the user wants to latch goal tolerance, if we ever reach the goal location, we'll
