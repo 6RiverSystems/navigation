@@ -97,7 +97,7 @@ namespace dwa_local_planner {
       // odom_helper_.setWheelbase(config.wheelbase);
 
       // pass use overshoot tolerance to latched stop rotate controller
-      ROS_INFO("Updating overshoot tolerance flag to %b", config.use_overshoot_tolerance);
+      ROS_INFO("Updating overshoot tolerance flag to %s", config.use_overshoot_tolerance ? "true" : "false");
       latchedStopRotateController_.setUseOvershootTolerance(config.use_overshoot_tolerance);
       use_overshoot_tolerance_ = config.use_overshoot_tolerance;
 
