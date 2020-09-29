@@ -184,7 +184,6 @@ namespace dwa_local_planner {
       ROS_INFO("Goal reached DWA");
       return true;
     } else {
-      ROS_INFO("Goal not reached dwa");
       return false;
     }
   }
