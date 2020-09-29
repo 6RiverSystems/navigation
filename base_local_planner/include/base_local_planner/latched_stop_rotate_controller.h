@@ -45,6 +45,10 @@ public:
     latch_yaw_goal_tolerance_ = latch_yaw_goal_tolerance;
   }
 
+  void setUseOvershootTolerance(bool use_overshoot_tolerance) {
+    use_overshoot_tolerance_ = use_overshoot_tolerance;
+  }
+
   /**
    * @brief Stop the robot taking into account acceleration limits
    * @param  global_pose The pose of the robot in the global frame
@@ -96,6 +100,8 @@ private:
   }
 
 
+  // whether to use overshoot tolerance logic
+  bool use_overshoot_tolerance_;
   // whether to latch xy at all, and whether in this turn we have already been in goal area
   bool latch_xy_goal_tolerance_, xy_tolerance_latch_;
   // whether to latch yaw at all, and whether in this turn we have already been in goal area

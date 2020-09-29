@@ -96,6 +96,11 @@ namespace dwa_local_planner {
       odom_helper_.setAccelerationRates(config.acc_lim_x, config.acc_lim_theta);
       // odom_helper_.setWheelbase(config.wheelbase);
 
+      // pass use overshoot tolerance to latched stop rotate controller
+      ROS_INFO("Updating overshoot tolerance flag to %b", config.use_overshoot_tolerance);
+      latchedStopRotateController_.setUseOvershootTolerance(config.use_overshoot_tolerance);
+      use_overshoot_tolerance_ = config.use_overshoot_tolerance;
+
       // update latched stop rotate controller configuration
       ROS_INFO("Updating latching to  %d", config.latch_xy_goal_tolerance);
       latchedStopRotateController_.setLatch(config.latch_xy_goal_tolerance);
@@ -155,11 +160,11 @@ namespace dwa_local_planner {
       return false;
     }
     //when we get a new plan, we also want to clear any latch we may have on goal tolerances if the goal is different
-    if (!planner_util_.isGoalTheSame(orig_global_plan)) {
+    if (!use_overshoot_tolerance_ || !planner_util_.isGoalTheSame(orig_global_plan)) {
       ROS_INFO("DWA Planner got new goal, resetting latch.");
       latchedStopRotateController_.resetLatching();
     } else {
-      ROS_INFO("Goal is the same, not resetting latch.");
+      ROS_DEBUG("Goal is the same, not resetting latch.");
     }
 
     ROS_DEBUG("Got new plan");
