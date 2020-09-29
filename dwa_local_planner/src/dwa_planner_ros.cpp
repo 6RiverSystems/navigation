@@ -361,7 +361,7 @@ namespace dwa_local_planner {
 
   bool DWAPlannerROS::cancel() {
     // if we cancel, reset the latching
-    ROS_DEBUG_NAMED("dwa_local_planner", "Clearing latching in dwa cancel. How did we get here?");
+    ROS_WARN("dwa_local_planner", "Clearing latching in dwa cancel. How did we get here?");
     latchedStopRotateController_.resetLatching();
     canceled_ = true;
     return true;
