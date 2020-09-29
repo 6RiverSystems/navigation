@@ -37,7 +37,7 @@ LatchedStopRotateController::~LatchedStopRotateController() {}
 bool LatchedStopRotateController::isPositionReached(LocalPlannerUtil* planner_util,
     tf::Stamped<tf::Pose> global_pose) {
   double xy_goal_tolerance = planner_util->getCurrentLimits().xy_goal_tolerance;
-  double max_xy_goal_overshoot = planner_util->getCurrentLimits().max_xy_goal_overshoot;
+  double xy_goal_overshoot_tolerance = planner_util->getCurrentLimits().xy_goal_overshoot_tolerance;
   //we assume the global goal is the last point in the global plan
   tf::Stamped<tf::Pose> goal_pose;
   if ( ! planner_util->getGoal(goal_pose)) {
@@ -65,7 +65,7 @@ bool LatchedStopRotateController::isGoalReached(LocalPlannerUtil* planner_util,
     OdometryHelperRos& odom_helper,
     tf::Stamped<tf::Pose> global_pose) {
   double xy_goal_tolerance = planner_util->getCurrentLimits().xy_goal_tolerance;
-  double xy_goal_overshoot_tolerance = planner_util.getCurrentLimits().xy_goal_overshoot_tolerance;
+  double xy_goal_overshoot_tolerance = planner_util->getCurrentLimits().xy_goal_overshoot_tolerance;
   double rot_stopped_vel = planner_util->getCurrentLimits().rot_stopped_vel;
   double trans_stopped_vel = planner_util->getCurrentLimits().trans_stopped_vel;
 
