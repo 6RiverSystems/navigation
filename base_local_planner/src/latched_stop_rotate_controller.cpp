@@ -97,7 +97,6 @@ bool LatchedStopRotateController::isGoalReached(LocalPlannerUtil* planner_util,
      goal_position_distance <= xy_goal_tolerance) {
     //if the user wants to latch goal tolerance, if we ever reach the goal location, we'll
     //just rotate in place
-    // TODO need to reset if distance is too far
     if (latch_xy_goal_tolerance_ && ! xy_tolerance_latch_) {
       ROS_INFO_NAMED("latched_stop_rotate", "Goal position reached (%f, %f) (check), stopping and turning in place", goal_x, goal_y);
       xy_tolerance_latch_ = true;
@@ -106,7 +105,6 @@ bool LatchedStopRotateController::isGoalReached(LocalPlannerUtil* planner_util,
 
     double angle = base_local_planner::getGoalOrientationAngleDifference(global_pose, goal_th);
     //check to see if the goal orientation has been reached
-    // TODO check here too
     if ((fabs(angle) <= limits.yaw_goal_tolerance) || (latch_yaw_goal_tolerance_ && yaw_tolerance_latch_)){
 
       // Set the latch yaw if need be
