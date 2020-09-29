@@ -68,7 +68,6 @@ public:
   double xy_goal_tolerance;
   double xy_goal_overshoot_tolerance;
   double yaw_goal_tolerance;
-  double yaw_goal_overshoot_tolerance;
   double trans_stopped_vel;
   double rot_stopped_vel;
   bool   restore_defaults;
@@ -91,7 +90,6 @@ public:
       double nxy_goal_tolerance,
       double nxy_goal_overshoot_tolerance,
       double nyaw_goal_tolerance,
-      double nyaw_goal_overshoot_tolerance,
 //      double njerk_lim_trans = -1,
 //      double njerk_lim_rot = -1,
       bool   nprune_plan = true,
@@ -121,7 +119,6 @@ public:
         xy_goal_tolerance(nxy_goal_tolerance),
         xy_goal_overshoot_tolerance(nxy_goal_overshoot_tolerance),
         yaw_goal_tolerance(nyaw_goal_tolerance),
-        yaw_goal_overshoot_tolerance(nyaw_goal_overshoot_tolerance),
         trans_stopped_vel(ntrans_stopped_vel),
         rot_stopped_vel(nrot_stopped_vel) {}
 

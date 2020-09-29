@@ -88,15 +88,13 @@ bool LatchedStopRotateController::isGoalReached(LocalPlannerUtil* planner_util,
   //check to see if we've reached the goal position,
   //or have moved out of latching outer tolerance
   const double goal_position_distance = base_local_planner::getGoalPositionDistance(global_pose, goal_x, goal_y);
-  ROS_INFO("goal position distance: %f >= %f ?", goal_position_distance, xy_goal_overshoot_tolerance);
-    if (goal_position_distance >= xy_goal_overshoot_tolerance) {
-    ROS_INFO("Goal is farther than overshoot tolerance, not reached");
+  if (xy_tolerance_latch_ && (goal_position_distance >= xy_goal_overshoot_tolerance)) {
+    ROS_INFO_NAMED("latched_stop_rotate", "Goal is farther than overshoot tolerance, resetting latching");
     xy_tolerance_latch_ = false;
     yaw_tolerance_latch_ = false;
   }
-  
-  if ( !(goal_position_distance >= xy_goal_overshoot_tolerance) ||
-    (latch_xy_goal_tolerance_ && xy_tolerance_latch_) ||
+
+  if ((latch_xy_goal_tolerance_ && xy_tolerance_latch_) ||
      goal_position_distance <= xy_goal_tolerance) {
     //if the user wants to latch goal tolerance, if we ever reach the goal location, we'll
     //just rotate in place

@@ -88,7 +88,6 @@ namespace dwa_local_planner {
       limits.xy_goal_tolerance = config.xy_goal_tolerance;
       limits.xy_goal_overshoot_tolerance = config.xy_goal_overshoot_tolerance;
       limits.yaw_goal_tolerance = config.yaw_goal_tolerance;
-      limits.yaw_goal_overshoot_tolerance = config.yaw_goal_overshoot_tolerance;
       limits.prune_plan = config.prune_plan;
       limits.trans_stopped_vel = config.trans_stopped_vel;
       limits.rot_stopped_vel = config.rot_stopped_vel;
