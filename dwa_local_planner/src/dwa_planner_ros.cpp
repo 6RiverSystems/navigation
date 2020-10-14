@@ -161,7 +161,7 @@ namespace dwa_local_planner {
     }
     //when we get a new plan, we also want to clear any latch we may have on goal tolerances if the goal is different
     if (!use_overshoot_tolerance_ || !planner_util_.isGoalTheSame(orig_global_plan)) {
-      ROS_INFO("DWA Planner got new goal, resetting latch.");
+      ROS_DEBUG("DWA Planner got new goal, resetting latch.");
       latchedStopRotateController_.resetLatching();
     } else {
       ROS_DEBUG("Goal is the same, not resetting latch.");
