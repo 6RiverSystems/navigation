@@ -152,7 +152,7 @@ bool LatchedStopRotateController::stopWithAccLimits(const tf::Stamped<tf::Pose>&
 
   //if we have a valid command, we'll pass it on, otherwise we'll command all zeros
   if(valid_cmd){
-    ROS_DEBUG_NAMED("latched_stop_rotate", "Slowing down... using vx, vy, vth: %.2f, %.2f, %.2f", vx, vy, vth);
+    ROS_INFO_THROTTLE(0.5, "[%s]::[%s] Slowing down... using vx, vy, vth: %.2f, %.2f, %.2f", "LatchedStopRotateController", __FUNCTION__, vx, vy, vth);
     cmd_vel.linear.x = vx;
     cmd_vel.linear.y = vy;
     cmd_vel.angular.z = vth;
@@ -206,11 +206,11 @@ bool LatchedStopRotateController::rotateToGoal(
       Eigen::Vector3f( 0.0, 0.0, v_theta_samp));
 
   if (valid_cmd) {
-    ROS_DEBUG_NAMED("dwa_local_planner", "Moving to desired goal orientation, th cmd: %.2f, valid_cmd: %d", v_theta_samp, valid_cmd);
+    ROS_INFO_THROTTLE(0.5, "[%s]::[%s] Moving to desired goal orientation, th cmd: %.2f, valid_cmd: %d", "LatchedStopRotateController", __FUNCTION__, v_theta_samp, valid_cmd);
     cmd_vel.angular.z = v_theta_samp;
     return true;
   }
-  ROS_WARN("Rotation cmd in collision");
+  ROS_INFO("%s - Rotation cmd in collision", __FUNCTION__);
   cmd_vel.angular.z = 0.0;
   return false;
 
