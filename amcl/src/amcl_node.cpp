@@ -180,6 +180,7 @@ class AmclNode
     void handleMapMessage(const nav_msgs::OccupancyGrid& msg);
     void freeMapDependentMemory();
     map_t* convertMap( const nav_msgs::OccupancyGrid& map_msg );
+    void updatePoseFromCore();
     void updatePoseFromServer();
     bool checkPoseParamOnServer();
     bool applyInitialPose();
@@ -838,6 +839,48 @@ bool AmclNode::checkPoseParamOnServer()
   return false;
 }
 
+void AmclNode::updatePoseFromCore()
+{
+  std::string pos;
+  double tmp_pos;
+  private_nh_.getParam("initial_pose_x", pos);
+  tmp_pos = std::stod(pos);
+  if(!std::isnan(tmp_pos))
+    init_pose_[0] = tmp_pos;
+  else
+    ROS_WARN("ignoring NAN in initial pose X position");
+  private_nh_.getParam("initial_pose_y", pos);
+  tmp_pos = std::stod(pos);
+  if(!std::isnan(tmp_pos))
+    init_pose_[1] = tmp_pos;
+  else
+    ROS_WARN("ignoring NAN in initial pose Y position");
+  private_nh_.getParam("initial_pose_a", pos);
+  tmp_pos = std::stod(pos);
+  if(!std::isnan(tmp_pos))
+    init_pose_[2] = tmp_pos;
+  else
+    ROS_WARN("ignoring NAN in initial pose Yaw");
+  private_nh_.getParam("initial_cov_xx", pos);
+  tmp_pos = std::stod(pos);
+  if(!std::isnan(tmp_pos))
+    init_cov_[0] =tmp_pos;
+  else
+    ROS_WARN("ignoring NAN in initial covariance XX");
+  private_nh_.getParam("initial_cov_yy", pos);
+  tmp_pos = std::stod(pos);
+  if(!std::isnan(tmp_pos))
+    init_cov_[1] = tmp_pos;
+  else
+    ROS_WARN("ignoring NAN in initial covariance YY");
+  private_nh_.getParam("initial_cov_aa", pos);
+  tmp_pos = std::stod(pos);
+  if(!std::isnan(tmp_pos))
+    init_cov_[2] = tmp_pos;
+  else
+    ROS_WARN("ignoring NAN in initial covariance AA");
+}
+
 void AmclNode::updatePoseFromServer()
 {
   // default values
@@ -961,7 +1004,11 @@ AmclNode::handleMapMessage(const nav_msgs::OccupancyGrid& msg)
   // check if we can localize from initial pose params on server or not
   bool initial_pose_found_from_server = checkPoseParamOnServer();
   // Initialize the filter
-  updatePoseFromServer();
+  if (initial_pose_found_from_server) {
+    updatePoseFromCore();
+  } else {
+    updatePoseFromServer();
+  }
   // delete all the params for next map update
   deletePoseFromServer();
 
