@@ -56,7 +56,7 @@ class AmclRosNode: public AmclNode
         move_base_msgs::SetInitialPoseResult set_initial_pose_action_result_;
 
         message_filters::Subscriber<sensor_msgs::LaserScan>* laser_scan_sub_;
-        tf::MessageFilter<sensor_msgs::LaserScan>* laser_scan_filter_;
+        tf2_ros::MessageFilter<sensor_msgs::LaserScan>* laser_scan_filter_;
  
         ros::Time last_laser_received_ts_;
         ros::Duration laser_check_interval_;
@@ -80,13 +80,7 @@ class AmclRosNode: public AmclNode
         
         tf::TransformBroadcaster* tfb_;
 
-        // Use a child class to get access to tf2::Buffer class inside of tf_
-        struct TransformListenerWrapper : public tf::TransformListener
-        {
-            inline tf2_ros::Buffer &getBuffer() {return tf2_buffer_;}
-        };
-
-        TransformListenerWrapper* tf_;
+        tf2_ros::TransformListener* tf_;
 
         bool first_map_received_;
         boost::recursive_mutex config_mutex_;

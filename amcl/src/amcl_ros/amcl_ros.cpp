@@ -15,7 +15,8 @@ AmclRosNode::AmclRosNode():
     initializeParams();
     updatePoseFromServer();
     tfb_ = new tf::TransformBroadcaster();
-    tf_  = new TransformListenerWrapper();
+
+    tf_ = new tf2_ros::TransformListener(getTfBuffer());
 
     pose_pub_ = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("amcl_pose", 2, true);
     analytics_pub_ = nh_.advertise<move_base_msgs::amcl_analytics>("amcl_analytics", 2, true);
@@ -32,10 +33,10 @@ AmclRosNode::AmclRosNode():
 
     laser_scan_sub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>(nh_, scan_topic_, 100);
     laser_scan_filter_ =
-            new tf::MessageFilter<sensor_msgs::LaserScan>(*laser_scan_sub_,
-                                                            *tf_,
+            new tf2_ros::MessageFilter<sensor_msgs::LaserScan>(*laser_scan_sub_,
+                                                            getTfBuffer(),
                                                             amclParams_.odom_frame_id_,
-                                                            100);
+                                                            100, 0);
     laser_scan_filter_->registerCallback(boost::bind(&AmclRosNode::laserReceived,
                                                     this, _1));
     initial_pose_sub_ = nh_.subscribe("initialpose", 2, &AmclRosNode::initialPoseReceived, this);
@@ -270,7 +271,7 @@ void AmclRosNode::deletePoseFromServer()
 bool AmclRosNode::globalLocalizationCallback(std_srvs::Empty::Request& req,
                                      std_srvs::Empty::Response& res)
 {
-  globalInitialization();
+  return globalInitialization();
 }
 
 // force nomotion updates (amcl updating without requiring motion)
@@ -489,10 +490,11 @@ void AmclRosNode::reconfigureCB(AMCLConfig &config, uint32_t level)
 
   delete laser_scan_filter_;
   laser_scan_filter_ =
-          new tf::MessageFilter<sensor_msgs::LaserScan>(*laser_scan_sub_,
-                                                        *tf_,
+          new tf2_ros::MessageFilter<sensor_msgs::LaserScan>(*laser_scan_sub_,
+                                                        getTfBuffer(),
                                                         amclParams_.odom_frame_id_,
-                                                        100);
+                                                        100,
+                                                        0);
   laser_scan_filter_->registerCallback(boost::bind(&AmclRosNode::laserReceived,
                                                    this, _1));
 
