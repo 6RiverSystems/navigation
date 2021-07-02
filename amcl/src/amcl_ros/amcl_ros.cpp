@@ -7,7 +7,6 @@ AmclRosNode::AmclRosNode():
     private_nh_("~"),
     first_reconfigure_call_(true),
     first_map_received_(false),
-    tdr_("AMCL"),
     set_inital_pose_action_(nh_, std::string("initial_pose_server"), boost::bind(&AmclRosNode::executeInitialPoseCB, this, _1), false)
 {
     std::cout << "construtor amcl_ros" << std::endl;
@@ -82,6 +81,7 @@ AmclRosNode::~AmclRosNode()
 void AmclRosNode::initializeParams()
 {
     std::cout << "initialize params" << std::endl;
+    amclParams_.tf_prefix_ = tf::getPrefixParam(private_nh_);
     // Grab params off the param server
     private_nh_.param("use_map_topic", amclParams_.use_map_topic_, false);
     private_nh_.param("first_map_only", amclParams_.first_map_only_, false);

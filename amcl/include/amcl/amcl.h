@@ -82,6 +82,7 @@ typedef struct amcl_parameters
     ros::Duration gui_publish_period;
     ros::Duration save_pose_period;
 
+    std::string tf_prefix_;
   
     int max_beams_, min_particles_, max_particles_;
     double alpha1_, alpha2_, alpha3_, alpha4_, alpha5_;
@@ -115,6 +116,7 @@ typedef struct amcl_parameters
     odom_frame_id_(std::string("odom")),
     base_frame_id_(std::string("base_link")),
     global_frame_id_(std::string("map")),
+    tf_prefix_(std::string("")),
     gui_publish_period(ros::Duration(-1.0)),
     save_pose_period(ros::Duration(2.0)),
     max_beams_(30),
@@ -244,7 +246,7 @@ class AmclNode
     bool hasNewOdomToMapTf_;
 
     // Nomotion update control
-	  bool force_update_;  // used to temporarily let amcl update samples even when no motion occurs...
+    bool force_update_;  // used to temporarily let amcl update samples even when no motion occurs...
 
     pf_vector_t pf_odom_pose_;
 
@@ -273,6 +275,16 @@ class AmclNode
     // Particle filter
     pf_t *pf_;
     bool pf_init_;
+
+    pf_vector_t computeChangeInPose(pf_vector_t pose);
+
+    int setupMultiLaser(const sensor_msgs::LaserScanConstPtr& laser_scan);
+
+    bool initializeParticleFilter(pf_vector_t pose);
+
+    void updateOdomData(pf_vector_t pose, pf_vector_t delta);
+
+    bool updateSensor(const sensor_msgs::LaserScanConstPtr &laser_scan, int laser_index, pf_vector_t pose);
 
     void updateHypothesis(const sensor_msgs::LaserScanConstPtr& laser_scan);
 

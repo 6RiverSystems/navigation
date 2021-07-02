@@ -280,8 +280,7 @@ bool AmclNode::handleInitialPosesMessage(const move_base_msgs::PoseWithCovarianc
     ROS_WARN("Received initial pose with empty frame_id.  You should always supply a frame_id.");
   }
   // We only accept initial pose estimates in the global frame, #5148.
-  // NOTE: Check if this statement is correct as compared to original
-  else if(msg.header.frame_id != amclParams_.global_frame_id_)
+  else if(tf::resolve(amclParams_.tf_prefix_, msg.header.frame_id) != tf::resolve(amclParams_.tf_prefix_, amclParams_.global_frame_id_))
   {
     ROS_WARN("Ignoring initial pose in frame \"%s\"; initial poses must be in the global frame, \"%s\"",
              msg.header.frame_id.c_str(),
@@ -326,6 +325,11 @@ bool AmclNode::handleInitialPosesMessage(const move_base_msgs::PoseWithCovarianc
 	  stream << pose_new.getOrigin().x() << " ";
 	  stream << pose_new.getOrigin().y() << " ";
 	  stream << getYaw(pose_new) << ",";
+
+    stream << "TX ODOM" << " ";
+	  stream << tx_odom.getOrigin().x() << " ";
+	  stream << tx_odom.getOrigin().y() << " ";
+	  stream << getYaw(tx_odom) << ",";
 
 	  // Re-initialize the filter
 	  pf_vector_t pf_init_pose_mean = pf_vector_zero();
@@ -387,13 +391,8 @@ bool AmclNode::getOdomPose(tf::Stamped<tf::Pose>& odom_pose,
   return true;
 }
 
-void AmclNode::handleLaserScanMessage(const sensor_msgs::LaserScanConstPtr& laser_scan)
+int AmclNode::setupMultiLaser(const sensor_msgs::LaserScanConstPtr &laser_scan)
 {
-  if (map_ == NULL) {
-    return;
-  }
-
-  boost::recursive_mutex::scoped_lock lr(configuration_mutex_);
   int laser_index = -1;
 
   // Do we have the base->base_laser Tx yet?
@@ -422,7 +421,9 @@ void AmclNode::handleLaserScanMessage(const sensor_msgs::LaserScanConstPtr& lase
                 "even though the message notifier is in use",
                 laser_scan->header.frame_id.c_str(),
                 amclParams_.base_frame_id_.c_str());
-      return;
+
+      // TODO: figure out such bad returns
+      return laser_index;
     }
 
     pf_vector_t laser_pose_v;
@@ -442,81 +443,74 @@ void AmclNode::handleLaserScanMessage(const sensor_msgs::LaserScanConstPtr& lase
     laser_index = frame_to_laser_[laser_scan->header.frame_id];
   }
 
-  // Where was the robot when this scan was taken?
-  pf_vector_t pose;
-  if(!getOdomPose(latest_odom_pose_, pose.v[0], pose.v[1], pose.v[2],
-                  laser_scan->header.stamp, amclParams_.base_frame_id_))
-  {
-    ROS_ERROR("Couldn't determine robot's pose associated with laser scan");
-    return;
-  }
+  return laser_index;
+}
 
+pf_vector_t AmclNode::computeChangeInPose(pf_vector_t pose)
+{
   pf_vector_t delta = pf_vector_zero();
+  // Compute change in pose
+  //delta = pf_vector_coord_sub(pose, pf_odom_pose_);
+  delta.v[0] = pose.v[0] - pf_odom_pose_.v[0];
+  delta.v[1] = pose.v[1] - pf_odom_pose_.v[1];
+  delta.v[2] = angle_diff(pose.v[2], pf_odom_pose_.v[2]);
 
-  if(pf_init_)
-  {
-    // Compute change in pose
-    //delta = pf_vector_coord_sub(pose, pf_odom_pose_);
-    delta.v[0] = pose.v[0] - pf_odom_pose_.v[0];
-    delta.v[1] = pose.v[1] - pf_odom_pose_.v[1];
-    delta.v[2] = angle_diff(pose.v[2], pf_odom_pose_.v[2]);
+  // See if we should update the filter
+  bool update = fabs(delta.v[0]) > amclParams_.d_thresh_ ||
+                fabs(delta.v[1]) > amclParams_.d_thresh_ ||
+                fabs(delta.v[2]) > amclParams_.a_thresh_;
+  update = update || force_update_;
+  force_update_ = false;
 
-    // See if we should update the filter
-    bool update = fabs(delta.v[0]) > amclParams_.d_thresh_ ||
-                  fabs(delta.v[1]) > amclParams_.d_thresh_ ||
-                  fabs(delta.v[2]) > amclParams_.a_thresh_;
-    update = update || force_update_;
-    force_update_ = false;
-
-    // Set the laser update flags
-    if(update)
-      for(unsigned int i=0; i < lasers_update_.size(); i++)
-        lasers_update_[i] = true;
-  }
-
-  bool force_publication = false;
-  if(!pf_init_)
-  {
-    // Pose at last filter update
-    pf_odom_pose_ = pose;
-
-    // Filter is now initialized
-    pf_init_ = true;
-
-    // Should update sensor data
+  // Set the laser update flags
+  if(update)
     for(unsigned int i=0; i < lasers_update_.size(); i++)
       lasers_update_[i] = true;
+  return delta;
+}
 
-    force_publication = true;
+bool AmclNode::initializeParticleFilter(pf_vector_t pose)
+{
+  // Pose at last filter update
+  pf_odom_pose_ = pose;
 
-    resample_count_ = 0;
-  }
-  // If the robot has moved, update the filter
-  else if(pf_init_ && lasers_update_[laser_index])
-  {
-    //printf("pose\n");
-    //pf_vector_fprintf(pose, stdout, "%.3f");
+  // Filter is now initialized
+  pf_init_ = true;
 
-    AMCLOdomData odata;
-    odata.pose = pose;
-    // HACK
-    // Modify the delta in the action data so the filter gets
-    // updated correctly
-    odata.delta = delta;
+  // Should update sensor data
+  for(unsigned int i=0; i < lasers_update_.size(); i++)
+    lasers_update_[i] = true;
 
-    // Use the action data to update the filter
-    odom_->UpdateAction(pf_, (AMCLSensorData*)&odata);
+  resample_count_ = 0;
 
-    // Pose at last filter update
-    //this->pf_odom_pose = pose;
-  }
+  return true;
+}
 
+void AmclNode::updateOdomData(pf_vector_t pose, pf_vector_t delta)
+{
+  //printf("pose\n");
+  //pf_vector_fprintf(pose, stdout, "%.3f");
+
+  AMCLOdomData odata;
+  odata.pose = pose;
+  // HACK
+  // Modify the delta in the action data so the filter gets
+  // updated correctly
+  odata.delta = delta;
+
+  // Use the action data to update the filter
+  odom_->UpdateAction(pf_, (AMCLSensorData*)&odata);
+
+  // Pose at last filter update
+  //this->pf_odom_pose = pose;
+}
+
+// If the robot has moved, update the filter
+bool AmclNode::updateSensor(const sensor_msgs::LaserScanConstPtr &laser_scan, int laser_index, pf_vector_t pose)
+{
   bool resampled = false;
-  // If the robot has moved, update the filter
-  if(lasers_update_[laser_index])
+  if(lasers_update_[laser_index]) 
   {
-    // srs::ScopedTimingSampleRecorder stsr_cb(tdr_.getRecorder("-LaserCB"));
-
     AMCLLaserData ldata;
     ldata.sensor = lasers_[laser_index];
     ldata.range_count = laser_scan->ranges.size();
@@ -546,7 +540,7 @@ void AmclNode::handleLaserScanMessage(const sensor_msgs::LaserScanConstPtr& lase
     {
       ROS_WARN("Unable to transform min/max laser angles into base frame: %s",
                e.what());
-      return;
+      return resampled;
     }
 
     double angle_min = tf::getYaw(min_q);
@@ -618,6 +612,47 @@ void AmclNode::handleLaserScanMessage(const sensor_msgs::LaserScanConstPtr& lase
       amclAnalyticsData_.particle_cloud_msg_ = cloud_msg;
     }
   }
+  return resampled;
+}
+
+void AmclNode::handleLaserScanMessage(const sensor_msgs::LaserScanConstPtr& laser_scan)
+{
+  if (map_ == NULL) {
+    return;
+  }
+
+  boost::recursive_mutex::scoped_lock lr(configuration_mutex_);
+
+  int laser_index = setupMultiLaser(laser_scan);
+  // Where was the robot when this scan was taken?
+  pf_vector_t pose;
+  if(!getOdomPose(latest_odom_pose_, pose.v[0], pose.v[1], pose.v[2],
+                  laser_scan->header.stamp, amclParams_.base_frame_id_))
+  {
+    ROS_ERROR("Couldn't determine robot's pose associated with laser scan");
+    return;
+  }
+
+  pf_vector_t delta = pf_vector_zero();
+
+  if(pf_init_)
+  {
+    delta = computeChangeInPose(pose);
+  }
+
+  bool force_publication = false;
+  if(!pf_init_)
+  {
+    force_publication = initializeParticleFilter(pose);
+  }
+  // If the robot has moved, update the filter
+  else if(pf_init_ && lasers_update_[laser_index])
+  {
+    updateOdomData(pose, delta);
+  }
+
+  bool resampled = updateSensor(laser_scan, laser_index, pose);
+  
   if(resampled || force_publication)
   {
     updateHypothesis(laser_scan);
@@ -641,7 +676,7 @@ void AmclNode::handleLaserScanMessage(const sensor_msgs::LaserScanConstPtr& lase
 
 void AmclNode::updateHypothesis(const sensor_msgs::LaserScanConstPtr& laser_scan)
 {
-    // Read out the current hypotheses
+  // Read out the current hypotheses
   move_base_msgs::amcl_data dp; //data_msg
 
   double max_weight = 0.0;

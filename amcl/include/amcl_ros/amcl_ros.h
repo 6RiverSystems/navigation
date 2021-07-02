@@ -47,8 +47,6 @@ class AmclRosNode: public AmclNode
         amcl::AMCLConfig default_config_;
         bool first_reconfigure_call_;
 
-        srs::MasterTimingDataRecorder tdr_;
-
         ros::NodeHandle nh_;
 
         // set inital pose using action
