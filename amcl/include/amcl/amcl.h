@@ -154,13 +154,21 @@ typedef struct amcl_parameters
     }
 } amcl_parameters;
 
-typedef struct
+typedef struct amcl_analytics_data
 {
   float percent_invalid_poses_;
   geometry_msgs::PoseArray particle_cloud_msg_;
   move_base_msgs::amcl_analytics analytics_data_;
   geometry_msgs::PoseWithCovarianceStamped pose_data_;
   move_base_msgs::amcl_data amcl_data_;
+  bool resampling_;
+  bool hasNewOdomToMapTf_;
+  bool force_publication;
+
+  amcl_analytics_data():
+  hasNewOdomToMapTf_(false),
+  resampling_(false),
+  force_publication(false) {}
 } amcl_analytics_data;
 
 // Pose hypothesis
@@ -208,17 +216,13 @@ class AmclNode
 
     bool handleInitialPosesMessage(const move_base_msgs::PoseWithCovarianceStampedArray& msg);
 
-    void handleLaserScanMessage(const sensor_msgs::LaserScanConstPtr& laser_scan);
+    amcl_analytics_data* handleLaserScanMessage(const sensor_msgs::LaserScanConstPtr& laser_scan);
 
     void handleMapMessage(const nav_msgs::OccupancyGrid& msg);
 
     bool globalInitialization();
 
     void setInitialPose(double init_pose[3], double init_cov[3]);
-
-    bool hasNewOdomToMapTf() { return hasNewOdomToMapTf_;};
-
-    inline void setHasNewOdomToMapTf(bool hasNewOdomToMapTf) { hasNewOdomToMapTf_ = hasNewOdomToMapTf;};
 
     inline void setForceUpdateControl(bool force_update) { force_update_ = force_update;};
 
@@ -243,8 +247,6 @@ class AmclNode
 
     tf::StampedTransform odom_to_map_tf_;
 
-    bool hasNewOdomToMapTf_;
-
     // Nomotion update control
     bool force_update_;  // used to temporarily let amcl update samples even when no motion occurs...
 
@@ -253,8 +255,6 @@ class AmclNode
     geometry_msgs::PoseWithCovarianceStamped last_published_pose;
 
     tf::Transform latest_tf_;
-
-    bool latest_tf_valid_;
 
     bool sent_first_transform_;
 
@@ -278,15 +278,15 @@ class AmclNode
 
     pf_vector_t computeChangeInPose(pf_vector_t pose);
 
-    int setupMultiLaser(const sensor_msgs::LaserScanConstPtr& laser_scan);
+    std::pair<int, bool> setupMultiLaser(const sensor_msgs::LaserScanConstPtr& laser_scan);
 
     bool initializeParticleFilter(pf_vector_t pose);
 
     void updateOdomData(pf_vector_t pose, pf_vector_t delta);
 
-    bool updateSensor(const sensor_msgs::LaserScanConstPtr &laser_scan, int laser_index, pf_vector_t pose);
+    bool updateSensor(const sensor_msgs::LaserScanConstPtr &laser_scan, int laser_index, pf_vector_t pose, amcl_analytics_data*);
 
-    void updateHypothesis(const sensor_msgs::LaserScanConstPtr& laser_scan);
+    bool updateHypothesis(const sensor_msgs::LaserScanConstPtr& laser_scan, amcl_analytics_data* amclAnalyticsData);
 
     bool applyInitialPose();
 
@@ -303,8 +303,6 @@ class AmclNode
 
   protected:
     amcl_parameters amclParams_;
-
-    amcl_analytics_data amclAnalyticsData_;
 
     // Pose-generating function used to uniformly distribute particles over
     // the map

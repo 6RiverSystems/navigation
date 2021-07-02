@@ -505,24 +505,27 @@ void
 AmclRosNode::laserReceived(const sensor_msgs::LaserScanConstPtr& laser_scan)
 {
   last_laser_received_ts_ = ros::Time::now();
-  setHasNewOdomToMapTf(false);
   boost::recursive_mutex::scoped_lock cfl(config_mutex_);
-  handleLaserScanMessage(laser_scan);
+  amcl_analytics_data* amclAnalyticsData = handleLaserScanMessage(laser_scan);
 
-  if (amclAnalyticsData_.percent_invalid_poses_ > 0) {
-    std_msgs::Float32 float_msg;
-    float_msg.data = amclAnalyticsData_.percent_invalid_poses_;
-    invalid_pose_percent_pub_.publish(float_msg);
-  }
+  if (amclAnalyticsData) {
+    if (amclAnalyticsData->percent_invalid_poses_ > 0) {
+        std_msgs::Float32 float_msg;
+        float_msg.data = amclAnalyticsData->percent_invalid_poses_;
+        invalid_pose_percent_pub_.publish(float_msg);
+      }
 
-  particlecloud_pub_.publish(amclAnalyticsData_.particle_cloud_msg_);
+    particlecloud_pub_.publish(amclAnalyticsData->particle_cloud_msg_);
 
-  analytics_pub_.publish(amclAnalyticsData_.analytics_data_);
-  data_pub_.publish(amclAnalyticsData_.amcl_data_);
-  pose_pub_.publish(amclAnalyticsData_.pose_data_);
+    if (amclAnalyticsData->resampling_  || amclAnalyticsData->force_publication) {
+      analytics_pub_.publish(amclAnalyticsData->analytics_data_);
+      data_pub_.publish(amclAnalyticsData->amcl_data_);
+      pose_pub_.publish(amclAnalyticsData->pose_data_);
+    }
 
-  if (amclParams_.tf_broadcast_ == true && hasNewOdomToMapTf())
-  {
-    this->tfb_->sendTransform(getOdomToMapTf());
+    if (amclParams_.tf_broadcast_ == true && amclAnalyticsData->hasNewOdomToMapTf_)
+    {
+      this->tfb_->sendTransform(getOdomToMapTf());
+    }
   }
 }
