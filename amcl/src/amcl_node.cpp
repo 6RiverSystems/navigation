@@ -274,7 +274,7 @@ class AmclNode
 
     ros::Publisher brainstem_driver_pose_pub_;
 
-    std::vector<amcl_hyp_t> initial_poses_hyp_;
+    amcl_hyp_t* initial_pose_hyp_;
     bool first_map_received_;
     bool first_reconfigure_call_;
 
@@ -362,7 +362,7 @@ AmclNode::AmclNode() :
         odom_(NULL),
         laser_(NULL),
 	      private_nh_("~"),
-        initial_poses_hyp_(),
+        initial_pose_hyp_(NULL),
         first_map_received_(false),
         first_reconfigure_call_(true),
         tdr_("AMCL"),
@@ -650,7 +650,7 @@ void AmclNode::reconfigureCB(AMCLConfig &config, uint32_t level)
   pf_init_pose_cov.m[0][0] = last_published_pose.pose.covariance[6*0+0];
   pf_init_pose_cov.m[1][1] = last_published_pose.pose.covariance[6*1+1];
   pf_init_pose_cov.m[2][2] = last_published_pose.pose.covariance[6*5+5];
-  pf_init(pf_, 1, &pf_init_pose_mean, &pf_init_pose_cov);
+  pf_init(pf_, pf_init_pose_mean, pf_init_pose_cov);
   pf_init_ = false;
 
   // Instantiate the sensor objects
@@ -968,7 +968,7 @@ AmclNode::handleMapMessage(const nav_msgs::OccupancyGrid& msg)
   pf_init_pose_cov.m[0][0] = init_cov_[0];
   pf_init_pose_cov.m[1][1] = init_cov_[1];
   pf_init_pose_cov.m[2][2] = init_cov_[2];
-  pf_init(pf_, 1, &pf_init_pose_mean, &pf_init_pose_cov);
+  pf_init(pf_, pf_init_pose_mean, pf_init_pose_cov);
   pf_init_ = false;
 
   // Instantiate the sensor objects
@@ -1658,8 +1658,6 @@ AmclNode::handleInitialPoseMessage(const geometry_msgs::PoseWithCovarianceStampe
   std::ostringstream stream;
   	stream << "Setting pose (" << ros::Time::now().toSec() << "):";
 
-  initial_poses_hyp_.erase(initial_poses_hyp_.begin(), initial_poses_hyp_.end());
-
   tf::Pose pose_old, pose_new;
   tf::poseMsgToTF(msg.pose.pose, pose_old);
   pose_new = pose_old * tx_odom;
@@ -1686,12 +1684,10 @@ AmclNode::handleInitialPoseMessage(const geometry_msgs::PoseWithCovarianceStampe
   }
   pf_init_pose_cov.m[2][2] = msg.pose.covariance[6*5+5];
 
-  amcl_hyp_t hyp;
-
-  hyp.pf_pose_mean = pf_init_pose_mean;
-  hyp.pf_pose_cov = pf_init_pose_cov;
-
-  initial_poses_hyp_.push_back(hyp);
+  delete initial_pose_hyp_;
+  initial_pose_hyp_ = new amcl_hyp_t();
+  initial_pose_hyp_->pf_pose_mean = pf_init_pose_mean;
+  initial_pose_hyp_->pf_pose_cov = pf_init_pose_cov;
 
   std::string strData = stream.str( );
 
@@ -1709,20 +1705,12 @@ bool
 AmclNode::applyInitialPose()
 {
   boost::recursive_mutex::scoped_lock cfl(configuration_mutex_);
-  if (initial_poses_hyp_.size() && map_ != NULL ) {
-	std::vector<pf_vector_t> initial_means;
-	std::vector<pf_matrix_t> initial_covs;
-
-	for (auto poses : initial_poses_hyp_)
-	{
-		initial_means.push_back(poses.pf_pose_mean);
-		initial_covs.push_back(poses.pf_pose_cov);
-	}
-
-    pf_init(pf_, initial_poses_hyp_.size(), &initial_means[0], &initial_covs[0]);
+  if (initial_pose_hyp_ !=NULL && map_ != NULL ) {
+    pf_init(pf_, initial_pose_hyp_->pf_pose_mean, initial_pose_hyp_->pf_pose_cov);
     pf_init_ = false;
 
-    initial_poses_hyp_.erase(initial_poses_hyp_.begin(), initial_poses_hyp_.end());
+    delete initial_pose_hyp_;
+    initial_pose_hyp_ = NULL;
   }
   return true;
 }
