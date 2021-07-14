@@ -63,7 +63,7 @@
 #include "tf/message_filter.h"
 #include "tf/tf.h"
 #include "message_filters/subscriber.h"
-
+#include <chrono>
 // Dynamic_reconfigure
 #include "dynamic_reconfigure/server.h"
 #include "amcl/AMCLConfig.h"
@@ -922,7 +922,8 @@ void
 AmclNode::handleMapMessage(const nav_msgs::OccupancyGrid& msg)
 {
   boost::recursive_mutex::scoped_lock cfl(configuration_mutex_);
-
+  auto start = std::chrono::high_resolution_clock::now();
+  std::ios_base::sync_with_stdio(false);
   ROS_INFO("Received a %d X %d map @ %.3f m/pix\n",
            msg.info.width,
            msg.info.height,
@@ -1006,7 +1007,12 @@ AmclNode::handleMapMessage(const nav_msgs::OccupancyGrid& msg)
 
   //if we didn't initialize using param server tell core (publish)
   publishStatusOnNewWorkArea(true, initial_pose_found_from_server);
+  auto end = std::chrono::high_resolution_clock::now();
+  double time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
+  time_taken *= 1e-9;
+
+  ROS_INFO("Time taken by handleMapMessage in amcl is : %f sec", time_taken);
 }
 
 void
