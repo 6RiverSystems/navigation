@@ -47,6 +47,9 @@ add_message_files(
         SpeedLimitRequest.msg
         Obstacle.msg
         Obstacles.msg
+
+        ObstacleList.msg
+        SimpleObstacle.msg
         SpeedLimiterMsg.msg
         SpeedLimitersMsg.msg
         StaticObjects.msg
@@ -55,6 +58,7 @@ add_message_files(
 generate_messages(
     DEPENDENCIES
         std_msgs
+        srslib_framework
 )
 
 # dynamic reconfigure

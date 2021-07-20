@@ -47,7 +47,8 @@
 
 namespace base_local_planner {
 
-void SpeedLimitManager::initialize(costmap_2d::Costmap2DROS* costmap, std::string controller_name) {
+void SpeedLimitManager::initialize(costmap_2d::Costmap2DROS* costmap, std::string controller_name, tf::TransformListener* tf) {
+  tf_ = tf;
   std::string name = "~/speed_limiters";
   // Create the limiters
   limiters_.clear();
@@ -97,8 +98,21 @@ bool SpeedLimitManager::calculateLimits(double& max_allowed_linear_vel, double& 
   base_local_planner::SpeedLimiterMsg greatest;
   base_local_planner::SpeedLimitersMsg limiterArray;
   greatest.name = limiter_string;
+
   for (const auto& limiter : limiters_)
   {
+    try{
+      tf::StampedTransform transform;
+      tf_->lookupTransform("/map", "/base_link",  
+                                ros::Time(0), transform);
+      
+      tf::Transform trans(transform.getBasis(),transform.getOrigin());
+      limiter->setGlobalPose(trans);
+    }
+    catch (tf::TransformException ex){
+      ROS_WARN_THROTTLE(10,"Speedlimiter could not get transform: %s",ex.what());
+    }
+    
     double linear = 0, angular = 0;
     if (!limiter->calculateLimits(linear, angular))
     {
