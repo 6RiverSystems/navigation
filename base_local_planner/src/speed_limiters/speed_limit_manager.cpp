@@ -47,7 +47,7 @@
 
 namespace base_local_planner {
 
-void SpeedLimitManager::initialize(costmap_2d::Costmap2DROS* costmap, std::string controller_name, tf::TransformListener* tf,) {
+void SpeedLimitManager::initialize(costmap_2d::Costmap2DROS* costmap, std::string controller_name, tf::TransformListener* tf) {
   tf_ = tf;
   std::string name = "~/speed_limiters";
   // Create the limiters
@@ -103,7 +103,7 @@ bool SpeedLimitManager::calculateLimits(double& max_allowed_linear_vel, double& 
   {
     try{
       tf::StampedTransform transform;
-      tf_.lookupTransform("/map", "/base_link",  
+      tf_->lookupTransform("/map", "/base_link",  
                                 ros::Time(0), transform);
       
       tf::Transform trans(transform.getBasis(),transform.getOrigin());
