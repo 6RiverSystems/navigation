@@ -38,6 +38,8 @@
 #include <base_local_planner/speed_limiters/obstacle_speed_limiter.h>
 #include <base_local_planner/geometry_math_helpers.h>
 #include <base_local_planner/Obstacles.h>
+#include <base_local_planner/ObstacleList.h>
+#include <base_local_planner/SimpleObstacle.h>
 #include <tf/transform_datatypes.h>
 #include <costmap_2d/footprint.h>
 
@@ -50,6 +52,7 @@ void ObstacleSpeedLimiter::initialize(std::string name) {
   configClient_->setConfigurationCallback(boost::bind(&ObstacleSpeedLimiter::reconfigure, this, _1));
 
   obstacle_pub = private_nh.advertise<base_local_planner::Obstacles>("obstacle_info", 5, true);
+  obstacle_list_pub = private_nh.advertise<base_local_planner::ObstacleList>("obstacle_list", 5, true);
 }
 
 std::string ObstacleSpeedLimiter::getName(){
@@ -90,7 +93,7 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
   std::string name_nearest, name_limiting;
 
   double obstacle_speed_nearest = max_allowed_linear_vel;
-
+  base_local_planner::ObstacleList obstacle_list_msg;
   for (const auto& obs : (*obstructions))
   {
     // Skip non-dynamic things or things that have been cleared
@@ -101,6 +104,10 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
     costmap_2d::ObstructionMsg obs_body_frame = obstructionToBodyFrame(obs, current_pose_inv_tf);
     LinearSpeedLimiterResult result;
     result = calculateAllowedLinearSpeed(obs_body_frame);
+    base_local_planner::SimpleObstalce simpleObstacle;
+    simpleObstacle.distance = result.distance;
+    simpleObstacle.heading = result.heading;
+    obstacle_list_msg.obstacles.push_back(simpleObstacle);
     if(result.limiting)
     {
       if(result.speed < max_allowed_linear_vel)
@@ -159,6 +166,8 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
   obstacle_msg.nearest.heading = heading_nearest;
   obstacle_msg.nearest.layer_name = name_nearest;
   obstacle_pub.publish(obstacle_msg);
+
+  obstacle_list_pub.publish(obstacle_list_msg);
   return true;
 }
 

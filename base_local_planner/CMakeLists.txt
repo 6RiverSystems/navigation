@@ -47,6 +47,9 @@ add_message_files(
         SpeedLimitRequest.msg
         Obstacle.msg
         Obstacles.msg
+
+        ObstacleList.msg
+        SimpleObstacle.msg
         SpeedLimiterMsg.msg
         SpeedLimitersMsg.msg
         StaticObjects.msg

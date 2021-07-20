@@ -104,6 +104,7 @@ private:
   double footprint_max_y_ = 0.4;
   double circumscribed_radius_ = 0.7;
   ros::Publisher obstacle_pub;
+  ros::Publisher obstacle_list_pub;
 };
 
 } /* namespace base_local_planner */
