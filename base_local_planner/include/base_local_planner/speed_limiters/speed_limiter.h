@@ -81,7 +81,7 @@ public:
     max_angular_velocity_ = angular;
   };
 
-  void setGlobalPose(tf::transform trans){
+  void setGlobalPose(tf::Transform trans){
     globalPose_ = trans;
   };
 
@@ -101,7 +101,7 @@ protected:
   double max_linear_velocity_ = 1.0;
   double max_angular_velocity_ = 1.0;
 
-  tf::transform globalPose_;
+  tf::Transform globalPose_;
 };
 
 } /* namespace base_local_planner */
