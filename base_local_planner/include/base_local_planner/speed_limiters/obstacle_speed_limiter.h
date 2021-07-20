@@ -105,6 +105,8 @@ private:
   double circumscribed_radius_ = 0.7;
   ros::Publisher obstacle_pub;
   ros::Publisher obstacle_list_pub;
+
+  int obstacle_interval = 0;
 };
 
 } /* namespace base_local_planner */

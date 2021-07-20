@@ -104,7 +104,7 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
     costmap_2d::ObstructionMsg obs_body_frame = obstructionToBodyFrame(obs, current_pose_inv_tf);
     LinearSpeedLimiterResult result;
     result = calculateAllowedLinearSpeed(obs_body_frame);
-    base_local_planner::SimpleObstalce simpleObstacle;
+    base_local_planner::SimpleObstacle simpleObstacle;
     simpleObstacle.distance = result.distance;
     simpleObstacle.heading = result.heading;
     obstacle_list_msg.obstacles.push_back(simpleObstacle);
@@ -166,8 +166,12 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
   obstacle_msg.nearest.heading = heading_nearest;
   obstacle_msg.nearest.layer_name = name_nearest;
   obstacle_pub.publish(obstacle_msg);
-
-  obstacle_list_pub.publish(obstacle_list_msg);
+  obstacle_interval++;
+  if(obstacle_interval % params_.extended_obstacle_curve % 0){
+    obstacle_interval = 0;
+    obstacle_list_pub.publish(obstacle_list_msg);
+  }
+  
   return true;
 }
 
