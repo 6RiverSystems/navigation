@@ -167,7 +167,7 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
   obstacle_msg.nearest.layer_name = name_nearest;
   obstacle_pub.publish(obstacle_msg);
   obstacle_interval++;
-  if(obstacle_interval % params_.extended_obstacle_curve % 0){
+  if(obstacle_interval % params_.obstacle_pub_decimate % 0){
     obstacle_interval = 0;
     obstacle_list_pub.publish(obstacle_list_msg);
   }
