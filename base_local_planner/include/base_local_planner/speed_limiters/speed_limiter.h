@@ -81,6 +81,10 @@ public:
     max_angular_velocity_ = angular;
   };
 
+  void setGlobalPose(tf::transform trans){
+    globalPose_ = trans;
+  };
+
 protected:
   bool getCurrentPose(tf::Stamped<tf::Pose>& pose) {
     if (!costmap_ || !costmap_->getRobotPose(pose)) {
@@ -96,6 +100,8 @@ protected:
 
   double max_linear_velocity_ = 1.0;
   double max_angular_velocity_ = 1.0;
+
+  tf::transform globalPose_;
 };
 
 } /* namespace base_local_planner */

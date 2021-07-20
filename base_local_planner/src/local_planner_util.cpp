@@ -52,7 +52,7 @@ void LocalPlannerUtil::initialize(
     tf_ = tf;
     costmap_ = costmap;
     global_frame_ = global_frame;
-    speed_limit_manager_.initialize(costmap, controller_name);
+    speed_limit_manager_.initialize(costmap, controller_name, tf_);
     initialized_ = true;
   }
   else{

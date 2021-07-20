@@ -86,6 +86,8 @@ protected:
 
   double max_linear_velocity_ = 1.0;
   double max_angular_velocity_ = 1.0;
+
+  tf::TransformListener* tf_;
   
 };
 

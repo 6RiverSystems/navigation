@@ -169,6 +169,9 @@ bool ObstacleSpeedLimiter::calculateLimits(double& max_allowed_linear_vel, doubl
   obstacle_interval++;
   if(obstacle_interval % params_.obstacle_pub_decimate){
     obstacle_interval = 0;
+    obstacle_list_pub.pose.x = globalPose_.getOrigin().getX();
+    obstacle_list_pub.pose.y = globalPose_.getOrigin().getY();
+    obstacle_list_pub.pose.orientation = tf::getYaw(globalPose_.getOrientation());
     obstacle_list_pub.publish(obstacle_list_msg);
   }
   
