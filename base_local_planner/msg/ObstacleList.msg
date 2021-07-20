@@ -1,2 +1,2 @@
 SimpleObstacle[] obstacles
-srslib_framework/MsgPose2d pose
+srslib_framework/MsgPose2D pose
