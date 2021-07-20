@@ -98,19 +98,6 @@ bool SpeedLimitManager::calculateLimits(double& max_allowed_linear_vel, double& 
   base_local_planner::SpeedLimiterMsg greatest;
   base_local_planner::SpeedLimitersMsg limiterArray;
   greatest.name = limiter_string;
-  tf::StampedTransform robotTransform;
-  try{
-    tf::StampedTransform transform;
-    tf_.lookupTransform("/map", "/base_link",  
-                              ros::Time(0), transform);
-    
-    tf::Transform trans(transform.getBasis(),transform.getOrigin());
-    tf::Stamped<tf::Transform> tstamp (trans,transform.stamp_,transform.frame_id_);
-    tf::poseStampedTFToMsg(tstamp, map_pose);
-    }
-    catch (tf::TransformException ex){
-      ROS_WARN_THROTTLE(10,"Map Pose could not get transform: %s",ex.what());
-    }
 
   for (const auto& limiter : limiters_)
   {
